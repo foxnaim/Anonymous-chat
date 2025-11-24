@@ -2,29 +2,54 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import AppProviders from "@/components/providers/AppProviders";
-import SeoHead from "@/components/seo/SeoHead";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
 export const metadata: Metadata = {
   title: {
-    default: "Anonymous Chat",
+    default: "Anonymous Chat — безопасные и быстрые комьюнити",
     template: "%s | Anonymous Chat"
   },
   description:
-    "Готовый к продакшену стек Next.js + Tailwind + Redux + Framer Motion для анонимных сообществ и лендингов.",
+    "Заранее настроенный фронтенд на Next.js + TypeScript для мгновенного запуска приватных чатов с анимациями, SEO и интеграциями.",
   keywords: [
-    "Next.js",
-    "Tailwind CSS",
-    "Redux Toolkit",
-    "Framer Motion",
-    "TanStack Query",
-    "SEO"
+    "next.js",
+    "tailwind",
+    "anonymous chat",
+    "secure messaging",
+    "framer motion",
+    "redux",
+    "tanstack query"
   ],
   authors: [{ name: "Anonymous Team" }],
   metadataBase: new URL("https://anonymouschat.example"),
   icons: {
     icon: "/favicon.svg"
+  },
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    url: "https://anonymouschat.example",
+    siteName: "Anonymous Chat",
+    title: "Anonymous Chat — безопасные и быстрые комьюнити",
+    description:
+      "Заранее настроенный фронтенд на Next.js + TypeScript для мгновенного запуска приватных чатов с анимациями, SEO и интеграциями.",
+    images: [
+      {
+        url: "https://anonymouschat.example/og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Anonymous Chat Preview"
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Anonymous Chat — безопасные и быстрые комьюнити",
+    description:
+      "Заранее настроенный фронтенд на Next.js + TypeScript для мгновенного запуска приватных чатов с анимациями, SEO и интеграциями.",
+    creator: "@anonymouschat",
+    site: "@anonymouschat"
   }
 };
 
@@ -36,7 +61,6 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className={inter.className}>
-        <SeoHead />
         <AppProviders>{children}</AppProviders>
       </body>
     </html>
