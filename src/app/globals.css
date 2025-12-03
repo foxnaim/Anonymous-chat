@@ -27,6 +27,10 @@
   }
 }
 
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
 @layer base {
   :root {
     /* Background colors */
@@ -95,51 +99,73 @@
     --popover: 239 57% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 240 57% 41%;
+    /* Primary: #2F2FA2 - slightly lighter in dark mode */
+    --primary: 240 57% 50%;
     --primary-foreground: 0 0% 100%;
-    --primary-dark: 239 57% 33%;
+    
+    /* Primary Dark / Navigation: #242582 */
+    --primary-dark: 239 57% 33%; /* #242582 */
 
-    --secondary: 280 26% 32%;
+    /* Secondary: #553D67 - slightly lighter in dark mode */
+    --secondary: 280 26% 40%;
     --secondary-foreground: 0 0% 100%;
-    --secondary-light: 280 26% 45%;
+    
+    --secondary-light: 280 26% 50%;
 
-    --muted: 240 12% 20%;
-    --muted-foreground: 320 15% 70%;
+    /* Muted: #99738E */
+    --muted: 239 57% 18%;
+    --muted-foreground: 320 15% 60%;
 
-    --accent: 345 90% 63%;
+    /* Accent / Alert: #F64C72 */
+    --accent: 345 90% 63%; /* #F64C72 */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 345 90% 63%;
+    --destructive: 345 90% 63%; /* #F64C72 */
     --destructive-foreground: 0 0% 100%;
 
-    --success: 240 57% 41%;
+    /* Success / Resolved: Primary color for "Решено" status */
+    --success: 240 57% 50%; /* #2F2FA2 - Lighter primary for dark mode */
     --success-foreground: 0 0% 100%;
 
-    --border: 240 12% 20%;
-    --input: 240 12% 20%;
-    --ring: 240 57% 41%;
-
-    --sidebar-background: 239 57% 15%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 240 57% 41%;
+    --border: 239 57% 20%;
+    --input: 239 57% 20%;
+    --ring: 240 57% 50%;
+    
+    /* Sidebar: Primary Dark / Navigation */
+    --sidebar-background: 239 57% 33%; /* #242582 */
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 240 57% 50%; /* Lighter primary for dark mode */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 57% 41%;
+    --sidebar-accent: 240 57% 50%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 240 12% 20%;
-    --sidebar-ring: 240 57% 41%;
+    --sidebar-border: 239 57% 25%;
+    --sidebar-ring: 240 57% 50%;
   }
 }
 
-body {
-  min-height: 100vh;
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
-}
+@layer base {
+  * {
+    @apply border-border;
+  }
 
-.text-gradient {
-  background: linear-gradient(120deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
+  body {
+    @apply bg-background text-foreground;
+  }
 
+  /* Fullscreen mode */
+  body.fullscreen-mode {
+    overflow: hidden;
+  }
+
+  body.fullscreen-mode #root {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+}

@@ -9,21 +9,14 @@ import ru from './locales/ru.json';
 import kk from './locales/kk.json';
 
 if (!i18n.isInitialized) {
-  // Determine initial language: always 'ru' on server, detect on client
+  // Determine initial language: always 'ru' on server, 'ru' on client for first render
+  // This ensures server and client match during hydration
   const getInitialLanguage = (): string => {
     if (typeof window === 'undefined') {
-      return 'ru'; // Server-side: always use 'ru' to match layout
+      return 'ru'; // Server-side: always use 'ru'
     }
-    // Client-side: check localStorage first, then browser, then default to 'ru'
-    const stored = localStorage.getItem('i18nextLng');
-    if (stored && ['en', 'ru', 'kk'].includes(stored)) {
-      return stored;
-    }
-    const browserLang = navigator.language.split('-')[0];
-    if (['en', 'ru', 'kk'].includes(browserLang)) {
-      return browserLang;
-    }
-    return 'ru'; // Default fallback
+    // Client-side: use 'ru' initially to match server, then detect after mount
+    return 'ru';
   };
 
   i18n
@@ -50,6 +43,23 @@ if (!i18n.isInitialized) {
         useSuspense: false, // Disable suspense to prevent hydration issues
       },
     });
+
+  // After initialization, detect and change language if needed (client-side only)
+  // This runs after the initial render to prevent hydration mismatch
+  if (typeof window !== 'undefined') {
+    // Use requestAnimationFrame to ensure this runs after React hydration
+    requestAnimationFrame(() => {
+      const stored = localStorage.getItem('i18nextLng');
+      if (stored && ['en', 'ru', 'kk'].includes(stored) && stored !== 'ru') {
+        i18n.changeLanguage(stored);
+      } else {
+        const browserLang = navigator.language.split('-')[0];
+        if (['en', 'ru', 'kk'].includes(browserLang) && browserLang !== 'ru') {
+          i18n.changeLanguage(browserLang);
+        }
+      }
+    });
+  }
 }
 
 export default i18n;

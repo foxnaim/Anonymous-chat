@@ -7,7 +7,7 @@ export interface UIState {
 }
 
 const initialState: UIState = {
-  theme: "dark"
+  theme: "light"
 };
 
 const uiSlice = createSlice({

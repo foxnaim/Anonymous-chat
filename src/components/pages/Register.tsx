@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -18,17 +18,12 @@ const Register = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const { login } = useAuth();
-  const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const { mutate: registerCompany, isPending } = useCreateCompany({
     onSuccess: async (company) => {
@@ -114,11 +109,11 @@ const Register = () => {
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <FiHome className="h-8 w-8 text-primary" />
               </div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
-                {mounted ? t("auth.register") : "Регистрация"}
+              <h1 className="text-3xl font-bold text-foreground mb-2" suppressHydrationWarning>
+                {t("auth.register")}
               </h1>
-              <p className="text-muted-foreground">
-                {mounted ? t("auth.register") : "Регистрация"}
+              <p className="text-muted-foreground" suppressHydrationWarning>
+                {t("auth.register")}
               </p>
             </div>
           </div>
@@ -188,7 +183,9 @@ const Register = () => {
             </div>
 
             <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending ? (mounted ? t("common.loading") : "Загрузка...") : (mounted ? t("auth.register") : "Регистрация")}
+              <span suppressHydrationWarning>
+                {isPending ? t("common.loading") : t("auth.register")}
+              </span>
             </Button>
 
             <div className="text-center text-sm">
