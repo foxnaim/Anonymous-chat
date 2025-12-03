@@ -2,14 +2,11 @@
 
 import { Switch } from "@headlessui/react";
 import { motion } from "framer-motion";
-import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
-import { toggleTheme } from "@/lib/redux/slices/uiSlice";
-
+import { useAppDispatch, useAppSelector, toggleTheme } from "@/lib";
 const ThemeSwitch = () => {
   const theme = useAppSelector((state) => state.ui.theme);
   const dispatch = useAppDispatch();
   const enabled = theme === "light";
-
   return (
     <div className="flex items-center gap-3">
       <motion.span
@@ -35,6 +32,4 @@ const ThemeSwitch = () => {
     </div>
   );
 };
-
 export default ThemeSwitch;
-

@@ -1,10 +1,11 @@
 import type { DefaultSeoProps } from "next-seo";
+import { APP_CONFIG } from "./constants";
 
 const defaultSeo: DefaultSeoProps = {
-  title: "Anonymous Chat — безопасные и быстрые комьюнити",
+  title: `${APP_CONFIG.NAME} — безопасные и быстрые комьюнити`,
   description:
     "Заранее настроенный фронтенд на Next.js + TypeScript для мгновенного запуска приватных чатов с анимациями, SEO и интеграциями.",
-  canonical: "https://anonymouschat.example",
+  canonical: APP_CONFIG.SITE_URL,
   additionalMetaTags: [
     {
       name: "keywords",
@@ -15,20 +16,20 @@ const defaultSeo: DefaultSeoProps = {
   openGraph: {
     type: "website",
     locale: "ru_RU",
-    url: "https://anonymouschat.example",
-    siteName: "Anonymous Chat",
+    url: APP_CONFIG.SITE_URL,
+    siteName: APP_CONFIG.NAME,
     images: [
       {
-        url: "https://anonymouschat.example/og.jpg",
+        url: `${APP_CONFIG.SITE_URL}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "Anonymous Chat Preview"
+        alt: `${APP_CONFIG.NAME} Preview`
       }
     ]
   },
   twitter: {
-    handle: "@anonymouschat",
-    site: "@anonymouschat",
+    handle: "@feedbackhub",
+    site: "@feedbackhub",
     cardType: "summary_large_image"
   }
 };

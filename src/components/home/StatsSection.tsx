@@ -1,31 +1,14 @@
 'use client';
 
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
-
-interface Stats {
-  rooms: number;
-  latency: string;
-  retention: string;
-}
-
-const fetchStats = async (): Promise<Stats> => {
-  await new Promise((resolve) => setTimeout(resolve, 600));
-  return {
-    rooms: 42,
-    latency: "54ms",
-    retention: "92%"
-  };
-};
+import { usePlatformStats, type PlatformStats } from "@/lib/query";
 
 interface StatsSectionProps {
-  initialStats?: Stats;
+  initialStats?: PlatformStats;
 }
 
 export default function StatsSection({ initialStats }: StatsSectionProps) {
-  const { data: stats, isPending } = useQuery({
-    queryKey: ["platform-stats"],
-    queryFn: fetchStats,
+  const { data: stats, isPending } = usePlatformStats({
     initialData: initialStats,
     staleTime: 30000
   });
@@ -58,4 +41,3 @@ export default function StatsSection({ initialStats }: StatsSectionProps) {
     </motion.div>
   );
 }
-

@@ -19,18 +19,13 @@ export default function HeroSection() {
         </motion.h1>
         <motion.p
           className="mt-6 text-lg leading-8 text-gray-300"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
           Next.js + TypeScript + Tailwind CSS with Redux state, TanStack Query
-          data, Framer Motion micro-animations and next-seo defaults already
-          wired.
+          data, Framer Motion micro-animations and next-seo defaults already wired.
         </motion.p>
         <motion.div
           className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-3"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <ThemeSwitch />
@@ -85,4 +80,3 @@ export default function HeroSection() {
     </section>
   );
 }
-

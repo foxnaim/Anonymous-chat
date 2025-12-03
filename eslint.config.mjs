@@ -5,6 +5,11 @@ export default tseslint.config(
   ...nextPlugin.recommended,
   {
     ignores: ["node_modules/", ".next/"]
+  },
+  {
+    rules: {
+      "react-refresh/only-export-components": "off"
+    }
   }
 );
 
