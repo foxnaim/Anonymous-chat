@@ -117,40 +117,42 @@ const CompanyBilling = () => {
                 const planName = typeof plan.name === "string" ? plan.name : getTranslatedValue(plan.name);
                 const isCurrent = planName === company?.plan || (typeof plan.name === "object" && (plan.name.ru === company?.plan || plan.name.en === company?.plan || plan.name.kk === company?.plan));
                 const isFree = plan.price === 0;
+                const isStandard = plan.id === "standard";
                 const isPro = plan.id === "pro";
-                const isBusiness = plan.id === "business";
                 
                 // Определяем цвета для каждого тарифа
                 let cardBorderColor = "border-border";
                 let cardBgGradient = "";
                 let badgeColor = "bg-muted text-muted-foreground";
                 let buttonVariant: "default" | "outline" | "secondary" = "default";
+                
                 if (isFree) {
                   cardBorderColor = "border-muted";
                   badgeColor = "bg-muted text-muted-foreground";
                   buttonVariant = "outline";
+                } else if (isStandard) {
+                  cardBorderColor = "border-primary/50";
+                  cardBgGradient = "bg-gradient-to-br from-primary/5 to-primary/10";
+                  badgeColor = "bg-primary/20 text-primary-foreground";
+                  buttonVariant = "default";
                 } else if (isPro) {
                   cardBorderColor = "border-primary";
-                  cardBgGradient = "bg-gradient-to-br from-primary/5 to-primary/10";
+                  cardBgGradient = "bg-gradient-to-br from-primary/10 to-primary/20";
                   badgeColor = "bg-primary text-primary-foreground";
                   buttonVariant = "default";
-                } else if (isBusiness) {
-                  cardBorderColor = "border-secondary";
-                  cardBgGradient = "bg-gradient-to-br from-secondary/5 to-secondary/10";
-                  badgeColor = "bg-secondary text-secondary-foreground";
                 }
                 return (
                   <Card
                     key={plan.id}
                     className={`p-6 relative overflow-hidden transition-all hover:shadow-lg ${
                       isCurrent 
-                        ? `ring-2 ${isPro ? "ring-primary" : isBusiness ? "ring-secondary" : "ring-primary"} ${cardBgGradient}` 
+                        ? `ring-2 ${isPro ? "ring-primary" : isStandard ? "ring-primary/50" : "ring-primary"} ${cardBgGradient}` 
                         : `${cardBorderColor} ${cardBgGradient}`
                     }`}
                   >
                     {isCurrent && (
                       <div className={`absolute top-0 right-0 w-0 h-0 border-l-[60px] border-l-transparent border-t-[60px] ${
-                        isPro ? "border-t-primary" : isBusiness ? "border-t-secondary" : "border-t-primary"
+                        isPro ? "border-t-primary" : isStandard ? "border-t-primary/50" : "border-t-primary"
                       }`} />
                     )}
                     <div className="space-y-4 relative z-10">
@@ -166,7 +168,7 @@ const CompanyBilling = () => {
                         </div>
                         <div className="flex items-baseline gap-1">
                           <p className={`text-3xl font-bold ${
-                            isPro ? "text-primary" : isBusiness ? "text-secondary" : "text-foreground"
+                            isPro ? "text-primary" : isStandard ? "text-primary/80" : "text-foreground"
                           }`}>
                             {plan.price === 0 ? t("common.free") : `${plan.price} ₸`}
                           </p>
@@ -179,10 +181,10 @@ const CompanyBilling = () => {
                         {plan.features.map((feature, idx) => (
                           <li key={idx} className="flex items-start gap-3 text-sm text-foreground">
                             <div className={`mt-0.5 flex-shrink-0 rounded-full p-0.5 ${
-                              isPro ? "bg-primary/20" : isBusiness ? "bg-secondary/20" : "bg-muted"
+                              isPro ? "bg-primary/20" : isStandard ? "bg-primary/10" : "bg-muted"
                             }`}>
                               <FiCheck className={`h-3.5 w-3.5 ${
-                                isPro ? "text-primary" : isBusiness ? "text-secondary" : "text-muted-foreground"
+                                isPro ? "text-primary" : isStandard ? "text-primary/80" : "text-muted-foreground"
                               }`} />
                             </div>
                             <span className="leading-relaxed">{getTranslatedValue(feature)}</span>
@@ -195,8 +197,8 @@ const CompanyBilling = () => {
                             ? "bg-muted text-muted-foreground hover:bg-muted cursor-not-allowed" 
                             : isPro 
                               ? "bg-primary hover:bg-primary/90" 
-                              : isBusiness 
-                                ? "bg-secondary hover:bg-secondary/90"
+                              : isStandard 
+                                ? "bg-primary/80 hover:bg-primary/70"
                                 : ""
                         }`}
                         variant={isCurrent ? "outline" : buttonVariant}

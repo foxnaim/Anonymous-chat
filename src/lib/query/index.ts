@@ -20,7 +20,7 @@ export {
 // Query keys для централизованного управления
 export const queryKeys = {
   // Messages
-  messages: (companyCode?: string) => ['messages', companyCode] as const,
+  messages: (companyCode?: string | null) => ['messages', companyCode ?? undefined] as const,
   message: (id: string) => ['message', id] as const,
   
   // Companies

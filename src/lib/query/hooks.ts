@@ -17,11 +17,17 @@ import {
 
 /**
  * Хук для получения всех сообщений
+ * Если companyCode не передан (undefined) - получает все сообщения (для админа)
+ * Если companyCode === null - запрос отключен
+ * Если companyCode === string - получает сообщения конкретной компании
  */
-export const useMessages = (companyCode?: string, options?: Omit<UseQueryOptions<Message[]>, 'queryKey' | 'queryFn'>) => {
+export const useMessages = (companyCode?: string | null, options?: Omit<UseQueryOptions<Message[]>, 'queryKey' | 'queryFn'>) => {
+  // Нормализуем null в undefined для queryKey
+  const normalizedCode = companyCode ?? undefined;
   return useQuery({
-    queryKey: queryKeys.messages(companyCode),
-    queryFn: () => messageService.getAll(companyCode),
+    queryKey: queryKeys.messages(normalizedCode),
+    queryFn: () => messageService.getAll(normalizedCode),
+    enabled: companyCode !== null, // enabled если не null (undefined разрешен для админа)
     ...options,
   });
 };
@@ -40,11 +46,14 @@ export const useMessage = (id: string, options?: Omit<UseQueryOptions<Message | 
 
 /**
  * Хук для получения всех компаний
+ * Оптимизирован для кэширования
  */
 export const useCompanies = (options?: Omit<UseQueryOptions<Company[]>, 'queryKey' | 'queryFn'>) => {
   return useQuery({
     queryKey: queryKeys.companies,
     queryFn: () => companyService.getAll(),
+    staleTime: 1000 * 60 * 2, // 2 минуты
+    gcTime: 1000 * 60 * 10, // 10 минут в кэше
     ...options,
   });
 };
@@ -76,47 +85,59 @@ export const useCompanyByCode = (code: string, options?: Omit<UseQueryOptions<Co
 
 /**
  * Хук для получения статистики компании
+ * Оптимизирован для быстрой работы и кэширования
  */
 export const useCompanyStats = (companyId: number, options?: Omit<UseQueryOptions<Stats>, 'queryKey' | 'queryFn'>) => {
   return useQuery({
     queryKey: queryKeys.companyStats(companyId),
     queryFn: () => statsService.getCompanyStats(companyId),
     enabled: !!companyId,
+    staleTime: 1000 * 60 * 3, // 3 минуты - статистика не меняется часто
+    gcTime: 1000 * 60 * 10, // 10 минут в кэше
     ...options,
   });
 };
 
 /**
  * Хук для получения распределения сообщений
+ * Оптимизирован для быстрой работы и кэширования
  */
 export const useMessageDistribution = (companyId: number, options?: Omit<UseQueryOptions<MessageDistribution>, 'queryKey' | 'queryFn'>) => {
   return useQuery({
     queryKey: queryKeys.messageDistribution(companyId),
     queryFn: () => statsService.getMessageDistribution(companyId),
     enabled: !!companyId,
+    staleTime: 1000 * 60 * 3, // 3 минуты - статистика не меняется часто
+    gcTime: 1000 * 60 * 10, // 10 минут в кэше
     ...options,
   });
 };
 
 /**
  * Хук для получения метрик роста
+ * Оптимизирован для быстрой работы и кэширования
  */
 export const useGrowthMetrics = (companyId: number, options?: Omit<UseQueryOptions<GrowthMetrics>, 'queryKey' | 'queryFn'>) => {
   return useQuery({
     queryKey: queryKeys.growthMetrics(companyId),
     queryFn: () => statsService.getGrowthMetrics(companyId),
     enabled: !!companyId,
+    staleTime: 1000 * 60 * 5, // 5 минут - метрики роста меняются редко
+    gcTime: 1000 * 60 * 15, // 15 минут в кэше
     ...options,
   });
 };
 
 /**
  * Хук для получения планов подписки
+ * Оптимизирован для кэширования (планы меняются редко)
  */
 export const usePlans = (options?: Omit<UseQueryOptions<SubscriptionPlan[]>, 'queryKey' | 'queryFn'>) => {
   return useQuery({
     queryKey: queryKeys.plans,
     queryFn: () => plansService.getAll(),
+    staleTime: 1000 * 60 * 10, // 10 минут - планы меняются очень редко
+    gcTime: 1000 * 60 * 30, // 30 минут в кэше
     ...options,
   });
 };

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { ThemeProvider, useTheme } from "next-themes";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import ReduxProvider from "./ReduxProvider";
 import QueryProvider from "./QueryProvider";
 // AuthProvider удален - используем Redux auth
@@ -13,11 +13,13 @@ import "@/i18n/config";
 // Компонент для принудительной установки светлой темы при первой загрузке
 const ThemeInitializer = ({ children }: { children: ReactNode }) => {
   const { theme, setTheme } = useTheme();
+  const initialized = useRef(false);
   
   useEffect(() => {
     // При первой загрузке принудительно устанавливаем светлую тему
-    if (theme !== 'light') {
+    if (!initialized.current && theme !== 'light') {
       setTheme('light');
+      initialized.current = true;
     }
     // Удаляем сохраненную темную тему из localStorage
     if (typeof window !== 'undefined') {
@@ -26,7 +28,7 @@ const ThemeInitializer = ({ children }: { children: ReactNode }) => {
         localStorage.removeItem('theme');
       }
     }
-  }, []); // Только при монтировании
+  }, [theme, setTheme]); // Добавлены зависимости
 
   return <>{children}</>;
 };

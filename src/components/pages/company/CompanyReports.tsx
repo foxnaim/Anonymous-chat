@@ -16,9 +16,8 @@ import { FiDownload } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import { jsPDF } from "jspdf";
-import i18n from "@/i18n/config";
 const CompanyReports = () => {
-  const { t } = useTranslation();
+  const { t, i18n: i18nInstance } = useTranslation();
   const { user } = useAuth();
   
   // Состояние для выбранного месяца и года
@@ -55,7 +54,7 @@ const CompanyReports = () => {
     const date = new Date(year, month - 1, 1);
     
     // Используем текущий язык из i18n для форматирования месяца
-    const currentLang = i18n.language || "ru";
+    const currentLang = i18nInstance.language || "ru";
     const localeMap: Record<string, string> = {
       ru: "ru-RU",
       en: "en-US",
@@ -68,7 +67,7 @@ const CompanyReports = () => {
   };
   // Генерация списка месяцев
   const getMonthOptions = () => {
-    const currentLang = i18n.language || "ru";
+    const currentLang = i18nInstance.language || "ru";
     const localeMap: Record<string, string> = {
       ru: "ru-RU",
       en: "en-US",
@@ -152,7 +151,7 @@ const CompanyReports = () => {
     // Дата генерации
     doc.setFontSize(10);
     doc.setFont("helvetica", "italic");
-    const currentLang = i18n.language || "ru";
+    const currentLang = i18nInstance.language || "ru";
     const localeMap: Record<string, string> = {
       ru: "ru-RU",
       en: "en-US",

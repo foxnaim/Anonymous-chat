@@ -1,0 +1,171 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+}
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Background colors */
+    --background: 240 20% 97%; /* #F7F7FA */
+    --foreground: 239 57% 15%; /* Dark text for headings */
+
+    --card: 0 0% 100%; /* White cards */
+    --card-foreground: 239 57% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 239 57% 15%;
+
+    /* Primary: #2F2FA2 */
+    --primary: 240 57% 41%; /* #2F2FA2 */
+    --primary-foreground: 0 0% 100%;
+    
+    /* Primary Dark / Navigation: #242582 */
+    --primary-dark: 239 57% 33%; /* #242582 */
+
+    /* Secondary: #553D67 */
+    --secondary: 280 26% 32%; /* #553D67 */
+    --secondary-foreground: 0 0% 100%;
+    
+    --secondary-light: 280 26% 45%;
+
+    /* Muted: #99738E */
+    --muted: 240 12% 90%; /* Light background #E0E0E8 */
+    --muted-foreground: 320 15% 53%; /* #99738E for text */
+
+    /* Accent / Alert: #F64C72 */
+    --accent: 345 90% 63%; /* #F64C72 */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 345 90% 63%; /* #F64C72 */
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success / Resolved: Primary color for "Решено" status */
+    --success: 240 57% 41%; /* #2F2FA2 - Primary color for resolved status */
+    --success-foreground: 0 0% 100%;
+
+    /* Borders: #E0E0E8 */
+    --border: 240 12% 90%; /* #E0E0E8 */
+    --input: 240 12% 90%;
+    --ring: 240 57% 41%; /* Primary color */
+
+    --radius: 0.75rem;
+
+    /* Sidebar: Primary Dark / Navigation */
+    --sidebar-background: 239 57% 33%; /* #242582 */
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 240 57% 41%; /* #2F2FA2 */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 57% 41%; /* #2F2FA2 */
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 240 12% 90%;
+    --sidebar-ring: 240 57% 41%;
+  }
+
+  .dark {
+    --background: 239 57% 10%;
+    --foreground: 0 0% 98%;
+
+    --card: 239 57% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 239 57% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Primary: #2F2FA2 - slightly lighter in dark mode */
+    --primary: 240 57% 50%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Primary Dark / Navigation: #242582 */
+    --primary-dark: 239 57% 33%; /* #242582 */
+
+    /* Secondary: #553D67 - slightly lighter in dark mode */
+    --secondary: 280 26% 40%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --secondary-light: 280 26% 50%;
+
+    /* Muted: #99738E */
+    --muted: 239 57% 18%;
+    --muted-foreground: 320 15% 60%;
+
+    /* Accent / Alert: #F64C72 */
+    --accent: 345 90% 63%; /* #F64C72 */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 345 90% 63%; /* #F64C72 */
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success / Resolved: Primary color for "Решено" status */
+    --success: 240 57% 50%; /* #2F2FA2 - Lighter primary for dark mode */
+    --success-foreground: 0 0% 100%;
+
+    --border: 239 57% 20%;
+    --input: 239 57% 20%;
+    --ring: 240 57% 50%;
+    
+    /* Sidebar: Primary Dark / Navigation */
+    --sidebar-background: 239 57% 33%; /* #242582 */
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 240 57% 50%; /* Lighter primary for dark mode */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 57% 50%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 239 57% 25%;
+    --sidebar-ring: 240 57% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Fullscreen mode */
+  body.fullscreen-mode {
+    overflow: hidden;
+  }
+
+  body.fullscreen-mode #root {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+}

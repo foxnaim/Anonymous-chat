@@ -13,7 +13,7 @@ import type {
   AdminUser 
 } from "@/types";
 import type { PlatformStats } from "./types";
-import { API_CONFIG } from "./constants";
+import { DELAYS } from "./constants";
 
 // Симуляция задержки API
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -104,7 +104,7 @@ const mockCompanies: Company[] = [
     code: "ACME001",
     adminEmail: "admin@acme.com",
     status: "Активна",
-    plan: "Про",
+    plan: "Стандарт",
     registered: "2024-01-15",
     employees: 245,
     messages: 127,
@@ -172,7 +172,7 @@ const customPlans: SubscriptionPlan[] = [];
 // ========== MESSAGE SERVICES ==========
 export const messageService = {
   getAll: async (companyCode?: string): Promise<Message[]> => {
-    await delay(API_CONFIG.TIMEOUT / 3);
+    await delay(DELAYS.NORMAL);
     if (companyCode) {
       return mockMessages.filter((m) => m.companyCode === companyCode);
     }
@@ -180,12 +180,12 @@ export const messageService = {
   },
 
   getById: async (id: string): Promise<Message | null> => {
-    await delay(API_CONFIG.TIMEOUT / 3);
+    await delay(DELAYS.FAST);
     return mockMessages.find((m) => m.id === id) || null;
   },
 
   create: async (message: Omit<Message, "id" | "createdAt" | "updatedAt" | "lastUpdate">): Promise<Message> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
+    await delay(DELAYS.SLOW);
     const now = new Date().toISOString().split("T")[0];
     const newMessage: Message = {
       ...message,
@@ -199,7 +199,7 @@ export const messageService = {
   },
 
   update: async (id: string, updates: Partial<Message>): Promise<Message> => {
-    await delay(API_CONFIG.TIMEOUT / 3);
+    await delay(DELAYS.NORMAL);
     const message = mockMessages.find((m) => m.id === id);
     if (!message) throw new Error("Message not found");
     const now = new Date().toISOString().split("T")[0];
@@ -208,7 +208,7 @@ export const messageService = {
   },
 
   updateStatus: async (id: string, status: Message["status"], response?: string): Promise<Message> => {
-    await delay(API_CONFIG.TIMEOUT / 3);
+    await delay(DELAYS.NORMAL);
     const message = mockMessages.find((m) => m.id === id);
     if (!message) throw new Error("Message not found");
     const now = new Date().toISOString().split("T")[0];
@@ -225,22 +225,22 @@ export const messageService = {
 // ========== COMPANY SERVICES ==========
 export const companyService = {
   getAll: async (): Promise<Company[]> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
+    await delay(DELAYS.NORMAL);
     return mockCompanies;
   },
 
   getById: async (id: number): Promise<Company | null> => {
-    await delay(API_CONFIG.TIMEOUT / 3);
+    await delay(DELAYS.FAST);
     return mockCompanies.find((c) => c.id === id) || null;
   },
 
   getByCode: async (code: string): Promise<Company | null> => {
-    await delay(API_CONFIG.TIMEOUT / 3);
+    await delay(DELAYS.FAST);
     return mockCompanies.find((c) => c.code === code) || null;
   },
 
   create: async (company: Omit<Company, "id" | "registered" | "messages">): Promise<Company> => {
-    await delay(API_CONFIG.TIMEOUT);
+    await delay(DELAYS.SLOW);
     const registeredDate = new Date().toISOString().split("T")[0];
     const trialEndDate = company.trialEndDate || (() => {
       const endDate = new Date(registeredDate);
@@ -266,7 +266,7 @@ export const companyService = {
   },
 
   update: async (id: number, updates: Partial<Company>): Promise<Company> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
+    await delay(DELAYS.NORMAL);
     const company = mockCompanies.find((c) => c.id === id);
     if (!company) throw new Error("Company not found");
     Object.assign(company, updates);
@@ -274,7 +274,7 @@ export const companyService = {
   },
 
   updateStatus: async (id: number, status: Company["status"]): Promise<Company> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
+    await delay(DELAYS.NORMAL);
     const company = mockCompanies.find((c) => c.id === id);
     if (!company) throw new Error("Company not found");
     company.status = status;
@@ -285,31 +285,56 @@ export const companyService = {
 // ========== STATS SERVICES ==========
 export const statsService = {
   getCompanyStats: async (companyId: number): Promise<Stats> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
+    await delay(DELAYS.STATS);
     const company = mockCompanies.find((c) => c.id === companyId);
-    const filteredMessages = company ? mockMessages.filter((m) => m.companyCode === company.code) : [];
+    if (!company) {
+      return { new: 0, inProgress: 0, resolved: 0, total: 0 };
+    }
+    
+    // Оптимизация: один проход по массиву вместо множественных filter()
+    let newCount = 0;
+    let inProgressCount = 0;
+    let resolvedCount = 0;
+    
+    for (const message of mockMessages) {
+      if (message.companyCode === company.code) {
+        if (message.status === "Новое") newCount++;
+        else if (message.status === "В работе") inProgressCount++;
+        else if (message.status === "Решено") resolvedCount++;
+      }
+    }
+    
     return {
-      new: filteredMessages.filter((m) => m.status === "Новое").length,
-      inProgress: filteredMessages.filter((m) => m.status === "В работе").length,
-      resolved: filteredMessages.filter((m) => m.status === "Решено").length,
-      total: filteredMessages.length,
+      new: newCount,
+      inProgress: inProgressCount,
+      resolved: resolvedCount,
+      total: newCount + inProgressCount + resolvedCount,
     };
   },
 
   getMessageDistribution: async (companyId: number): Promise<MessageDistribution> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
+    await delay(DELAYS.STATS);
     const company = mockCompanies.find((c) => c.id === companyId);
     if (!company) return { complaints: 0, praises: 0, suggestions: 0 };
-    const companyMessages = mockMessages.filter((m) => m.companyCode === company.code);
-    return {
-      complaints: companyMessages.filter((m) => m.type === "complaint").length,
-      praises: companyMessages.filter((m) => m.type === "praise").length,
-      suggestions: companyMessages.filter((m) => m.type === "suggestion").length,
-    };
+    
+    // Оптимизация: один проход по массиву вместо множественных filter()
+    let complaints = 0;
+    let praises = 0;
+    let suggestions = 0;
+    
+    for (const message of mockMessages) {
+      if (message.companyCode === company.code) {
+        if (message.type === "complaint") complaints++;
+        else if (message.type === "praise") praises++;
+        else if (message.type === "suggestion") suggestions++;
+      }
+    }
+    
+    return { complaints, praises, suggestions };
   },
 
   getGrowthMetrics: async (companyId: number): Promise<GrowthMetrics> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
+    await delay(DELAYS.STATS);
     return {
       rating: 8.5,
       mood: "Позитивный",
@@ -318,7 +343,7 @@ export const statsService = {
   },
 
   getPlatformStats: async (): Promise<PlatformStats> => {
-    await delay(600);
+    await delay(DELAYS.FAST); // Платформенная статистика - очень быстрая
     return {
       rooms: 42,
       latency: "54ms",
@@ -330,7 +355,7 @@ export const statsService = {
 // ========== PLANS SERVICES ==========
 export const plansService = {
   getAll: async (): Promise<SubscriptionPlan[]> => {
-    await delay(API_CONFIG.TIMEOUT / 3);
+    await delay(DELAYS.NORMAL);
     const defaultPlans: SubscriptionPlan[] = [
       {
         id: "free",
@@ -346,9 +371,52 @@ export const plansService = {
         freePeriodDays: freePlanSettings.freePeriodDays,
         features: [
           {
-            ru: `До ${freePlanSettings.messagesLimit} сообщений в месяц`,
-            en: `Up to ${freePlanSettings.messagesLimit} messages per month`,
-            kk: `Айына ${freePlanSettings.messagesLimit} хабарламаға дейін`
+            ru: "Все функции на 2 месяца",
+            en: "All features for 2 months",
+            kk: "2 айға барлық функциялар"
+          },
+          {
+            ru: "Полный доступ ко всем возможностям платформы",
+            en: "Full access to all platform features",
+            kk: "Платформаның барлық мүмкіндіктеріне толық қол жетімділік"
+          },
+          {
+            ru: "Приём и ответы на сообщения",
+            en: "Receive and respond to messages",
+            kk: "Хабарламаларды қабылдау және жауап беру"
+          },
+          {
+            ru: "Аналитика и отчёты",
+            en: "Analytics and reports",
+            kk: "Аналитика және есептер"
+          },
+          {
+            ru: "Рейтинги и метрики",
+            en: "Ratings and metrics",
+            kk: "Рейтингтер және метрикалар"
+          }
+        ],
+      },
+      {
+        id: "standard",
+        name: {
+          ru: "Стандарт",
+          en: "Standard",
+          kk: "Стандарт"
+        },
+        price: 2999,
+        messagesLimit: 100,
+        storageLimit: 10,
+        features: [
+          {
+            ru: "Приём сообщений",
+            en: "Receive messages",
+            kk: "Хабарламаларды қабылдау"
+          },
+          {
+            ru: "Ответы на сообщения",
+            en: "Respond to messages",
+            kk: "Хабарламаларға жауап беру"
           },
           {
             ru: "Просмотр и управление сообщениями",
@@ -360,6 +428,11 @@ export const plansService = {
             en: "Basic statistics",
             kk: "Негізгі статистика"
           },
+          {
+            ru: "Распределение по типам сообщений",
+            en: "Message type distribution",
+            kk: "Хабарлама түрлері бойынша бөлу"
+          }
         ],
       },
       {
@@ -369,53 +442,55 @@ export const plansService = {
           en: "Pro",
           kk: "Про"
         },
-        price: 2999,
-        messagesLimit: 100,
-        storageLimit: 10,
-        features: [
-          {
-            ru: "До 100 сообщений в месяц",
-            en: "Up to 100 messages per month",
-            kk: "Айына 100 хабарламаға дейін"
-          },
-          {
-            ru: "Все функции бесплатного плана",
-            en: "All free plan features",
-            kk: "Тегін жоспардың барлық функциялары"
-          },
-          {
-            ru: "Расширенная аналитика",
-            en: "Advanced analytics",
-            kk: "Кеңейтілген аналитика"
-          },
-        ],
-      },
-      {
-        id: "business",
-        name: {
-          ru: "Бизнес",
-          en: "Business",
-          kk: "Бизнес"
-        },
         price: 9999,
         messagesLimit: 500,
         storageLimit: 50,
         features: [
           {
-            ru: "До 500 сообщений в месяц",
-            en: "Up to 500 messages per month",
-            kk: "Айына 500 хабарламаға дейін"
+            ru: "Приём и ответы на сообщения",
+            en: "Receive and respond to messages",
+            kk: "Хабарламаларды қабылдау және жауап беру"
           },
           {
-            ru: "Все функции плана Про",
-            en: "All Pro plan features",
-            kk: "Про жоспарының барлық функциялары"
+            ru: "Просмотр и управление сообщениями",
+            en: "View and manage messages",
+            kk: "Хабарламаларды көру және басқару"
           },
           {
-            ru: "Полная аналитика",
-            en: "Full analytics",
-            kk: "Толық аналитика"
+            ru: "Аналитика",
+            en: "Analytics",
+            kk: "Аналитика"
           },
+          {
+            ru: "Отчёты",
+            en: "Reports",
+            kk: "Есептер"
+          },
+          {
+            ru: "Рейтинги",
+            en: "Ratings",
+            kk: "Рейтингтер"
+          },
+          {
+            ru: "Детальная аналитика и метрики",
+            en: "Detailed analytics and metrics",
+            kk: "Толық аналитика және метрикалар"
+          },
+          {
+            ru: "Экспорт отчётов в PDF",
+            en: "PDF report export",
+            kk: "PDF есептерді экспорттау"
+          },
+          {
+            ru: "Анализ трендов",
+            en: "Trends analysis",
+            kk: "Трендтерді талдау"
+          },
+          {
+            ru: "Метрики роста",
+            en: "Growth metrics",
+            kk: "Өсу метрикалары"
+          }
         ],
       },
     ];
@@ -423,7 +498,7 @@ export const plansService = {
   },
 
   create: async (plan: Omit<SubscriptionPlan, "id">): Promise<SubscriptionPlan> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
+    await delay(DELAYS.NORMAL);
     const newPlan: SubscriptionPlan = {
       ...plan,
       id: `custom-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
@@ -433,12 +508,12 @@ export const plansService = {
   },
 
   getFreePlanSettings: async () => {
-    await delay(API_CONFIG.TIMEOUT / 5);
+    await delay(DELAYS.FAST);
     return freePlanSettings;
   },
 
   updateFreePlanSettings: async (settings: { messagesLimit: number; storageLimit: number; freePeriodDays: number }): Promise<void> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
+    await delay(DELAYS.NORMAL);
     freePlanSettings = { ...freePlanSettings, ...settings };
   },
 };
@@ -446,7 +521,7 @@ export const plansService = {
 // ========== ADMIN SERVICES ==========
 export const adminService = {
   getAdmins: async (): Promise<AdminUser[]> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
+    await delay(DELAYS.NORMAL);
     return [
       {
         id: "admin-1",
