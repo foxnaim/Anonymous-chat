@@ -4,7 +4,8 @@
 
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { loginAsync, logout, checkSessionAsync } from '../slices/authSlice';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 /**
  * Хук для работы с аутентификацией
@@ -13,13 +14,16 @@ import { useEffect } from 'react';
 export const useAuth = () => {
   const dispatch = useAppDispatch();
   const auth = useAppSelector((state) => state.auth);
+  const queryClient = useQueryClient();
+  const hasCheckedSession = useRef(false);
 
-  // Проверяем сессию при монтировании
+  // Проверяем сессию при монтировании (только один раз)
   useEffect(() => {
-    if (typeof window !== 'undefined' && !auth.user && !auth.isLoading) {
+    if (typeof window !== 'undefined' && !hasCheckedSession.current && auth.isLoading) {
+      hasCheckedSession.current = true;
       dispatch(checkSessionAsync());
     }
-  }, [dispatch, auth.user, auth.isLoading]);
+  }, [dispatch, auth.isLoading]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -31,7 +35,29 @@ export const useAuth = () => {
   };
 
   const handleLogout = () => {
+    // Очищаем Redux state немедленно (синхронно)
     dispatch(logout());
+    
+    // Все остальное делаем асинхронно, чтобы не блокировать UI
+    if (typeof window !== 'undefined') {
+      // Используем requestIdleCallback для неблокирующей очистки кэша
+      const clearCache = () => {
+        try {
+          queryClient.cancelQueries();
+          queryClient.clear();
+        } catch (error) {
+          // Игнорируем ошибки при очистке кэша
+          console.error('Error clearing query cache:', error);
+        }
+      };
+      
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(clearCache, { timeout: 1000 });
+      } else {
+        // Fallback для браузеров без requestIdleCallback
+        setTimeout(clearCache, 0);
+      }
+    }
   };
 
   return {

@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FiMessageSquare, FiCheckCircle, FiSend, FiLogIn, FiHome, FiX } from "react-icons/fi";
+import { FiMessageSquare, FiCheckCircle, FiSend, FiLogIn, FiHome, FiX, FiKey, FiHash, FiEye, FiEyeOff, FiSearch } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/redux";
 import { useCompanyByCode, companyService } from "@/lib/query";
@@ -14,6 +14,9 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SEO, WebsiteStructuredData, OrganizationStructuredData } from "@/lib/seo";
+import { useDebounce } from "@/hooks/use-debounce";
+import SendMessageModal from "./SendMessageModal";
+import CheckStatusModal from "./CheckStatusModal";
 
 const Welcome = () => {
   const { t } = useTranslation();
@@ -21,52 +24,92 @@ const Welcome = () => {
   const { isAuthenticated } = useAuth();
   const [companyCode, setCompanyCode] = useState("");
   const [validatedCode, setValidatedCode] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isVerifyingPassword, setIsVerifyingPassword] = useState(false);
+  const [isSendMessageModalOpen, setIsSendMessageModalOpen] = useState(false);
+  const [isCheckStatusModalOpen, setIsCheckStatusModalOpen] = useState(false);
 
-  const { data: company, isLoading: isValidating } = useCompanyByCode(companyCode, {
-    enabled: companyCode.length > 0 && companyCode.length <= 20,
+  const debouncedCode = useDebounce(companyCode, 500);
+
+  // Передаем код в хук только если он готов (8 символов), иначе пустую строку
+  const codeForQuery = debouncedCode.length === 8 ? debouncedCode : "";
+
+  const { data: company, isLoading: isValidating } = useCompanyByCode(codeForQuery, {
+    enabled: codeForQuery.length === 8,
     retry: false,
   });
+
+  // Автоматическая проверка кода только после ввода 8 символов
+  useEffect(() => {
+    // Сбрасываем валидацию, если код не равен 8 символам
+    if (debouncedCode.length !== 8) {
+      setValidatedCode(null);
+      return;
+    }
+
+    // Проверяем только когда код равен 8 символам
+    if (debouncedCode.length === 8 && company) {
+      if (company.status === t("admin.blocked")) {
+        toast.error(t("admin.blockCompany"));
+        setValidatedCode(null);
+        return;
+      }
+      setValidatedCode(debouncedCode);
+    } else if (debouncedCode.length === 8 && !isValidating && !company) {
+      setValidatedCode(null);
+    }
+  }, [company, debouncedCode, isValidating, t]);
 
   const handleCodeChange = (value: string) => {
     setCompanyCode(value.toUpperCase().trim());
     setValidatedCode(null);
+    setPassword("");
   };
 
-  const handleValidateCode = async () => {
-    if (!companyCode) {
+  const handleSendMessage = async () => {
+    if (!validatedCode) {
       toast.error(t("welcome.enterCode"));
       return;
     }
 
-    const foundCompany = await companyService.getByCode(companyCode);
-    if (!foundCompany) {
-      toast.error(t("welcome.codeInvalid"));
-      setValidatedCode(null);
+    if (validatedCode.length !== 8) {
+      toast.error(t("welcome.codeLengthError"));
       return;
     }
 
-    if (foundCompany.status === t("admin.blocked")) {
-      toast.error(t("admin.blockCompany"));
-      setValidatedCode(null);
+    if (!password) {
+      toast.error(t("welcome.passwordRequired"));
       return;
     }
 
-    setValidatedCode(companyCode);
-    toast.success(`${t("welcome.codeValid")}: ${foundCompany.name}`);
-  };
-
-  const handleSendMessage = () => {
-    if (!validatedCode) {
-      toast.error(t("sendMessage.codeRequired"));
+    if (password.length !== 10) {
+      toast.error(t("welcome.passwordLengthError"));
       return;
     }
-    router.push(`/send-message?code=${validatedCode}`);
+
+    setIsVerifyingPassword(true);
+    try {
+      const isValid = await companyService.verifyPassword(validatedCode, password);
+      if (!isValid) {
+        toast.error(t("welcome.passwordInvalid"));
+        setIsVerifyingPassword(false);
+        return;
+      }
+      // Открываем модальное окно вместо редиректа
+      setIsSendMessageModalOpen(true);
+      setIsVerifyingPassword(false);
+    } catch (error) {
+      toast.error(t("welcome.passwordError"));
+      setIsVerifyingPassword(false);
+    }
   };
 
   const steps = [
-    { number: "1", title: t("welcome.enterCode"), icon: FiMessageSquare },
-    { number: "2", title: t("sendMessage.enterMessage"), icon: FiSend },
-    { number: "3", title: t("checkStatus.messageId"), icon: FiCheckCircle },
+    { number: "1", title: t("sendMessage.step1Title"), icon: FiKey },
+    { number: "2", title: t("sendMessage.step2Title"), icon: FiMessageSquare },
+    { number: "3", title: t("sendMessage.step3Title"), icon: FiHash },
+    { number: "4", title: t("sendMessage.step4Title"), icon: FiSearch },
   ];
 
   return (
@@ -80,7 +123,7 @@ const Welcome = () => {
       />
       <WebsiteStructuredData />
       <OrganizationStructuredData />
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="h-screen bg-background flex flex-col overflow-hidden">
         {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
@@ -113,9 +156,9 @@ const Welcome = () => {
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-12 sm:py-20">
-        <div className="max-w-4xl w-full text-center space-y-8 sm:space-y-12">
-          <div className="space-y-4 sm:space-y-6">
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-3 sm:py-4 overflow-y-auto scrollbar-hide">
+        <div className="max-w-7xl w-full space-y-4 sm:space-y-6">
+          <div className="text-center space-y-2 sm:space-y-3">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight px-2">
               {t("welcome.title")}
             </h1>
@@ -124,82 +167,113 @@ const Welcome = () => {
             </p>
           </div>
 
-          {/* Company Code Input */}
-          <Card className="max-w-2xl mx-auto p-4 sm:p-6 md:p-8">
-            <div className="space-y-6">
-              <div className="text-center space-y-2">
+          {/* Main Content: Form and Steps */}
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 lg:gap-8 items-start">
+            {/* Company Code Input - Left Side */}
+            <Card className="w-full p-4 sm:p-5 md:p-6 order-2 lg:order-1">
+            <div className="space-y-4">
+              <div className="text-center space-y-1">
                 <h2 className="text-2xl font-bold text-foreground">{t("welcome.enterCode")}</h2>
-                <p className="text-muted-foreground">
-                  {t("welcome.companyCode")}
-                </p>
               </div>
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="company-code" className="text-sm sm:text-base font-medium">
-                    {t("welcome.companyCode")}
-                  </Label>
-                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                    <Input
-                      id="company-code"
-                      placeholder={t("welcome.companyCodePlaceholder")}
-                      value={companyCode}
-                      onChange={(e) => handleCodeChange(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && companyCode) {
-                          handleValidateCode();
-                        }
-                      }}
-                      className="text-base sm:text-lg font-mono tracking-wider text-center uppercase"
-                      maxLength={20}
-                      autoComplete="off"
-                    />
-                    <Button
-                      onClick={handleValidateCode}
-                      disabled={!companyCode || isValidating}
-                      size="lg"
-                      className="w-full sm:w-auto"
+                  <Input
+                    id="company-code"
+                    placeholder={t("welcome.companyCode")}
+                    value={companyCode}
+                    onChange={(e) => handleCodeChange(e.target.value)}
+                    className="text-base sm:text-lg font-mono tracking-wider text-center uppercase"
+                    maxLength={8}
+                    autoComplete="off"
+                  />
+                  {isValidating && (
+                    <p className="text-sm text-muted-foreground text-center">{t("common.loading")}</p>
+                  )}
+                  {!isValidating && companyCode.length > 0 && companyCode.length < 8 && (
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-xs text-muted-foreground text-center mt-1"
                     >
-                      {isValidating ? (
-                        t("common.loading")
-                      ) : validatedCode ? (
-                        <FiCheckCircle className="h-5 w-5" />
-                      ) : (
-                        t("welcome.validateCode")
-                      )}
-                    </Button>
-                  </div>
+                      {t("welcome.codeLengthHint")}
+                    </motion.p>
+                  )}
                 </div>
 
                 {company && validatedCode && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-primary/10 border border-primary/20 rounded-lg p-4"
+                    className="space-y-4"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                        <FiHome className="h-5 w-5 text-primary" />
+                    <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                          <FiHome className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-foreground">{company.name}</p>
+                          <p className="text-sm text-muted-foreground">{t("welcome.codeValid")}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setCompanyCode("");
+                            setValidatedCode(null);
+                            setPassword("");
+                          }}
+                        >
+                          <FiX className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-foreground">{company.name}</p>
-                        <p className="text-sm text-muted-foreground">{t("welcome.codeValid")}</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="company-password" className="text-sm sm:text-base font-medium">
+                        {t("welcome.companyPassword")}
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="company-password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder={t("welcome.companyPasswordPlaceholder")}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && password && validatedCode) {
+                              handleSendMessage();
+                            }
+                          }}
+                          className="text-base sm:text-lg pr-10"
+                          maxLength={10}
+                          autoComplete="off"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <FiEyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <FiEye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setCompanyCode("");
-                          setValidatedCode(null);
-                        }}
-                      >
-                        <FiX className="h-4 w-4" />
-                      </Button>
+                      {password.length > 0 && password.length !== 10 && (
+                        <p className="text-xs text-muted-foreground">
+                          {t("welcome.passwordLengthHint")}
+                        </p>
+                      )}
                     </div>
                   </motion.div>
                 )}
 
-                {companyCode && !company && !isValidating && validatedCode === null && (
+                {companyCode && !company && !isValidating && debouncedCode.length === 8 && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -210,21 +284,23 @@ const Welcome = () => {
                 )}
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <Button
                   size="lg"
-                  className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 h-auto flex-1"
+                  className="text-sm sm:text-base px-4 sm:px-6 py-3 sm:py-4 h-auto flex-1"
                   onClick={handleSendMessage}
-                  disabled={!validatedCode}
+                  disabled={!validatedCode || !password || isVerifyingPassword}
                 >
                   <FiSend className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="text-sm sm:text-base">{t("welcome.sendMessage")}</span>
+                  <span className="text-sm sm:text-base">
+                    {isVerifyingPassword ? t("common.loading") : t("welcome.sendMessage")}
+                  </span>
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 h-auto"
-                  onClick={() => router.push("/check-status")}
+                  className="text-sm sm:text-base px-4 sm:px-6 py-3 sm:py-4 h-auto"
+                  onClick={() => setIsCheckStatusModalOpen(true)}
                 >
                   <FiCheckCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                   <span className="text-sm sm:text-base">{t("welcome.checkStatus")}</span>
@@ -233,33 +309,82 @@ const Welcome = () => {
             </div>
           </Card>
 
-          {/* Steps */}
-          <Card className="max-w-3xl mx-auto p-4 sm:p-6 md:p-8 mt-8 sm:mt-12 md:mt-16">
-            <h3 className="text-base sm:text-lg font-semibold mb-6 sm:mb-8 text-foreground">{t("welcome.title")}</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
-              {steps.map((step, index) => (
-                <div key={index} className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-base sm:text-lg">
-                    {step.number}
-                  </div>
-                  <step.icon className="h-6 w-6 sm:h-8 sm:w-8 text-secondary" />
-                  <p className="text-xs sm:text-sm font-medium text-foreground">{step.title}</p>
+            {/* Three-Step Guide Section - Right Side */}
+            <div className="w-full p-3 sm:p-4 md:p-5 order-1 lg:order-2 lg:sticky lg:top-8 flex flex-col h-full">
+              <div className="space-y-3 flex-1">
+                <div className="text-center lg:text-left">
+                  <h3 className="text-lg sm:text-xl font-bold text-foreground mb-1">
+                    {t("welcome.howItWorks")}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {t("welcome.howItWorksDescription")}
+                  </p>
                 </div>
-              ))}
+                
+                <div className="space-y-3 lg:space-y-4">
+                  {steps.map((step, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      className="flex items-start gap-4 group"
+                    >
+                      {/* Icon Circle */}
+                      <div className="relative flex-shrink-0">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300" style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}>
+                          <step.icon className="h-6 w-6 sm:h-7 sm:w-7 text-primary-foreground" style={{ color: 'hsl(var(--primary-foreground))' }} />
+                        </div>
+                        {/* Number Badge */}
+                        <div className="absolute -top-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary flex items-center justify-center border-2 border-background shadow-md" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                          <span className="text-xs sm:text-sm font-bold text-primary-foreground" style={{ color: 'hsl(var(--primary-foreground))' }}>{step.number}</span>
+                        </div>
+                      </div>
+                      {/* Text */}
+                      <div className="flex-1 pt-1">
+                        <p className="text-sm sm:text-base font-semibold text-foreground leading-tight">
+                          {step.title}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </Card>
+          </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-card">
-        <div className="container mx-auto px-6 py-6">
-          <p className="text-sm text-muted-foreground text-center">
+      <footer className="border-t border-border bg-card shrink-0">
+        <div className="container mx-auto px-4 sm:px-6 py-2 sm:py-3">
+          <p className="text-xs text-muted-foreground text-center">
             © 2025 FeedbackHub. {t("welcome.anonymityGuaranteed")}
           </p>
         </div>
       </footer>
       </div>
+
+      {/* Модальное окно отправки сообщения */}
+      <SendMessageModal
+        open={isSendMessageModalOpen}
+        onOpenChange={setIsSendMessageModalOpen}
+        companyCode={validatedCode || ""}
+        companyName={company?.name || ""}
+        companyPlan={company?.plan}
+        onSuccess={() => {
+          // После успешной отправки можно сбросить форму
+          setCompanyCode("");
+          setValidatedCode(null);
+          setPassword("");
+        }}
+      />
+
+      {/* Модальное окно проверки статуса */}
+      <CheckStatusModal
+        open={isCheckStatusModalOpen}
+        onOpenChange={setIsCheckStatusModalOpen}
+      />
     </>
   );
 };

@@ -16,7 +16,6 @@ import {
   FiX,
 } from "react-icons/fi";
 import { useAuth } from "@/lib/redux";
-import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
@@ -26,7 +25,6 @@ export const AdminHeader = () => {
   const { t } = useTranslation();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navigation = [
@@ -120,7 +118,10 @@ export const AdminHeader = () => {
                           <button
                             onClick={() => {
                               logout();
-                              router.push("/");
+                              // Используем window.location для полного сброса состояния
+                              setTimeout(() => {
+                                window.location.href = "/";
+                              }, 50);
                             }}
                             className={cn(
                               "w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-md transition-colors",

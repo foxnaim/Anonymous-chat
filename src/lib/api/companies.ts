@@ -14,7 +14,7 @@ const mockCompanies: Company[] = [
   {
     id: 1,
     name: "Acme Corporation",
-    code: "ACME001",
+    code: "ACME0001",
     adminEmail: "admin@acme.com",
     status: "Активна",
     plan: "Про",
@@ -29,7 +29,7 @@ const mockCompanies: Company[] = [
   {
     id: 2,
     name: "TechStart Inc",
-    code: "TECH001",
+    code: "TECH0001",
     adminEmail: "sarah.smith@techstart.com",
     status: "Пробная",
     plan: "Бесплатный",
@@ -45,7 +45,7 @@ const mockCompanies: Company[] = [
   {
     id: 3,
     name: "Global Solutions",
-    code: "GLOB001",
+    code: "GLOB0001",
     adminEmail: "mike.jones@global.com",
     status: "Активна",
     plan: "Бизнес",
@@ -60,7 +60,7 @@ const mockCompanies: Company[] = [
   {
     id: 4,
     name: "StartupCo",
-    code: "STUP001",
+    code: "STUP0001",
     adminEmail: "lisa.wang@startup.com",
     status: "Заблокирована",
     plan: "Бесплатный",

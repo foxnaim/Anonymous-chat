@@ -272,7 +272,7 @@ const CompanySettings = () => {
                     <Label className="text-sm text-muted-foreground mb-2 block">{t("company.shareLink")}</Label>
                     <div className="flex items-center gap-3">
                       <Input
-                        value={`${typeof window !== 'undefined' ? window.location.origin : ''}/send-message?code=${company.code}`}
+                        value={`${typeof window !== 'undefined' ? window.location.origin : ''}/?code=${company.code}`}
                         readOnly
                         className="font-mono text-sm"
                         autoComplete="off"
@@ -280,7 +280,7 @@ const CompanySettings = () => {
                       <Button
                         variant="outline"
                         onClick={() => {
-                          const link = `${typeof window !== 'undefined' ? window.location.origin : ''}/send-message?code=${company.code}`;
+                          const link = `${typeof window !== 'undefined' ? window.location.origin : ''}/?code=${company.code}`;
                           navigator.clipboard.writeText(link);
                           toast.success(t("company.linkCopied"));
                         }}

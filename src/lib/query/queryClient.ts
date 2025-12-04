@@ -15,13 +15,13 @@ const getDefaultOptions = () => ({
     // Используем структурное разделение для лучшей производительности
     structuralSharing: true,
     // Улучшенная производительность
-    networkMode: 'online',
+    networkMode: 'online' as const,
   },
   mutations: {
     retry: 1,
     // Не показывать ошибки автоматически, пусть компоненты обрабатывают
     throwOnError: false,
-    networkMode: 'online',
+    networkMode: 'online' as const,
   },
 });
 

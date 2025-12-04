@@ -7,7 +7,7 @@ export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
   REGISTER: '/register',
-  SEND_MESSAGE: '/send-message',
+  SEND_MESSAGE: '/',
   CHECK_STATUS: '/check-status',
   COMPANY: '/company',
   ADMIN: '/admin',

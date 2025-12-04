@@ -74,10 +74,14 @@ export const useCompany = (id: number, options?: Omit<UseQueryOptions<Company | 
  * Хук для получения компании по коду
  */
 export const useCompanyByCode = (code: string, options?: Omit<UseQueryOptions<Company | null>, 'queryKey' | 'queryFn'>) => {
+  // Используем один queryKey для всех неполных кодов, чтобы не создавать лишние кэш-записи
+  const isValidCode = code && code.length === 8;
+  const queryKey = isValidCode ? queryKeys.companyByCode(code) : ['company-by-code', 'incomplete'] as const;
+  
   return useQuery({
-    queryKey: queryKeys.companyByCode(code),
+    queryKey,
     queryFn: () => companyService.getByCode(code),
-    enabled: !!code && code.length > 0,
+    enabled: isValidCode,
     retry: false,
     ...options,
   });

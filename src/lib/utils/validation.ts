@@ -10,17 +10,21 @@ import { z } from 'zod';
 export const emailSchema = z.string().email('Некорректный email адрес');
 
 /**
+ * Валидация пароля компании (точно 10 символов)
+ */
+export const companyPasswordSchema = z.string().length(10, 'Пароль компании должен содержать ровно 10 символов');
+
+/**
  * Валидация пароля (минимум 6 символов)
  */
 export const passwordSchema = z.string().min(6, 'Пароль должен содержать минимум 6 символов');
 
 /**
- * Валидация кода компании
+ * Валидация кода компании (точно 8 символов)
  */
 export const companyCodeSchema = z
   .string()
-  .min(3, 'Код должен содержать минимум 3 символа')
-  .max(20, 'Код не должен превышать 20 символов')
+  .length(8, 'Код компании должен содержать ровно 8 символов')
   .regex(/^[A-Z0-9]+$/, 'Код должен содержать только заглавные буквы и цифры');
 
 /**
@@ -45,7 +49,14 @@ export const isValidPassword = (password: string): boolean => {
 };
 
 /**
- * Проверка валидности кода компании
+ * Проверка валидности пароля компании (точно 10 символов)
+ */
+export const isValidCompanyPassword = (password: string): boolean => {
+  return companyPasswordSchema.safeParse(password).success;
+};
+
+/**
+ * Проверка валидности кода компании (точно 8 символов)
  */
 export const isValidCompanyCode = (code: string): boolean => {
   return companyCodeSchema.safeParse(code).success;

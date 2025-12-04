@@ -152,6 +152,14 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 
+  /* Блокировка скролла для страницы отправки сообщения */
+  body.no-scroll {
+    overflow: hidden !important;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
   /* Fullscreen mode */
   body.fullscreen-mode {
     overflow: hidden;

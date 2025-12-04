@@ -71,6 +71,7 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
+      state.isLoading = false; // Явно устанавливаем isLoading в false при выходе
       if (typeof window !== 'undefined') {
         localStorage.removeItem(STORAGE_KEYS.USER);
         localStorage.removeItem(STORAGE_KEYS.PASSWORD);
@@ -107,6 +108,11 @@ const authSlice = createSlice({
       .addCase(checkSessionAsync.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = !!action.payload;
+        state.isLoading = false;
+      })
+      .addCase(checkSessionAsync.rejected, (state) => {
+        state.user = null;
+        state.isAuthenticated = false;
         state.isLoading = false;
       });
   },
