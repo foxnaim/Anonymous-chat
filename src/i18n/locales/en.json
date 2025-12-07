@@ -24,7 +24,9 @@
     "backToHome": "Back to home",
     "free": "Free",
     "add": "Add",
-    "fillAllFields": "Please fill all fields"
+    "copy": "Copy",
+    "fillAllFields": "Please fill all fields",
+    "passwordMinLength": "Minimum {{length}} characters"
   },
   "welcome": {
     "title": "Send anonymous feedback to your company",
@@ -394,6 +396,7 @@
     "noData": "No data available",
     "adminDeleted": "Administrator deleted",
     "addAdmin": "Add Administrator",
+    "superAdminOnly": "Available only for super admin",
     "searchAdmins": "Search administrators...",
     "superAdmin": "Super Admin",
     "administrator": "Administrator",

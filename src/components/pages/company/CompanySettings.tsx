@@ -29,7 +29,7 @@ const CompanySettings = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { isFullscreen, toggleFullscreen } = useFullscreen(
-    user?.role === "company" || user?.role === "admin" ? user.role : null
+    user?.role === "company" || user?.role === "admin" || user?.role === "super_admin" ? user.role : null
   );
   const { data: company, isLoading } = useCompany(user?.companyId || 0, {
     enabled: !!user?.companyId,

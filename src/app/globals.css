@@ -160,24 +160,32 @@ All colors MUST be HSL.
     height: 100%;
   }
 
-  /* Fullscreen mode */
-  html.fullscreen-mode,
-  body.fullscreen-mode {
+  /* Fullscreen mode - скрываем элементы браузера без блокировки кликов */
+  html.fullscreen-mode {
     overflow: hidden;
-    position: fixed;
-    width: 100%;
     height: 100%;
   }
 
-  html.fullscreen-mode body {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100vw;
+  body.fullscreen-mode {
+    overflow: hidden;
     height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+    width: 100vw;
+    position: relative;
+  }
+
+  /* Гарантируем, что все элементы кликабельны в полноэкранном режиме */
+  body.fullscreen-mode * {
+    pointer-events: auto !important;
+  }
+
+  /* Особенно важно для интерактивных элементов */
+  body.fullscreen-mode button,
+  body.fullscreen-mode a,
+  body.fullscreen-mode [role="button"],
+  body.fullscreen-mode tr,
+  body.fullscreen-mode td,
+  body.fullscreen-mode [onclick] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
   }
 }

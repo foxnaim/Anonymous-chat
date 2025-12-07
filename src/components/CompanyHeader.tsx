@@ -1,10 +1,11 @@
 'use client';
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
+  FiArrowLeft,
   FiLayout,
   FiMessageSquare,
   FiAward,
@@ -24,6 +25,7 @@ import { Menu as HeadlessMenu, Transition } from "@headlessui/react";
 export const CompanyHeader = () => {
   const { t } = useTranslation();
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -40,6 +42,14 @@ export const CompanyHeader = () => {
       <div className="container flex h-14 sm:h-16 items-center justify-between px-4 sm:px-6">
         {/* Logo */}
         <div className="flex items-center gap-2 sm:gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden sm:flex h-9 w-9"
+            onClick={() => router.push("/admin")}
+          >
+            <FiArrowLeft className="h-4 w-4" />
+          </Button>
           <Link href="/company" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
             <h1 className="text-lg sm:text-xl font-bold text-primary">FeedbackHub</h1>
           </Link>

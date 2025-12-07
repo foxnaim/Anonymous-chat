@@ -26,7 +26,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
       if (!roles.includes(user.role)) {
         if (user.role === "company") {
           router.push("/company");
-        } else if (user.role === "admin") {
+        } else if (user.role === "admin" || user.role === "super_admin") {
           router.push("/admin");
         } else {
           router.push("/");

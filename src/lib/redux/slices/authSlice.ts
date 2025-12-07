@@ -15,7 +15,7 @@ const mockUsers = {
   admin: {
     id: "admin-1",
     email: "admin@feedbackhub.com",
-    role: "admin" as const,
+    role: "super_admin" as const,
     name: "Super Admin",
   },
 };
@@ -27,9 +27,13 @@ const initialState: AuthState = {
 };
 
 // Async thunk для логина
-export const loginAsync = createAsyncThunk(
+export const loginAsync = createAsyncThunk<
+  User,
+  { email: string; password: string },
+  { rejectValue: string }
+>(
   'auth/login',
-  async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
+  async ({ email, password }, { rejectWithValue }) => {
     // Симуляция API запроса
     await new Promise((resolve) => setTimeout(resolve, 500));
     
@@ -46,7 +50,11 @@ export const loginAsync = createAsyncThunk(
 );
 
 // Async thunk для проверки сессии
-export const checkSessionAsync = createAsyncThunk(
+export const checkSessionAsync = createAsyncThunk<
+  User | null,
+  void,
+  { rejectValue: string }
+>(
   'auth/checkSession',
   async () => {
     if (typeof window === 'undefined') return null;
