@@ -60,7 +60,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${inter.className} overflow-x-hidden`}>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

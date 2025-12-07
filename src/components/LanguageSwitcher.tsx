@@ -36,23 +36,24 @@ export const LanguageSwitcher = memo(() => {
   return (
     <Listbox value={currentLanguage.code} onChange={changeLanguage}>
       {({ open }) => (
-        <div className="relative">
+        <div className="relative w-full min-w-0 max-w-full">
           <Listbox.Button
             className={cn(
-              "relative w-full cursor-pointer rounded-lg bg-white border border-border py-2 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 sm:text-sm",
-              "hover:bg-muted/50 transition-colors"
+              "relative w-full cursor-pointer rounded-lg bg-white dark:bg-card border border-border py-1.5 sm:py-2 pl-2 sm:pl-3 pr-8 sm:pr-10 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 text-xs sm:text-sm",
+              "hover:bg-muted/50 transition-colors h-8 sm:h-9 md:h-10 min-w-0 max-w-full"
             )}
           >
-            <span className="flex items-center gap-2">
-              <FiGlobe className="h-4 w-4 text-muted-foreground" />
-              <span className="block truncate font-medium text-foreground">
-                {currentLanguage.flag} {currentLanguage.name}
+            <span className="flex items-center gap-1 sm:gap-2 min-w-0">
+              <FiGlobe className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+              <span className="block truncate font-medium text-foreground min-w-0 max-w-full">
+                <span className="hidden sm:inline">{currentLanguage.flag} {currentLanguage.name}</span>
+                <span className="sm:hidden">{currentLanguage.flag}</span>
               </span>
             </span>
-            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1.5 sm:pr-2">
               <FiChevronDown
                 className={cn(
-                  "h-4 w-4 text-muted-foreground transition-transform",
+                  "h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground transition-transform flex-shrink-0",
                   open && "rotate-180"
                 )}
                 aria-hidden="true"
@@ -66,7 +67,7 @@ export const LanguageSwitcher = memo(() => {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Listbox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white border border-border py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+            <Listbox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white dark:bg-card border border-border py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none min-w-[140px]">
               {languages.map((language) => (
                 <Listbox.Option
                   key={language.code}
