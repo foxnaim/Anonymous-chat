@@ -32,6 +32,7 @@ export const queryKeys = {
   companyStats: (companyId: number) => ['stats', companyId] as const,
   messageDistribution: (companyId: number) => ['message-distribution', companyId] as const,
   growthMetrics: (companyId: number) => ['growth-metrics', companyId] as const,
+  achievements: (companyId: number) => ['achievements', companyId] as const,
   
   // Plans
   plans: ['plans'] as const,

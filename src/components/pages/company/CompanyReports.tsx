@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FiDownload } from "react-icons/fi";
+import { FiDownload, FiMessageSquare, FiAlertCircle, FiAward, FiZap, FiBarChart2, FiCheckCircle, FiX, FiTrendingUp } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import { jsPDF } from "jspdf";
@@ -174,162 +174,213 @@ const CompanyReports = () => {
   };
   
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       <CompanyHeader />
-      <div className="flex flex-col">
-        <div className="border-b border-border bg-card">
-          <div className="container px-6 py-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-foreground">{t("company.reports")}</h2>
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="border-b border-border bg-card flex-shrink-0">
+          <div className="container px-6 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-muted-foreground">{t("company.selectMonth")}:</label>
+                  <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getMonthOptions().map((month) => (
+                        <SelectItem key={month.value} value={month.value}>
+                          {month.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-muted-foreground">{t("company.selectYear")}:</label>
+                  <Select value={selectedYear} onValueChange={setSelectedYear}>
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getYearOptions().map((year) => (
+                        <SelectItem key={year.value} value={year.value}>
+                          {year.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
               <Button onClick={generatePDFReport} disabled={isLoading}>
                 <FiDownload className="h-4 w-4 mr-2" />
                 {t("company.downloadMonthlyReport")}
               </Button>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-muted-foreground">{t("company.selectMonth")}:</label>
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getMonthOptions().map((month) => (
-                      <SelectItem key={month.value} value={month.value}>
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-                <label className="text-sm text-muted-foreground">{t("company.selectYear")}:</label>
-                <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="w-[120px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getYearOptions().map((year) => (
-                      <SelectItem key={year.value} value={year.value}>
-                        {year.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+          </div>
         </div>
-        <main className="container flex-1 p-6 space-y-6">
+        <main className="flex-1 p-6 flex flex-col overflow-hidden">
           {isLoading ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">{t("common.loading")}</p>
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="p-6">
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">{t("admin.totalMessages")}</p>
-                    <p className="text-3xl font-bold text-foreground">{total}</p>
+            <div className="flex flex-col gap-6 h-full">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 flex-1">
+                <Card className="p-8 border-primary/20 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.1), hsl(var(--primary) / 0.05))' }}>
+                  <div className="absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 opacity-20" style={{ backgroundColor: 'hsl(var(--primary))' }}></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="p-3 rounded-lg" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                        <FiMessageSquare className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                    <p className="text-sm font-medium mb-2" style={{ color: 'hsl(var(--primary))' }}>{t("admin.totalMessages")}</p>
+                    <p className="text-5xl font-bold mb-1" style={{ color: 'hsl(var(--primary))' }}>{total}</p>
                   </div>
                 </Card>
-                <Card className="p-6">
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">{t("sendMessage.complaint")}</p>
-                    <p className="text-3xl font-bold text-accent">{distribution?.complaints || 0}</p>
-                    <p className="text-xs text-muted-foreground">{complaintsPercent}%</p>
+                <Card className="p-8 border-accent/20 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden" style={{ background: 'linear-gradient(to bottom right, hsl(var(--accent) / 0.1), hsl(var(--accent) / 0.05))' }}>
+                  <div className="absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 opacity-20" style={{ backgroundColor: 'hsl(var(--accent))' }}></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="p-3 rounded-lg" style={{ backgroundColor: 'hsl(var(--accent))' }}>
+                        <FiAlertCircle className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                    <p className="text-sm font-medium mb-2" style={{ color: 'hsl(var(--accent))' }}>{t("sendMessage.complaint")}</p>
+                    <p className="text-5xl font-bold mb-1" style={{ color: 'hsl(var(--accent))' }}>{distribution?.complaints || 0}</p>
+                    <p className="text-lg font-semibold" style={{ color: 'hsl(var(--accent))' }}>{complaintsPercent}%</p>
                   </div>
                 </Card>
-                <Card className="p-6">
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">{t("sendMessage.praise")}</p>
-                    <p className="text-3xl font-bold text-secondary">{distribution?.praises || 0}</p>
-                    <p className="text-xs text-muted-foreground">{praisesPercent}%</p>
+                <Card className="p-8 border-secondary/20 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden" style={{ background: 'linear-gradient(to bottom right, hsl(var(--secondary) / 0.1), hsl(var(--secondary) / 0.05))' }}>
+                  <div className="absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 opacity-20" style={{ backgroundColor: 'hsl(var(--secondary))' }}></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="p-3 rounded-lg" style={{ backgroundColor: 'hsl(var(--secondary))' }}>
+                        <FiAward className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                    <p className="text-sm font-medium mb-2" style={{ color: 'hsl(var(--secondary))' }}>{t("sendMessage.praise")}</p>
+                    <p className="text-5xl font-bold mb-1" style={{ color: 'hsl(var(--secondary))' }}>{distribution?.praises || 0}</p>
+                    <p className="text-lg font-semibold" style={{ color: 'hsl(var(--secondary))' }}>{praisesPercent}%</p>
                   </div>
                 </Card>
-                <Card className="p-6">
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">{t("sendMessage.suggestion")}</p>
-                    <p className="text-3xl font-bold text-primary">{distribution?.suggestions || 0}</p>
-                    <p className="text-xs text-muted-foreground">{suggestionsPercent}%</p>
+                <Card className="p-8 border-primary/20 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.08))' }}>
+                  <div className="absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 opacity-20" style={{ backgroundColor: 'hsl(var(--primary))' }}></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="p-3 rounded-lg" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                        <FiZap className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                    <p className="text-sm font-medium mb-2" style={{ color: 'hsl(var(--primary))' }}>{t("sendMessage.suggestion")}</p>
+                    <p className="text-5xl font-bold mb-1" style={{ color: 'hsl(var(--primary))' }}>{distribution?.suggestions || 0}</p>
+                    <p className="text-lg font-semibold" style={{ color: 'hsl(var(--primary))' }}>{suggestionsPercent}%</p>
                   </div>
                 </Card>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">{t("company.messageDistribution")}</h3>
-                  <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
+                <Card className="p-8 border-border shadow-lg hover:shadow-xl transition-shadow bg-card">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 rounded-lg bg-muted">
+                      <FiBarChart2 className="h-5 w-5 text-foreground" />
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">{t("company.messageDistribution")}</h3>
+                  </div>
+                  <div className="space-y-5">
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-sm font-medium">
                         <span className="text-muted-foreground">{t("sendMessage.complaint")}</span>
-                        <span className="font-semibold">{complaintsPercent}%</span>
+                        <span className="font-bold" style={{ color: 'hsl(var(--accent))' }}>{complaintsPercent}%</span>
                       </div>
-                      <div className="h-3 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-accent" style={{ width: `${complaintsPercent}%` }}></div>
+                      <div className="h-4 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${complaintsPercent}%`, backgroundColor: 'hsl(var(--accent))' }}></div>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-sm font-medium">
                         <span className="text-muted-foreground">{t("sendMessage.praise")}</span>
-                        <span className="font-semibold">{praisesPercent}%</span>
+                        <span className="font-bold" style={{ color: 'hsl(var(--secondary))' }}>{praisesPercent}%</span>
                       </div>
-                      <div className="h-3 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-secondary" style={{ width: `${praisesPercent}%` }}></div>
+                      <div className="h-4 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${praisesPercent}%`, backgroundColor: 'hsl(var(--secondary))' }}></div>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-sm font-medium">
                         <span className="text-muted-foreground">{t("sendMessage.suggestion")}</span>
-                        <span className="font-semibold">{suggestionsPercent}%</span>
+                        <span className="font-bold" style={{ color: 'hsl(var(--primary))' }}>{suggestionsPercent}%</span>
                       </div>
-                      <div className="h-3 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-primary" style={{ width: `${suggestionsPercent}%` }}></div>
+                      <div className="h-4 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${suggestionsPercent}%`, backgroundColor: 'hsl(var(--primary))' }}></div>
                       </div>
                     </div>
                   </div>
                 </Card>
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">{t("company.resolvedCases")}</h3>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">{t("company.resolved")}</span>
-                      <span className="text-2xl font-bold text-success">{resolved}</span>
+                <Card className="p-8 border-border shadow-lg hover:shadow-xl transition-shadow bg-card" style={{ background: 'linear-gradient(to bottom right, hsl(var(--success) / 0.08), hsl(var(--success) / 0.03))' }}>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 rounded-lg" style={{ backgroundColor: 'hsl(var(--success))' }}>
+                      <FiCheckCircle className="h-5 w-5 text-white" />
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">{t("company.unresolved")}</span>
-                      <span className="text-2xl font-bold text-accent">{unresolved}</span>
+                    <h3 className="text-xl font-bold text-foreground">{t("company.resolvedCases")}</h3>
+                  </div>
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--success) / 0.3)' }}>
+                      <div className="flex items-center gap-3">
+                        <FiCheckCircle className="h-5 w-5" style={{ color: 'hsl(var(--success))' }} />
+                        <span className="text-sm font-medium text-muted-foreground">{t("company.resolved")}</span>
+                      </div>
+                      <span className="text-4xl font-bold" style={{ color: 'hsl(var(--success))' }}>{resolved}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--accent) / 0.3)' }}>
+                      <div className="flex items-center gap-3">
+                        <FiX className="h-5 w-5" style={{ color: 'hsl(var(--accent))' }} />
+                        <span className="text-sm font-medium text-muted-foreground">{t("company.unresolved")}</span>
+                      </div>
+                      <span className="text-4xl font-bold" style={{ color: 'hsl(var(--accent))' }}>{unresolved}</span>
                     </div>
                     <div className="pt-4 border-t border-border">
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">{t("company.resolutionRate")}</span>
-                        <span className="text-lg font-semibold">
+                        <span className="text-sm font-medium text-muted-foreground">{t("company.resolutionRate")}</span>
+                        <span className="text-2xl font-bold" style={{ color: 'hsl(var(--success))' }}>
                           {total > 0 ? Math.round((resolved / total) * 100) : 0}%
                         </span>
                       </div>
                     </div>
                   </div>
                 </Card>
-              </div>
-              {growthMetrics && (
-                  <Card className="p-6">
-                    <h3 className="text-lg font-semibold mb-4">{t("company.teamMood")}</h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">{t("company.growthRating")}</span>
-                        <span className="text-2xl font-bold">{growthMetrics.rating}</span>
+                {growthMetrics && (
+                  <Card className="p-8 border-border shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden bg-card" style={{ background: 'linear-gradient(to bottom right, hsl(var(--secondary) / 0.1), hsl(var(--secondary) / 0.05))' }}>
+                    <div className="absolute top-0 right-0 w-40 h-40 rounded-full -mr-20 -mt-20 opacity-20" style={{ backgroundColor: 'hsl(var(--secondary))' }}></div>
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 rounded-lg" style={{ backgroundColor: 'hsl(var(--secondary))' }}>
+                          <FiTrendingUp className="h-5 w-5 text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold text-foreground">{t("company.teamMood")}</h3>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">{t("company.overallMood")}</span>
-                        <span className="text-lg font-semibold">{getMoodLabel(growthMetrics.mood)}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">{t("company.trend")}</span>
-                        <span className="text-lg font-semibold">{getTrendLabel(growthMetrics.trend)}</span>
+                      <div className="space-y-6">
+                        <div className="p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-muted-foreground">{t("company.growthRating")}</span>
+                            <span className="text-5xl font-bold" style={{ color: 'hsl(var(--secondary))' }}>{growthMetrics.rating}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>
+                          <span className="text-sm font-medium text-muted-foreground">{t("company.overallMood")}</span>
+                          <span className="text-lg font-bold" style={{ color: 'hsl(var(--secondary))' }}>{getMoodLabel(growthMetrics.mood)}</span>
+                        </div>
+                        <div className="flex items-center justify-between p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>
+                          <span className="text-sm font-medium text-muted-foreground">{t("company.trend")}</span>
+                          <span className="text-lg font-bold" style={{ color: 'hsl(var(--success))' }}>{getTrendLabel(growthMetrics.trend)}</span>
+                        </div>
                       </div>
                     </div>
                   </Card>
                 )}
-              </>
-            )}
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

@@ -190,6 +190,8 @@
     "negative": "Негативный",
     "neutral": "Нейтральный",
     "growthRating": "Рейтинг роста",
+    "growthRatingInfo": "Информация о рейтинге роста",
+    "growthRatingTooltip": "Рейтинг формируется исходя из времени ответа и решенных проблем",
     "cultureStrong": "Культура обратной связи в вашей компании сильна",
     "searchMessages": "Поиск сообщений...",
     "currentPlan": "Текущий план",
@@ -205,12 +207,55 @@
     "messagesLabel": "Сообщений",
     "storageLabel": "Хранилище",
     "achievements": "Достижения",
-    "achievementFirst10": "Получить первые 10 отзывов",
-    "achievement50": "Получить 50 отзывов",
-    "achievement100": "Получить 100 отзывов",
-    "achievement50Resolved": "Решить 50 проблем",
-    "achievementMonthNoComplaints": "Месяц без жалоб",
+    "noAchievements": "Пока нет достижений",
     "completed": "Завершено",
+    "achievement": {
+      "level": "Уровень {{current}} из {{max}}",
+      "category": {
+        "reviews": "Количество отзывов",
+        "resolved": "Решенные проблемы",
+        "responseSpeed": "Скорость ответа",
+        "activity": "Активность",
+        "quality": "Качество работы",
+        "longevity": "Долгосрочность"
+      },
+      "reviews": {
+        "level": "Уровень {{level}}: {{target}} отзывов",
+        "description": "Соберите {{target}} отзывов от сотрудников"
+      },
+      "resolved": {
+        "level": "Уровень {{level}}: {{target}} решенных проблем",
+        "description": "Решите {{target}} проблем, поднятых сотрудниками"
+      },
+      "responseSpeed": {
+        "level": "Уровень {{level}}: {{target}} быстрых ответов",
+        "description": "Ответьте на {{target}} сообщений в течение 1 дня"
+      },
+      "activity": {
+        "week": "Неделя активности",
+        "week.description": "Получите минимум 5 сообщений за неделю",
+        "month": "Месяц активности",
+        "month.description": "Получите минимум 10 сообщений за месяц",
+        "noComplaintsMonth": "Месяц без жалоб",
+        "noComplaintsMonth.description": "Проведите месяц без жалоб от сотрудников",
+        "consistent": "Стабильная активность",
+        "consistent.description": "3 месяца подряд с активностью (минимум 5 сообщений в месяц)"
+      },
+      "quality": {
+        "highResolution": "Высокий процент решения",
+        "highResolution.description": "Решите {{target}}% всех проблем",
+        "excellentResolution": "Отличный процент решения",
+        "excellentResolution.description": "Решите {{target}}% всех проблем",
+        "manyPraises": "Много похвал",
+        "manyPraises.description": "Получите {{target}} похвал от сотрудников",
+        "positiveRatio": "Позитивная обратная связь",
+        "positiveRatio.description": "{{target}}% положительных отзывов (похвалы и предложения)"
+      },
+      "longevity": {
+        "level": "Уровень {{level}}: {{target}} месяцев",
+        "description": "Работайте с платформой {{target}} месяцев"
+      }
+    },
     "totalReviews": "Всего отзывов",
     "perMonth": "в месяц",
     "resolvedProblems": "Решенных проблем",

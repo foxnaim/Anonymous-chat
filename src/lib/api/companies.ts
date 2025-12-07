@@ -2,9 +2,10 @@
  * API сервисы для работы с компаниями, статистикой, планами и админами
  */
 
-import { Company, Stats, MessageDistribution, GrowthMetrics, SubscriptionPlan, AdminUser } from "@/types";
+import { Company, Stats, MessageDistribution, GrowthMetrics, SubscriptionPlan, AdminUser, AchievementProgress } from "@/types";
 import { messageApi } from "./messages";
 import { API_CONFIG } from "../query/constants";
+import { getCompanyAchievements, getGroupedAchievements, type GroupedAchievements } from "../achievements";
 
 // Симуляция задержки API
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -161,11 +162,139 @@ export const statsApi = {
 
   getGrowthMetrics: async (companyId: number): Promise<GrowthMetrics> => {
     await delay(API_CONFIG.TIMEOUT / 2);
-    return {
-      rating: 8.5,
-      mood: "Позитивный",
-      trend: "up",
+    const company = mockCompanies.find((c) => c.id === companyId);
+    if (!company) {
+      return {
+        rating: 0,
+        mood: "Нейтральный",
+        trend: "stable",
+        pointsBreakdown: {
+          totalMessages: 0,
+          resolvedCases: 0,
+          responseSpeed: 0,
+          activityBonus: 0,
+          achievementsBonus: 0,
+        },
+      };
+    }
+
+    const companyMessages = await messageApi.getAll(company.code);
+    
+    // Получаем статистику напрямую
+    const filteredMessages = companyMessages;
+    const stats = {
+      new: filteredMessages.filter((m) => m.status === "Новое").length,
+      inProgress: filteredMessages.filter((m) => m.status === "В работе").length,
+      resolved: filteredMessages.filter((m) => m.status === "Решено").length,
+      total: filteredMessages.length,
     };
+    
+    const distribution = {
+      complaints: filteredMessages.filter((m) => m.type === "complaint").length,
+      praises: filteredMessages.filter((m) => m.type === "praise").length,
+      suggestions: filteredMessages.filter((m) => m.type === "suggestion").length,
+    };
+
+    // Расчет баллов за решенные проблемы
+    // Учитываем только решенные жалобы и предложения
+    const resolvedComplaints = companyMessages.filter(
+      (m) => m.type === "complaint" && m.status === "Решено"
+    ).length;
+    const resolvedSuggestions = companyMessages.filter(
+      (m) => m.type === "suggestion" && m.status === "Решено"
+    ).length;
+    const totalResolved = resolvedComplaints + resolvedSuggestions;
+    const totalProblems = distribution.complaints + distribution.suggestions;
+    
+    // Баллы за решенные проблемы (максимум 50 баллов)
+    // Процент решенных проблем от общего количества проблем
+    const resolvedRatio = totalProblems > 0 ? (totalResolved / totalProblems) : 0;
+    const resolvedPoints = resolvedRatio * 50; // 0-50 баллов
+
+    // Расчет баллов за скорость ответа
+    // Учитываем только сообщения с ответами
+    let responseSpeedPoints = 0;
+    let totalResponses = 0;
+    
+    companyMessages.forEach((msg) => {
+      if (msg.companyResponse && msg.updatedAt) {
+        totalResponses++;
+        const created = new Date(msg.createdAt);
+        const updated = new Date(msg.updatedAt);
+        const daysDiff = Math.floor((updated.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+        
+        // Баллы за скорость ответа (быстрее = больше баллов)
+        if (daysDiff <= 1) responseSpeedPoints += 5;
+        else if (daysDiff <= 3) responseSpeedPoints += 3;
+        else if (daysDiff <= 7) responseSpeedPoints += 1;
+      }
+    });
+    
+    // Нормализуем баллы за скорость ответа (максимум 50 баллов)
+    // Если есть ответы, нормализуем по максимальному количеству баллов
+    const maxSpeedPoints = totalResponses * 5; // Максимум если все ответы в течение 1 дня
+    const normalizedSpeedPoints = maxSpeedPoints > 0 ? (responseSpeedPoints / maxSpeedPoints) * 50 : 0;
+
+    // Общая сумма баллов (только решенные проблемы + скорость ответа)
+    // Максимум 100 баллов = 10.0 рейтинг
+    const totalPoints = resolvedPoints + normalizedSpeedPoints;
+    
+    // Конвертация в рейтинг (максимум 100 баллов = 10.0)
+    const rating = Math.min(10, Math.round((totalPoints / 10) * 10) / 10);
+
+    // Определение настроения
+    let mood: "Позитивный" | "Нейтральный" | "Негативный" = "Нейтральный";
+    if (rating >= 7) mood = "Позитивный";
+    else if (rating <= 4) mood = "Негативный";
+
+    // Определение тренда на основе изменения рейтинга
+    // Упрощенная версия - можно улучшить с историей
+    const trend: "up" | "down" | "stable" = "stable";
+
+    // Расчет прогресса до следующего уровня
+    const currentLevel = Math.floor(rating);
+    const nextLevel = Math.min(10, currentLevel + 1);
+    const progress = ((rating - currentLevel) / 1) * 100;
+
+    return {
+      rating,
+      mood,
+      trend,
+      pointsBreakdown: {
+        totalMessages: 0,
+        resolvedCases: resolvedPoints,
+        responseSpeed: normalizedSpeedPoints,
+        activityBonus: 0,
+        achievementsBonus: 0,
+      },
+      nextLevel: {
+        current: currentLevel,
+        next: nextLevel,
+        progress: Math.round(progress),
+      },
+    };
+  },
+
+  getAchievements: async (companyId: number): Promise<AchievementProgress[]> => {
+    await delay(API_CONFIG.TIMEOUT / 2);
+    const company = mockCompanies.find((c) => c.id === companyId);
+    if (!company) {
+      return [];
+    }
+
+    const companyMessages = await messageApi.getAll(company.code);
+    return getCompanyAchievements(companyMessages, company);
+  },
+
+  getGroupedAchievements: async (companyId: number): Promise<GroupedAchievements[]> => {
+    await delay(API_CONFIG.TIMEOUT / 2);
+    const company = mockCompanies.find((c) => c.id === companyId);
+    if (!company) {
+      return [];
+    }
+
+    const companyMessages = await messageApi.getAll(company.code);
+    return getGroupedAchievements(companyMessages, company);
   },
 };
 
@@ -201,23 +330,38 @@ export const plansApi = {
             kk: `Айына ${freePlanSettings.messagesLimit} хабарламаға дейін`
           },
           {
-            ru: "Просмотр и управление сообщениями",
-            en: "View and manage messages",
-            kk: "Хабарламаларды көру және басқару"
+            ru: "Приём сообщений",
+            en: "Receive messages",
+            kk: "Хабарламаларды қабылдау"
           },
           {
-            ru: "Базовая статистика",
-            en: "Basic statistics",
-            kk: "Негізгі статистика"
+            ru: "Просмотр сообщений",
+            en: "View messages",
+            kk: "Хабарламаларды көру"
           },
+          {
+            ru: "Управление статусами сообщений",
+            en: "Manage message statuses",
+            kk: "Хабарлама статустарын басқару"
+          },
+          {
+            ru: "Фильтрация и поиск сообщений",
+            en: "Filter and search messages",
+            kk: "Хабарламаларды сүзгілеу және іздеу"
+          },
+          {
+            ru: "Базовая статистика по типам",
+            en: "Basic statistics by type",
+            kk: "Түрлер бойынша негізгі статистика"
+          }
         ],
       },
       {
-        id: "pro",
+        id: "standard",
         name: {
-          ru: "Про",
-          en: "Pro",
-          kk: "Про"
+          ru: "Стандарт",
+          en: "Standard",
+          kk: "Стандарт"
         },
         price: 2999,
         messagesLimit: 100,
@@ -234,18 +378,33 @@ export const plansApi = {
             kk: "Тегін жоспардың барлық функциялары"
           },
           {
-            ru: "Расширенная аналитика",
-            en: "Advanced analytics",
-            kk: "Кеңейтілген аналитика"
+            ru: "Ответы на сообщения",
+            en: "Respond to messages",
+            kk: "Хабарламаларға жауап беру"
           },
+          {
+            ru: "Расширенная статистика",
+            en: "Advanced statistics",
+            kk: "Кеңейтілген статистика"
+          },
+          {
+            ru: "Распределение по типам сообщений",
+            en: "Message type distribution",
+            kk: "Хабарлама түрлері бойынша бөлу"
+          },
+          {
+            ru: "Статистика решённых кейсов",
+            en: "Resolved cases statistics",
+            kk: "Шешілген істер статистикасы"
+          }
         ],
       },
       {
-        id: "business",
+        id: "pro",
         name: {
-          ru: "Бизнес",
-          en: "Business",
-          kk: "Бизнес"
+          ru: "Про",
+          en: "Pro",
+          kk: "Про"
         },
         price: 9999,
         messagesLimit: 500,
@@ -257,15 +416,40 @@ export const plansApi = {
             kk: "Айына 500 хабарламаға дейін"
           },
           {
-            ru: "Все функции плана Про",
-            en: "All Pro plan features",
-            kk: "Про жоспарының барлық функциялары"
+            ru: "Все функции плана Стандарт",
+            en: "All Standard plan features",
+            kk: "Стандарт жоспарының барлық функциялары"
           },
           {
-            ru: "Полная аналитика",
-            en: "Full analytics",
-            kk: "Толық аналитика"
+            ru: "Полная аналитика и отчёты",
+            en: "Full analytics and reports",
+            kk: "Толық аналитика және есептер"
           },
+          {
+            ru: "Рейтинги и метрики роста",
+            en: "Ratings and growth metrics",
+            kk: "Рейтингтер және өсу метрикалары"
+          },
+          {
+            ru: "Анализ трендов и настроения команды",
+            en: "Trend analysis and team mood",
+            kk: "Трендтерді талдау және команда көңіл-күйі"
+          },
+          {
+            ru: "Экспорт отчётов в PDF",
+            en: "PDF report export",
+            kk: "PDF есептерді экспорттау"
+          },
+          {
+            ru: "Детальная статистика по периодам",
+            en: "Detailed statistics by period",
+            kk: "Кезеңдер бойынша толық статистика"
+          },
+          {
+            ru: "Достижения и прогресс",
+            en: "Achievements and progress",
+            kk: "Жетістіктер және прогресс"
+          }
         ],
       },
     ];

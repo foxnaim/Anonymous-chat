@@ -10,9 +10,11 @@ import type {
   MessageDistribution, 
   GrowthMetrics, 
   SubscriptionPlan, 
-  AdminUser 
+  AdminUser,
+  AchievementProgress
 } from "@/types";
 import type { PlatformStats } from "./types";
+import type { GroupedAchievements } from "../achievements";
 import { DELAYS } from "./constants";
 
 // Симуляция задержки API
@@ -344,11 +346,21 @@ export const statsService = {
 
   getGrowthMetrics: async (companyId: number): Promise<GrowthMetrics> => {
     await delay(DELAYS.STATS);
-    return {
-      rating: 8.5,
-      mood: "Позитивный",
-      trend: "up",
-    };
+    // Используем логику из companies.ts
+    const { statsApi } = await import("../api/companies");
+    return statsApi.getGrowthMetrics(companyId);
+  },
+
+  getAchievements: async (companyId: number): Promise<AchievementProgress[]> => {
+    await delay(DELAYS.STATS);
+    const { statsApi } = await import("../api/companies");
+    return statsApi.getAchievements(companyId);
+  },
+
+  getGroupedAchievements: async (companyId: number): Promise<GroupedAchievements[]> => {
+    await delay(DELAYS.STATS);
+    const { statsApi } = await import("../api/companies");
+    return statsApi.getGroupedAchievements(companyId);
   },
 
   getPlatformStats: async (): Promise<PlatformStats> => {
@@ -380,29 +392,34 @@ export const plansService = {
         freePeriodDays: freePlanSettings.freePeriodDays,
         features: [
           {
-            ru: "Все функции на 2 месяца",
-            en: "All features for 2 months",
-            kk: "2 айға барлық функциялар"
+            ru: `До ${freePlanSettings.messagesLimit} сообщений в месяц`,
+            en: `Up to ${freePlanSettings.messagesLimit} messages per month`,
+            kk: `Айына ${freePlanSettings.messagesLimit} хабарламаға дейін`
           },
           {
-            ru: "Полный доступ ко всем возможностям платформы",
-            en: "Full access to all platform features",
-            kk: "Платформаның барлық мүмкіндіктеріне толық қол жетімділік"
+            ru: "Приём сообщений",
+            en: "Receive messages",
+            kk: "Хабарламаларды қабылдау"
           },
           {
-            ru: "Приём и ответы на сообщения",
-            en: "Receive and respond to messages",
-            kk: "Хабарламаларды қабылдау және жауап беру"
+            ru: "Просмотр сообщений",
+            en: "View messages",
+            kk: "Хабарламаларды көру"
           },
           {
-            ru: "Аналитика и отчёты",
-            en: "Analytics and reports",
-            kk: "Аналитика және есептер"
+            ru: "Управление статусами сообщений",
+            en: "Manage message statuses",
+            kk: "Хабарлама статустарын басқару"
           },
           {
-            ru: "Рейтинги и метрики",
-            en: "Ratings and metrics",
-            kk: "Рейтингтер және метрикалар"
+            ru: "Фильтрация и поиск сообщений",
+            en: "Filter and search messages",
+            kk: "Хабарламаларды сүзгілеу және іздеу"
+          },
+          {
+            ru: "Базовая статистика по типам",
+            en: "Basic statistics by type",
+            kk: "Түрлер бойынша негізгі статистика"
           }
         ],
       },
@@ -418,9 +435,14 @@ export const plansService = {
         storageLimit: 10,
         features: [
           {
-            ru: "Приём сообщений",
-            en: "Receive messages",
-            kk: "Хабарламаларды қабылдау"
+            ru: "До 100 сообщений в месяц",
+            en: "Up to 100 messages per month",
+            kk: "Айына 100 хабарламаға дейін"
+          },
+          {
+            ru: "Все функции бесплатного плана",
+            en: "All free plan features",
+            kk: "Тегін жоспардың барлық функциялары"
           },
           {
             ru: "Ответы на сообщения",
@@ -428,19 +450,19 @@ export const plansService = {
             kk: "Хабарламаларға жауап беру"
           },
           {
-            ru: "Просмотр и управление сообщениями",
-            en: "View and manage messages",
-            kk: "Хабарламаларды көру және басқару"
-          },
-          {
-            ru: "Базовая статистика",
-            en: "Basic statistics",
-            kk: "Негізгі статистика"
+            ru: "Расширенная статистика",
+            en: "Advanced statistics",
+            kk: "Кеңейтілген статистика"
           },
           {
             ru: "Распределение по типам сообщений",
             en: "Message type distribution",
             kk: "Хабарлама түрлері бойынша бөлу"
+          },
+          {
+            ru: "Статистика решённых кейсов",
+            en: "Resolved cases statistics",
+            kk: "Шешілген істер статистикасы"
           }
         ],
       },
@@ -456,34 +478,29 @@ export const plansService = {
         storageLimit: 50,
         features: [
           {
-            ru: "Приём и ответы на сообщения",
-            en: "Receive and respond to messages",
-            kk: "Хабарламаларды қабылдау және жауап беру"
+            ru: "До 500 сообщений в месяц",
+            en: "Up to 500 messages per month",
+            kk: "Айына 500 хабарламаға дейін"
           },
           {
-            ru: "Просмотр и управление сообщениями",
-            en: "View and manage messages",
-            kk: "Хабарламаларды көру және басқару"
+            ru: "Все функции плана Стандарт",
+            en: "All Standard plan features",
+            kk: "Стандарт жоспарының барлық функциялары"
           },
           {
-            ru: "Аналитика",
-            en: "Analytics",
-            kk: "Аналитика"
+            ru: "Полная аналитика и отчёты",
+            en: "Full analytics and reports",
+            kk: "Толық аналитика және есептер"
           },
           {
-            ru: "Отчёты",
-            en: "Reports",
-            kk: "Есептер"
+            ru: "Рейтинги и метрики роста",
+            en: "Ratings and growth metrics",
+            kk: "Рейтингтер және өсу метрикалары"
           },
           {
-            ru: "Рейтинги",
-            en: "Ratings",
-            kk: "Рейтингтер"
-          },
-          {
-            ru: "Детальная аналитика и метрики",
-            en: "Detailed analytics and metrics",
-            kk: "Толық аналитика және метрикалар"
+            ru: "Анализ трендов и настроения команды",
+            en: "Trend analysis and team mood",
+            kk: "Трендтерді талдау және команда көңіл-күйі"
           },
           {
             ru: "Экспорт отчётов в PDF",
@@ -491,14 +508,14 @@ export const plansService = {
             kk: "PDF есептерді экспорттау"
           },
           {
-            ru: "Анализ трендов",
-            en: "Trends analysis",
-            kk: "Трендтерді талдау"
+            ru: "Детальная статистика по периодам",
+            en: "Detailed statistics by period",
+            kk: "Кезеңдер бойынша толық статистика"
           },
           {
-            ru: "Метрики роста",
-            en: "Growth metrics",
-            kk: "Өсу метрикалары"
+            ru: "Достижения и прогресс",
+            en: "Achievements and progress",
+            kk: "Жетістіктер және прогресс"
           }
         ],
       },

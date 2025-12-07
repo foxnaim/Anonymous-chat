@@ -33,6 +33,12 @@ if (!i18n.isInitialized) {
       defaultNS: 'translation',
       interpolation: {
         escapeValue: false,
+        formatSeparator: ',',
+        format: function(value, format) {
+          if (format === 'uppercase') return value.toUpperCase();
+          if (format === 'lowercase') return value.toLowerCase();
+          return value;
+        }
       },
       detection: {
         order: ['localStorage', 'navigator'],

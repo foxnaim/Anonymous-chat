@@ -5,8 +5,9 @@
 
 import { useQuery, useMutation, useQueryClient, type UseQueryOptions, type UseMutationOptions } from "@tanstack/react-query";
 import { queryKeys } from "./index";
-import type { Message, Company, Stats, MessageDistribution, GrowthMetrics, SubscriptionPlan, AdminUser } from "@/types";
+import type { Message, Company, Stats, MessageDistribution, GrowthMetrics, SubscriptionPlan, AdminUser, AchievementProgress } from "@/types";
 import type { PlatformStats } from "./types";
+import type { GroupedAchievements } from "../achievements";
 import { 
   messageService, 
   companyService, 
@@ -133,6 +134,35 @@ export const useGrowthMetrics = (companyId: number, options?: Omit<UseQueryOptio
 };
 
 /**
+ * Хук для получения достижений компании
+ * Оптимизирован для быстрой работы и кэширования
+ */
+export const useAchievements = (companyId: number, options?: Omit<UseQueryOptions<AchievementProgress[]>, 'queryKey' | 'queryFn'>) => {
+  return useQuery({
+    queryKey: queryKeys.achievements(companyId),
+    queryFn: () => statsService.getAchievements(companyId),
+    enabled: !!companyId,
+    staleTime: 1000 * 60 * 5, // 5 минут - достижения меняются редко
+    gcTime: 1000 * 60 * 15, // 15 минут в кэше
+    ...options,
+  });
+};
+
+/**
+ * Хук для получения сгруппированных достижений компании
+ */
+export const useGroupedAchievements = (companyId: number, options?: Omit<UseQueryOptions<GroupedAchievements[]>, 'queryKey' | 'queryFn'>) => {
+  return useQuery({
+    queryKey: [...queryKeys.achievements(companyId), 'grouped'],
+    queryFn: () => statsService.getGroupedAchievements(companyId),
+    enabled: !!companyId,
+    staleTime: 1000 * 60 * 5, // 5 минут - достижения меняются редко
+    gcTime: 1000 * 60 * 15, // 15 минут в кэше
+    ...options,
+  });
+};
+
+/**
  * Хук для получения планов подписки
  * Оптимизирован для кэширования (планы меняются редко)
  */
@@ -179,6 +209,11 @@ export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Om
     onSuccess: (data) => {
       // Инвалидируем кэш сообщений
       queryClient.invalidateQueries({ queryKey: queryKeys.messages(data.companyCode) });
+      // Инвалидируем статистику и достижения для всех компаний (они будут пересчитаны при следующем запросе)
+      // Используем более широкую инвалидацию, так как мы не знаем companyId из companyCode напрямую
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+      queryClient.invalidateQueries({ queryKey: ['growth-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['achievements'] });
     },
     ...options,
   });
@@ -196,6 +231,12 @@ export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Err
       // Инвалидируем кэш конкретного сообщения и списка
       queryClient.invalidateQueries({ queryKey: queryKeys.message(data.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.messages(data.companyCode) });
+      // Инвалидируем статистику и достижения для всех компаний (они будут пересчитаны при следующем запросе)
+      // Используем более широкую инвалидацию, так как мы не знаем companyId из companyCode напрямую
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+      queryClient.invalidateQueries({ queryKey: ['message-distribution'] });
+      queryClient.invalidateQueries({ queryKey: ['growth-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['achievements'] });
     },
     ...options,
   });

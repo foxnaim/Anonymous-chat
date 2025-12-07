@@ -190,6 +190,8 @@
     "negative": "Negative",
     "neutral": "Neutral",
     "growthRating": "Growth Rating",
+    "growthRatingInfo": "Growth rating information",
+    "growthRatingTooltip": "Rating is calculated based on response time and resolved problems",
     "cultureStrong": "Feedback culture in your company is strong",
     "searchMessages": "Search messages...",
     "currentPlan": "Current Plan",
