@@ -230,7 +230,7 @@ const AdminPanel = () => {
           {/* Company Detail Panel - Desktop */}
           <aside className="hidden lg:block w-96 border-l border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-6">
             <div>
-              <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Детали компании</h4>
+              <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">{t("admin.companyDetails")}</h4>
               
               {selectedCompanyData ? (
                 <Card className="p-4 space-y-4">
@@ -246,35 +246,35 @@ const AdminPanel = () => {
 
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">Статус</p>
+                    <p className="text-xs text-muted-foreground mb-1">{t("admin.status")}</p>
                     <Badge className={getStatusColor(selectedCompanyData.status)}>
                       {selectedCompanyData.status}
                     </Badge>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">План</p>
+                    <p className="text-xs text-muted-foreground mb-1">{t("admin.plan")}</p>
                     <Badge variant="outline">{selectedCompanyData.plan}</Badge>
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-border space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Сотрудники</span>
+                    <span className="text-sm text-muted-foreground">{t("admin.employees")}</span>
                     <span className="text-sm font-semibold">{selectedCompanyData.employees}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Всего сообщений</span>
+                    <span className="text-sm text-muted-foreground">{t("admin.totalMessages")}</span>
                     <span className="text-sm font-semibold">{selectedCompanyData.messages}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Регистрация</span>
+                    <span className="text-sm text-muted-foreground">{t("admin.registration")}</span>
                     <span className="text-sm font-semibold">{selectedCompanyData.registered}</span>
                   </div>
                 </div>
               </Card>
               ) : (
                 <Card className="p-4">
-                  <p className="text-muted-foreground text-center">Выберите компанию</p>
+                  <p className="text-muted-foreground text-center">{t("admin.selectCompany")}</p>
                 </Card>
               )}
             </div>
@@ -282,7 +282,7 @@ const AdminPanel = () => {
             <div className="space-y-3">
               <Button className="w-full" variant="outline">
                 <FiEye className="h-4 w-4 mr-2" />
-                Открыть панель
+                {t("admin.openPanel")}
               </Button>
               
               {selectedCompanyData && (
@@ -316,7 +316,7 @@ const AdminPanel = () => {
                         }
                       }}
                     >
-                      Активировать компанию
+                      {t("admin.activateCompany")}
                     </Button>
                   )}
                 </>

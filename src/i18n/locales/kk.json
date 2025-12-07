@@ -23,7 +23,8 @@
     "pageNotFound": "Ой! Бет табылмады",
     "backToHome": "Басты бетке оралу",
     "free": "Тегін",
-    "add": "Қосу"
+    "add": "Қосу",
+    "fillAllFields": "Барлық өрістерді толтырыңыз"
   },
   "welcome": {
     "title": "Компанияңызға анонимді пікір жіберіңіз",
@@ -285,6 +286,7 @@
     "adminEmail": "Әкімші email-і",
     "searchCompanies": "Компанияларды іздеу...",
     "loadingCompanies": "Компаниялар жүктелуде...",
+    "companiesNotFound": "Компаниялар табылмады",
     "companyDetails": "Компания мәліметтері",
     "selectCompany": "Компания таңдаңыз",
     "status": "Статус",
@@ -382,6 +384,12 @@
     "planDistribution": "Жоспарлар бойынша бөлу",
     "detailedCompanyStats": "Компаниялар бойынша толық статистика",
     "detailedMessageStats": "Хабарламалар бойынша толық статистика",
+    "messageStatuses": "Хабарлама статустары",
+    "messageTypes": "Хабарлама түрлері",
+    "topCompanies": "Белсенділік бойынша топ компаниялар",
+    "avgMessagesPerCompany": "Орташа хабарламалар",
+    "messagesPerCompany": "компанияға хабарламалар",
+    "noData": "Деректер жоқ",
     "adminDeleted": "Әкімші жойылды",
     "addAdmin": "Әкімші қосу",
     "searchAdmins": "Әкімшілерді іздеу...",
@@ -441,7 +449,10 @@
     "spam": "Спам",
     "inProgress": "Жұмыс істеп жатыр",
     "date": "Күні",
-    "yourResponse": "Сіздің жауабыңыз"
+    "yourResponse": "Сіздің жауабыңыз",
+    "complaint": "Шағым",
+    "praise": "Мақтау",
+    "suggestion": "Ұсыныс"
   },
   "seo": {
     "defaultTitle": "FeedbackHub - Анонимді кері байланыс платформасы",

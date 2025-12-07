@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
 export const metadata: Metadata = {
   title: {
-    default: "Anonymous Chat — безопасные и быстрые комьюнити",
+    default: "feed Back",
     template: "%s | Anonymous Chat"
   },
   description:
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Anonymous Team" }],
   metadataBase: new URL("https://anonymouschat.example"),
   icons: {
-    icon: "/favicon.svg"
+    icon: "/feedBack.svg"
   },
   openGraph: {
     type: "website",

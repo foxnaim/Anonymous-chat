@@ -23,7 +23,8 @@
     "pageNotFound": "Oops! Page not found",
     "backToHome": "Back to home",
     "free": "Free",
-    "add": "Add"
+    "add": "Add",
+    "fillAllFields": "Please fill all fields"
   },
   "welcome": {
     "title": "Send anonymous feedback to your company",
@@ -285,6 +286,7 @@
     "adminEmail": "Admin Email",
     "searchCompanies": "Search companies...",
     "loadingCompanies": "Loading companies...",
+    "companiesNotFound": "No companies found",
     "companyDetails": "Company Details",
     "selectCompany": "Select a company",
     "status": "Status",
@@ -382,6 +384,12 @@
     "planDistribution": "Plan Distribution",
     "detailedCompanyStats": "Detailed Company Statistics",
     "detailedMessageStats": "Detailed Message Statistics",
+    "messageStatuses": "Message Statuses",
+    "messageTypes": "Message Types",
+    "topCompanies": "Top Companies by Activity",
+    "avgMessagesPerCompany": "Average Messages",
+    "messagesPerCompany": "messages per company",
+    "noData": "No data available",
     "adminDeleted": "Administrator deleted",
     "addAdmin": "Add Administrator",
     "searchAdmins": "Search administrators...",
@@ -441,7 +449,10 @@
     "spam": "Spam",
     "inProgress": "In Progress",
     "date": "Date",
-    "yourResponse": "Your Response"
+    "yourResponse": "Your Response",
+    "complaint": "Complaint",
+    "praise": "Praise",
+    "suggestion": "Suggestion"
   },
   "seo": {
     "defaultTitle": "FeedbackHub - Anonymous Feedback Platform",

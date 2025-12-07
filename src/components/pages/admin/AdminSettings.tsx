@@ -23,7 +23,7 @@ const AdminSettings = () => {
 
   const handlePasswordChange = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      toast.error("Заполните все поля");
+      toast.error(t("common.fillAllFields"));
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -31,7 +31,7 @@ const AdminSettings = () => {
       return;
     }
     if (newPassword.length < 6) {
-      toast.error("Пароль должен содержать минимум 6 символов");
+      toast.error(t("auth.passwordTooShort"));
       return;
     }
     // В реальном приложении здесь будет API вызов

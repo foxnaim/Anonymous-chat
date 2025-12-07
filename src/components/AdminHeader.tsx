@@ -1,6 +1,7 @@
 'use client';
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -40,8 +41,19 @@ export const AdminHeader = () => {
       <div className="container flex h-14 sm:h-16 items-center justify-between px-4 sm:px-6">
         {/* Logo */}
         <div className="flex items-center gap-2 sm:gap-4">
-          <Link href="/admin" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
-            <h1 className="text-lg sm:text-xl font-bold text-primary">FeedbackHub</h1>
+          <Link
+            href="/admin"
+            className="flex items-center gap-2"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <Image
+              src="/feedBack.svg"
+              alt="Anonymous Chat"
+              width={32}
+              height={32}
+              priority
+              className="h-8 w-8 sm:h-9 sm:w-9"
+            />
           </Link>
         </div>
 

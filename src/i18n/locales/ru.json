@@ -23,7 +23,8 @@
     "pageNotFound": "Упс! Страница не найдена",
     "backToHome": "Вернуться на главную",
     "free": "Бесплатно",
-    "add": "Добавить"
+    "add": "Добавить",
+    "fillAllFields": "Заполните все поля"
   },
   "welcome": {
     "title": "Отправьте анонимный отзыв в свою компанию",
@@ -286,6 +287,7 @@
     "adminEmail": "Email администратора",
     "searchCompanies": "Поиск компаний...",
     "loadingCompanies": "Загрузка компаний...",
+    "companiesNotFound": "Компании не найдены",
     "companyDetails": "Детали компании",
     "selectCompany": "Выберите компанию",
     "status": "Статус",
@@ -383,6 +385,12 @@
     "planDistribution": "Распределение по планам",
     "detailedCompanyStats": "Детальная статистика по компаниям",
     "detailedMessageStats": "Детальная статистика по сообщениям",
+    "messageStatuses": "Статусы сообщений",
+    "messageTypes": "Типы сообщений",
+    "topCompanies": "Топ компаний по активности",
+    "avgMessagesPerCompany": "Среднее сообщений",
+    "messagesPerCompany": "сообщений на компанию",
+    "noData": "Нет данных",
     "adminDeleted": "Администратор удален",
     "addAdmin": "Добавить администратора",
     "searchAdmins": "Поиск администраторов...",
@@ -442,7 +450,10 @@
     "spam": "Спам",
     "inProgress": "В работу",
     "date": "Дата",
-    "yourResponse": "Ваш ответ"
+    "yourResponse": "Ваш ответ",
+    "complaint": "Жалоба",
+    "praise": "Похвала",
+    "suggestion": "Предложение"
   },
   "seo": {
     "defaultTitle": "FeedbackHub - Платформа анонимной обратной связи",
