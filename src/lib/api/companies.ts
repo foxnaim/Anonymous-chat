@@ -182,12 +182,6 @@ export const statsApi = {
     
     // Получаем статистику напрямую
     const filteredMessages = companyMessages;
-    const stats = {
-      new: filteredMessages.filter((m) => m.status === "Новое").length,
-      inProgress: filteredMessages.filter((m) => m.status === "В работе").length,
-      resolved: filteredMessages.filter((m) => m.status === "Решено").length,
-      total: filteredMessages.length,
-    };
     
     const distribution = {
       complaints: filteredMessages.filter((m) => m.type === "complaint").length,
@@ -300,9 +294,9 @@ export const statsApi = {
 
 // Настройки бесплатного плана
 let freePlanSettings = {
-  messagesLimit: 10,
-  storageLimit: 1,
-  freePeriodDays: 0,
+  messagesLimit: 10, // Фиксированные значения
+  storageLimit: 1, // Фиксированные значения
+  freePeriodDays: 60, // Настраивается через админ-панель
 };
 
 const customPlans: SubscriptionPlan[] = [];
@@ -473,7 +467,11 @@ export const plansApi = {
 
   updateFreePlanSettings: async (settings: { messagesLimit: number; storageLimit: number; freePeriodDays: number }): Promise<void> => {
     await delay(API_CONFIG.TIMEOUT / 2);
-    freePlanSettings = { ...freePlanSettings, ...settings };
+    // Обновляем только freePeriodDays, messagesLimit и storageLimit остаются фиксированными
+    freePlanSettings = { 
+      ...freePlanSettings, 
+      freePeriodDays: settings.freePeriodDays 
+    };
   },
 };
 

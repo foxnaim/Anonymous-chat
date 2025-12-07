@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { FiAward, FiTrendingUp, FiTrendingDown, FiMinus, FiStar, FiMessageSquare, FiCheckCircle, FiClock, FiZap, FiTarget, FiHelpCircle } from "react-icons/fi";
+import { FiAward, FiStar, FiMessageSquare, FiCheckCircle, FiClock, FiHelpCircle } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import { useGrowthMetrics, useGroupedAchievements } from "@/lib/query";
@@ -21,16 +21,6 @@ const CompanyGrowth = () => {
   });
   
   const isLoading = isLoadingMetrics || isLoadingAchievements;
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case "up":
-        return <FiTrendingUp className="h-5 w-5 text-secondary" />;
-      case "down":
-        return <FiTrendingDown className="h-5 w-5 text-accent" />;
-      default:
-        return <FiMinus className="h-5 w-5 text-muted-foreground" />;
-    }
-  };
 
   const getRatingDescription = (rating: number) => {
     if (rating >= 8) {
@@ -144,7 +134,7 @@ const CompanyGrowth = () => {
                           translationParams.target = target;
                         }
                         
-                        description = t(titleKey, translationParams);
+                        description = String(t(titleKey, translationParams));
                       }
                       
                       return (

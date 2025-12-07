@@ -164,9 +164,9 @@ const mockCompanies: Company[] = [
 ];
 
 let freePlanSettings = {
-  messagesLimit: 10,
-  storageLimit: 1,
-  freePeriodDays: 0,
+  messagesLimit: 10, // Фиксированные значения
+  storageLimit: 1, // Фиксированные значения
+  freePeriodDays: 60, // Настраивается через админ-панель
 };
 
 const customPlans: SubscriptionPlan[] = [];
@@ -540,7 +540,11 @@ export const plansService = {
 
   updateFreePlanSettings: async (settings: { messagesLimit: number; storageLimit: number; freePeriodDays: number }): Promise<void> => {
     await delay(DELAYS.NORMAL);
-    freePlanSettings = { ...freePlanSettings, ...settings };
+    // Обновляем только freePeriodDays, messagesLimit и storageLimit остаются фиксированными
+    freePlanSettings = { 
+      ...freePlanSettings, 
+      freePeriodDays: settings.freePeriodDays 
+    };
   },
 };
 
