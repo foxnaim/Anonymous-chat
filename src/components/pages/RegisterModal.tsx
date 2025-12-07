@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useCreateCompany } from "@/lib/query";
 import { useAuth } from "@/lib/redux";
 import { toast } from "sonner";
-import { FiKey, FiSettings, FiGift, FiCheck, FiArrowLeft, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiKey, FiSettings, FiGift, FiCheck, FiEye, FiEyeOff, FiArrowLeft, FiUserPlus } from "react-icons/fi";
 import { Badge } from "@/components/ui/badge";
 
 interface RegisterModalProps {
@@ -129,7 +129,7 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
   if (!showForm) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-lg min-h-[600px] max-h-[90vh] overflow-y-auto [&>button]:hidden">
+        <DialogContent className="sm:max-w-lg min-h-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex flex-col items-center mb-3">
               <DialogTitle className="text-2xl font-bold" suppressHydrationWarning>
@@ -192,6 +192,7 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
               className="w-full mt-3 bg-primary text-primary-foreground hover:bg-primary/90"
               size="lg"
             >
+              <FiUserPlus className="mr-2 h-5 w-5" />
               {t("auth.register")}
             </Button>
           </div>
@@ -203,16 +204,16 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
   // Форма регистрации
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg min-h-[600px] max-h-[90vh] overflow-y-auto [&>button]:hidden">
+      <DialogContent className="sm:max-w-lg min-h-[600px] max-h-[90vh] overflow-y-auto">
+        <button
+          type="button"
+          onClick={() => setShowForm(false)}
+          className="absolute left-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+        >
+          <FiArrowLeft className="h-4 w-4" />
+          <span className="sr-only">{t("common.back")}</span>
+        </button>
         <DialogHeader>
-          <Button
-            size="lg"
-            onClick={() => setShowForm(false)}
-            className="w-full mb-2 bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            <FiArrowLeft className="h-4 w-4 mr-2" />
-            {t("common.back")}
-          </Button>
           <div className="flex flex-col items-center mb-4">
             <DialogTitle className="text-2xl font-bold" suppressHydrationWarning>
               {t("auth.register")}
@@ -310,6 +311,7 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
           </div>
 
           <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={isPending} size="lg">
+            <FiUserPlus className="mr-2 h-5 w-5" />
             <span suppressHydrationWarning>
               {isPending ? t("common.loading") : t("auth.register")}
             </span>

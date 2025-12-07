@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { FiSearch, FiClock, FiCheckCircle, FiMessageSquare, FiAlertCircle } from "react-icons/fi";
+import { FiSearch, FiClock, FiCheckCircle, FiMessageSquare, FiAlertCircle, FiRefreshCw, FiX } from "react-icons/fi";
 import { toast } from "sonner";
 import { useMessage } from "@/lib/query";
 
@@ -194,6 +194,7 @@ const CheckStatusModal = ({ open, onOpenChange }: CheckStatusModalProps) => {
                     setMessageId("");
                   }}
                 >
+                  <FiRefreshCw className="mr-2 h-5 w-5" />
                   {t("checkStatus.checkAnother")}
                 </Button>
                 <Button
@@ -201,6 +202,7 @@ const CheckStatusModal = ({ open, onOpenChange }: CheckStatusModalProps) => {
                   className="flex-1"
                   onClick={() => onOpenChange(false)}
                 >
+                  <FiX className="mr-2 h-5 w-5" />
                   {t("common.close")}
                 </Button>
               </div>

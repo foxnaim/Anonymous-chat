@@ -57,63 +57,69 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <div className="flex flex-col items-center mb-4">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-              <FiLogIn className="h-8 w-8 text-primary" />
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex flex-col items-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <FiLogIn className="h-8 w-8 text-primary" />
+              </div>
+              <DialogTitle className="text-2xl font-bold">FeedbackHub</DialogTitle>
+              <DialogDescription className="text-center mt-2">
+                {t("auth.login")}
+              </DialogDescription>
             </div>
-            <DialogTitle className="text-2xl font-bold">FeedbackHub</DialogTitle>
-            <DialogDescription className="text-center mt-2">
-              {t("auth.login")}
-            </DialogDescription>
-          </div>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">{t("auth.email")}</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="admin@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="username"
-              required
-            />
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password">{t("auth.password")}</Label>
+              <Label htmlFor="email">{t("auth.email")}</Label>
               <Input
-                id="password"
-                type="password"
-                placeholder={t("auth.password")}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
+                id="email"
+                type="email"
+                placeholder="admin@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="username"
                 required
               />
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setIsForgotPasswordOpen(true)}
-                  className="text-sm text-primary hover:underline"
-                >
-                  {t("auth.forgotPassword")}
-                </button>
+              <div className="space-y-2">
+                <Label htmlFor="password">{t("auth.password")}</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder={t("auth.password")}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                />
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onOpenChange(false);
+                      setIsForgotPasswordOpen(true);
+                    }}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    {t("auth.forgotPassword")}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? t("common.loading") : t("auth.login")}
-          </Button>
-        </form>
-      </DialogContent>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              <FiLogIn className="mr-2 h-5 w-5" />
+              {isLoading ? t("common.loading") : t("auth.login")}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
       <ForgotPasswordModal
         open={isForgotPasswordOpen}
         onOpenChange={setIsForgotPasswordOpen}
       />
-    </Dialog>
+    </>
   );
 };
 

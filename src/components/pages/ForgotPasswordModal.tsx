@@ -71,6 +71,7 @@ const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) =
             />
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
+            <FiLock className="mr-2 h-5 w-5" />
             {isLoading ? t("common.loading") : t("auth.resetPasswordButton")}
           </Button>
         </form>
