@@ -38,7 +38,7 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
         if (savedUser) {
           try {
             const userData = JSON.parse(savedUser);
-            if (userData.role === "admin") {
+            if (userData.role === "admin" || userData.role === "super_admin") {
               router.replace("/admin");
             } else if (userData.role === "company") {
               router.replace("/company");

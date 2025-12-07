@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Fragment } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { Dialog, Transition } from "@headlessui/react";
 import { Card } from "@/components/ui/card";
@@ -11,12 +11,12 @@ import {
   FiSearch,
   FiFilter,
   FiPlus,
-  FiMoreVertical,
   FiEye,
   FiX,
+  FiCopy,
 } from "react-icons/fi";
 import { AdminHeader } from "@/components/AdminHeader";
-import { useCompanies, companyService } from "@/lib/query";
+import { useCompanies, useCreateCompany, companyService } from "@/lib/query";
 import { toast } from "sonner";
 import type { CompanyStatus } from "@/types";
 
@@ -27,18 +27,66 @@ const COMPANY_STATUS: Record<string, CompanyStatus> = {
   BLOCKED: "Заблокирована",
 };
 
+const PLAN_OPTIONS = ["Бесплатный", "Стандарт", "Бизнес"] as const;
+
 const AdminPanel = () => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCompany, setSelectedCompany] = useState<number | null>(null);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "trial" | "blocked">("all");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const detailCloseRef = useRef<HTMLButtonElement | null>(null);
+  const createCloseRef = useRef<HTMLButtonElement | null>(null);
+  const viewCloseRef = useRef<HTMLButtonElement | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [newCompany, setNewCompany] = useState({
+    name: "",
+    adminEmail: "",
+    code: "",
+    status: COMPANY_STATUS.ACTIVE,
+    plan: "Бесплатный" as (typeof PLAN_OPTIONS)[number],
+    employees: 0,
+  });
 
   const { data: companies = [], isLoading, refetch } = useCompanies();
+  const { mutateAsync: createCompany, isPending: isCreating } = useCreateCompany({
+    onSuccess: async (data) => {
+      await refetch();
+      setSelectedCompanyId(data.id);
+      setIsCreateOpen(false);
+      toast.success(t("admin.createCompany"));
+    },
+    onError: () => toast.error(t("common.error")),
+  });
 
-  const filteredCompanies = companies.filter((company) =>
-    company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    company.adminEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    company.code.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const generateCode = () =>
+    Math.random().toString(36).slice(2, 10).toUpperCase();
+
+  const filteredCompanies = companies.filter((company) => {
+    const matchesSearch =
+      company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      company.adminEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      company.code.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const status = company.status.toLowerCase();
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && status === t("admin.active").toLowerCase()) ||
+      (statusFilter === "trial" && status === t("admin.trial").toLowerCase()) ||
+      (statusFilter === "blocked" && status === t("admin.blocked").toLowerCase());
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // Определяем мобильный режим, чтобы не рендерить мобильный модал на десктопе
+  useEffect(() => {
+    const check = () => setIsMobile(typeof window !== "undefined" && window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -53,24 +101,26 @@ const AdminPanel = () => {
     }
   };
 
-  // Автоматически выбираем первую компанию на десктопе, если ничего не выбрано
-  // На мобильных показываем только явно выбранную компанию
-  const getSelectedCompanyData = () => {
-    // Если компания явно выбрана и существует
-    if (selectedCompany !== null && filteredCompanies[selectedCompany]) {
-      return filteredCompanies[selectedCompany];
+  // Автовыбор первой компании после фильтра / поиска
+  useEffect(() => {
+    if (filteredCompanies.length === 0) {
+      setSelectedCompanyId(null);
+      return;
     }
-    // На десктопе показываем первую компанию по умолчанию (для мобильных вернем null)
-    if (filteredCompanies.length > 0) {
-      return filteredCompanies[0];
+    // если выбранная ушла из списка, выбрать первую
+    const exists = selectedCompanyId && filteredCompanies.some((c) => c.id === selectedCompanyId);
+    if (!exists) {
+      setSelectedCompanyId(filteredCompanies[0].id);
     }
-    return null;
-  };
+  }, [filteredCompanies, selectedCompanyId]);
 
-  const selectedCompanyData = getSelectedCompanyData();
+  const selectedCompanyData =
+    (selectedCompanyId && filteredCompanies.find((c) => c.id === selectedCompanyId)) ||
+    filteredCompanies[0] ||
+    null;
   
   // Для мобильных: определяем, показывать ли модальное окно
-  const shouldShowMobileModal = selectedCompany !== null && filteredCompanies.length > 0;
+  const shouldShowMobileModal = selectedCompanyId !== null && filteredCompanies.length > 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -95,14 +145,17 @@ const AdminPanel = () => {
                   {t("admin.manageCompanies")}
                 </p>
               </div>
-              <Button size="sm" className="w-full sm:w-auto">
+              <Button size="sm" className="w-full sm:w-auto" onClick={() => {
+                setNewCompany((prev) => ({ ...prev, code: generateCode() }));
+                setIsCreateOpen(true);
+              }}>
                 <FiPlus className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">{t("admin.createCompany")}</span>
                 <span className="sm:hidden">{t("common.create")}</span>
               </Button>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6 relative">
               <div className="relative flex-1">
                 <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -113,9 +166,40 @@ const AdminPanel = () => {
                   autoComplete="off"
                 />
               </div>
-              <Button variant="outline" size="icon" className="flex-shrink-0">
-                <FiFilter className="h-4 w-4" />
-              </Button>
+              <div className="relative">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className={`flex-shrink-0 ${isFilterOpen ? "ring-2 ring-ring" : ""}`}
+                  onClick={() => setIsFilterOpen((v) => !v)}
+                >
+                  <FiFilter className="h-4 w-4" />
+                </Button>
+                {isFilterOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-lg border border-border bg-card shadow-lg z-10">
+                    {[
+                      { key: "all", label: t("common.all") },
+                      { key: "active", label: t("admin.active") },
+                      { key: "trial", label: t("admin.trial") },
+                      { key: "blocked", label: t("admin.blocked") },
+                    ].map((item) => (
+                      <button
+                        key={item.key}
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition ${
+                          statusFilter === item.key ? "text-primary font-semibold" : "text-foreground"
+                        }`}
+                        onClick={() => {
+                          setStatusFilter(item.key as typeof statusFilter);
+                          setIsFilterOpen(false);
+                        }}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <Card>
@@ -149,9 +233,9 @@ const AdminPanel = () => {
                         <tr
                           key={company.id}
                           className={`border-b border-border/50 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors ${
-                            (selectedCompany === index || (selectedCompany === null && index === 0)) ? "bg-muted/30" : "bg-card"
+                            selectedCompanyId === company.id ? "bg-muted/30" : "bg-card"
                           }`}
-                          onClick={() => setSelectedCompany(index)}
+                          onClick={() => setSelectedCompanyId(company.id)}
                         >
                         <td className="p-4">
                           <div className="flex items-center gap-3">
@@ -173,9 +257,6 @@ const AdminPanel = () => {
                         <td className="p-4">
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-muted-foreground">{company.registered}</span>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <FiMoreVertical className="h-4 w-4 text-muted-foreground" />
-                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -200,9 +281,9 @@ const AdminPanel = () => {
                     <Card
                       key={company.id}
                       className={`p-4 cursor-pointer transition-colors ${
-                        selectedCompany === index ? "bg-muted/30 border-primary" : ""
+                        selectedCompanyId === company.id ? "bg-muted/30 border-primary" : ""
                       }`}
-                      onClick={() => setSelectedCompany(index)}
+                      onClick={() => setSelectedCompanyId(company.id)}
                     >
                       <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold flex-shrink-0">
@@ -233,7 +314,10 @@ const AdminPanel = () => {
               <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">{t("admin.companyDetails")}</h4>
               
               {selectedCompanyData ? (
-                <Card className="p-4 space-y-4">
+                <Card
+                  key={selectedCompanyData.id}
+                  className="p-4 space-y-4 transition"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold text-lg">
                       {selectedCompanyData.name.charAt(0)}
@@ -241,6 +325,22 @@ const AdminPanel = () => {
                     <div className="flex-1">
                       <h5 className="font-semibold text-foreground">{selectedCompanyData.name}</h5>
                       <p className="text-sm text-muted-foreground">{selectedCompanyData.adminEmail}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="text-xs">
+                          {selectedCompanyData.code}
+                        </Badge>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => {
+                            navigator.clipboard?.writeText(selectedCompanyData.code);
+                            toast.success(t("common.copy") || "Скопировано");
+                          }}
+                        >
+                          <FiCopy className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
@@ -280,11 +380,6 @@ const AdminPanel = () => {
             </div>
 
             <div className="space-y-3">
-              <Button className="w-full" variant="outline">
-                <FiEye className="h-4 w-4 mr-2" />
-                {t("admin.openPanel")}
-              </Button>
-              
               {selectedCompanyData && (
                 <>
                   {selectedCompanyData.status === t("admin.active") ? (
@@ -323,7 +418,10 @@ const AdminPanel = () => {
               )}
             </div>
 
-            <Card className="p-4 bg-muted">
+              <Card
+                key={`usage-${selectedCompanyData?.id ?? "none"}`}
+                className="p-4 bg-muted transition"
+              >
               <h5 className="font-semibold text-sm mb-3">{t("admin.usageStats")}</h5>
               <div className="space-y-3">
                 <div>
@@ -350,8 +448,13 @@ const AdminPanel = () => {
         </div>
 
         {/* Mobile Company Detail Modal */}
-        <Transition show={shouldShowMobileModal} as={Fragment}>
-          <Dialog as="div" className="lg:hidden relative z-50" onClose={() => setSelectedCompany(null)}>
+        <Transition show={shouldShowMobileModal && isMobile} as={Fragment}>
+          <Dialog
+            as="div"
+            className="lg:hidden relative z-50"
+            onClose={() => setSelectedCompanyId(null)}
+            initialFocus={detailCloseRef}
+          >
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -379,7 +482,12 @@ const AdminPanel = () => {
                     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                       <div className="flex items-center justify-between mb-2">
                         <Dialog.Title className="text-base sm:text-lg font-semibold">{t("admin.companyDetails")}</Dialog.Title>
-                        <Button variant="ghost" size="icon" onClick={() => setSelectedCompany(null)}>
+                        <Button
+                          ref={detailCloseRef}
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setSelectedCompanyId(null)}
+                        >
                           <FiX className="h-5 w-5" />
                         </Button>
                       </div>
@@ -441,7 +549,7 @@ const AdminPanel = () => {
                                   try {
                                     await companyService.updateStatus(selectedCompanyData.id, COMPANY_STATUS.BLOCKED);
                                     toast.success(t("admin.companyBlocked"));
-                                    setSelectedCompany(null);
+                                    setSelectedCompanyId(null);
                                     refetch();
                                   } catch (error) {
                                     toast.error(t("admin.blockError"));
@@ -457,7 +565,7 @@ const AdminPanel = () => {
                                   try {
                                     await companyService.updateStatus(selectedCompanyData.id, COMPANY_STATUS.ACTIVE);
                                     toast.success(t("admin.companyActivated"));
-                                    setSelectedCompany(null);
+                                    setSelectedCompanyId(null);
                                     refetch();
                                   } catch (error) {
                                     toast.error(t("admin.activateError"));
@@ -502,6 +610,354 @@ const AdminPanel = () => {
           </Dialog>
         </Transition>
       </div>
+
+      {/* Create Company Dialog */}
+      <Transition show={isCreateOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-50"
+          onClose={() => !isCreating && setIsCreateOpen(false)}
+          initialFocus={createCloseRef}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/50" />
+          </Transition.Child>
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-xl bg-card border border-border shadow-xl transition-all p-6 space-y-4">
+                  <Dialog.Title className="text-lg font-semibold text-foreground">
+                    {t("admin.createCompany")}
+                  </Dialog.Title>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm text-foreground">{t("admin.companyName")}</label>
+                      <Input
+                        value={newCompany.name}
+                        onChange={(e) => setNewCompany({ ...newCompany, name: e.target.value })}
+                        placeholder="Acme Corporation"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-foreground">{t("admin.adminEmail")}</label>
+                      <Input
+                        type="email"
+                        value={newCompany.adminEmail}
+                        onChange={(e) => setNewCompany({ ...newCompany, adminEmail: e.target.value })}
+                        placeholder="admin@company.com"
+                        autoComplete="email"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-foreground">Код компании</label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={newCompany.code}
+                          onChange={(e) => setNewCompany({ ...newCompany, code: e.target.value.toUpperCase() })}
+                          maxLength={8}
+                          placeholder="ACME0001"
+                        />
+                        <Button
+                          variant="outline"
+                          onClick={() => setNewCompany((prev) => ({ ...prev, code: generateCode() }))}
+                        >
+                          {t("common.add")}
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">8 символов, используйте буквы/цифры</p>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-foreground">{t("admin.status")}</label>
+                      <select
+                        className="w-full p-2 border rounded-md bg-background"
+                        value={newCompany.status}
+                        onChange={(e) => setNewCompany({ ...newCompany, status: e.target.value as CompanyStatus })}
+                      >
+                        <option value={COMPANY_STATUS.ACTIVE}>{t("admin.active")}</option>
+                        <option value={COMPANY_STATUS.TRIAL}>{t("admin.trial")}</option>
+                        <option value={COMPANY_STATUS.BLOCKED}>{t("admin.blocked")}</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-foreground">{t("admin.plan")}</label>
+                      <select
+                        className="w-full p-2 border rounded-md bg-background"
+                        value={newCompany.plan}
+                        onChange={(e) => setNewCompany({ ...newCompany, plan: e.target.value as (typeof PLAN_OPTIONS)[number] })}
+                      >
+                        {PLAN_OPTIONS.map((plan) => (
+                          <option key={plan} value={plan}>{plan}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-3 pt-2">
+                    <Button
+                      ref={createCloseRef}
+                      variant="outline"
+                      onClick={() => setIsCreateOpen(false)}
+                      disabled={isCreating}
+                    >
+                      {t("common.cancel")}
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        if (!newCompany.name.trim() || !newCompany.adminEmail.trim() || newCompany.code.length !== 8) {
+                          toast.error(t("common.fillAllFields") || "Заполните все поля");
+                          return;
+                        }
+                        try {
+                          await createCompany({
+                            ...newCompany,
+                            messagesLimit: 100,
+                            storageLimit: 10,
+                          });
+                        } catch (e) {
+                          toast.error(t("common.error"));
+                        }
+                      }}
+                      disabled={isCreating}
+                    >
+                      {isCreating ? t("common.loading") : t("common.create")}
+                    </Button>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* View company panel dialog */}
+      <Transition show={isViewOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-50"
+          onClose={() => setIsViewOpen(false)}
+          initialFocus={viewCloseRef}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/50" />
+          </Transition.Child>
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-xl bg-card border border-border shadow-xl transition-all p-6 space-y-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-12 h-12 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold text-lg">
+                        {selectedCompanyData?.name?.charAt(0) || "C"}
+                      </div>
+                      <div className="space-y-1">
+                        <Dialog.Title className="text-lg font-semibold text-foreground">
+                          {selectedCompanyData?.name || t("admin.companyDetails")}
+                        </Dialog.Title>
+                        <p className="text-sm text-muted-foreground">
+                          {selectedCompanyData?.adminEmail || "—"}
+                        </p>
+                        {selectedCompanyData && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              {selectedCompanyData.code}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => {
+                                navigator.clipboard?.writeText(selectedCompanyData.code);
+                                toast.success(t("common.copy") || "Скопировано");
+                              }}
+                            >
+                              <FiCopy className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      ref={viewCloseRef}
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setIsViewOpen(false)}
+                    >
+                      <FiX className="h-5 w-5" />
+                    </Button>
+                  </div>
+
+                  {selectedCompanyData ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                      <Card className="p-4 space-y-3 col-span-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge className={getStatusColor(selectedCompanyData.status)}>
+                            {selectedCompanyData.status}
+                          </Badge>
+                          <Badge variant="outline">{selectedCompanyData.plan}</Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {t("admin.registration")}: {selectedCompanyData.registered}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">{t("admin.totalMessages")}</p>
+                            <p className="text-base font-semibold">{selectedCompanyData.messages}</p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">{t("admin.messagesThisMonth")}</p>
+                            <p className="text-base font-semibold">
+                              {selectedCompanyData.messagesThisMonth ?? "—"} / {selectedCompanyData.messagesLimit ?? "—"}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">{t("admin.storageUsed")}</p>
+                            <p className="text-base font-semibold">
+                              {selectedCompanyData.storageUsed ?? "—"} / {selectedCompanyData.storageLimit ?? "—"} GB
+                            </p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">{t("admin.messagesThisMonth")}</p>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary"
+                                style={{
+                                  width: selectedCompanyData.messagesLimit
+                                    ? `${Math.min(
+                                        100,
+                                        Math.round(
+                                          ((selectedCompanyData.messagesThisMonth || 0) /
+                                            selectedCompanyData.messagesLimit) *
+                                            100
+                                        )
+                                      )}%`
+                                    : "0%",
+                                }}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">{t("admin.storageUsed")}</p>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-secondary"
+                                style={{
+                                  width: selectedCompanyData.storageLimit
+                                    ? `${Math.min(
+                                        100,
+                                        Math.round(
+                                          ((selectedCompanyData.storageUsed || 0) /
+                                            selectedCompanyData.storageLimit) *
+                                            100
+                                        )
+                                      )}%`
+                                    : "0%",
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+
+                      <Card className="p-4 space-y-3">
+                        <h5 className="text-sm font-semibold text-foreground">
+                          {t("admin.actions")}
+                        </h5>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">{t("admin.status")}</span>
+                            <Badge className={getStatusColor(selectedCompanyData.status)}>
+                              {selectedCompanyData.status}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">{t("admin.plan")}</span>
+                            <Badge variant="outline">{selectedCompanyData.plan}</Badge>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">{t("admin.registration")}</span>
+                            <span className="text-sm font-semibold">{selectedCompanyData.registered}</span>
+                          </div>
+                        </div>
+                        <div className="pt-2 space-y-2">
+                          {selectedCompanyData.status === t("admin.active") ? (
+                            <Button
+                              className="w-full"
+                              variant="destructive"
+                              onClick={async () => {
+                                try {
+                                  await companyService.updateStatus(selectedCompanyData.id, COMPANY_STATUS.BLOCKED);
+                                  toast.success(t("admin.companyBlocked"));
+                                  setIsViewOpen(false);
+                                  refetch();
+                                } catch (error) {
+                                  toast.error(t("admin.blockError"));
+                                }
+                              }}
+                            >
+                              {t("admin.blockCompany")}
+                            </Button>
+                          ) : (
+                            <Button
+                              className="w-full"
+                              onClick={async () => {
+                                try {
+                                  await companyService.updateStatus(selectedCompanyData.id, COMPANY_STATUS.ACTIVE);
+                                  toast.success(t("admin.companyActivated"));
+                                  setIsViewOpen(false);
+                                  refetch();
+                                } catch (error) {
+                                  toast.error(t("admin.activateError"));
+                                }
+                              }}
+                            >
+                              {t("admin.activateCompany")}
+                            </Button>
+                          )}
+                        </div>
+                      </Card>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{t("admin.selectCompany")}</p>
+                  )}
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
     </div>
   );
 };

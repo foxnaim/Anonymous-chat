@@ -24,7 +24,9 @@
     "backToHome": "Басты бетке оралу",
     "free": "Тегін",
     "add": "Қосу",
-    "fillAllFields": "Барлық өрістерді толтырыңыз"
+    "copy": "Көшіру",
+    "fillAllFields": "Барлық өрістерді толтырыңыз",
+    "passwordMinLength": "Ең аз дегенде {{length}} таңба"
   },
   "welcome": {
     "title": "Компанияңызға анонимді пікір жіберіңіз",
@@ -392,6 +394,7 @@
     "noData": "Деректер жоқ",
     "adminDeleted": "Әкімші жойылды",
     "addAdmin": "Әкімші қосу",
+    "superAdminOnly": "Тек супер әкімшіге қолжетімді",
     "searchAdmins": "Әкімшілерді іздеу...",
     "superAdmin": "Супер Әкімші",
     "administrator": "Әкімші",

@@ -19,7 +19,9 @@ const AdminSettings = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const { isFullscreen, toggleFullscreen } = useFullscreen(user?.role === "user" ? null : (user?.role || null));
+  const { isFullscreen, toggleFullscreen } = useFullscreen(
+    user?.role === "user" ? null : (user?.role || null)
+  );
 
   const handlePasswordChange = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {

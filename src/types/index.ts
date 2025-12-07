@@ -2,7 +2,7 @@
 
 export type MessageType = "complaint" | "praise" | "suggestion";
 export type MessageStatus = "Новое" | "В работе" | "Решено" | "Отклонено" | "Спам";
-export type UserRole = "user" | "company" | "admin";
+export type UserRole = "user" | "company" | "admin" | "super_admin";
 export type CompanyStatus = "Активна" | "Пробная" | "Заблокирована";
 export type PlanType = "Бесплатный" | "Про" | "Бизнес" | string; // string для кастомных планов
 
@@ -89,6 +89,6 @@ export interface AdminUser {
   name: string;
   role: "admin" | "super_admin";
   createdAt: string;
-  lastLogin?: string;
+  lastLogin?: string | null;
 }
 
