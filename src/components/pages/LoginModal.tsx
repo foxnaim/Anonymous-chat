@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/redux";
 import { FiLogIn } from "react-icons/fi";
-import { toast } from "sonner";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 
 interface LoginModalProps {

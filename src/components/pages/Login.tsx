@@ -107,10 +107,7 @@ const Login = () => {
               {isLoading ? t("common.loading") : t("auth.login")}
             </Button>
             <div className="text-center text-sm">
-              <span className="text-muted-foreground">{t("auth.noAccount")} </span>
-              <Link href="/register" className="text-primary hover:underline">
-                {t("auth.register")}
-              </Link>
+              <span className="text-muted-foreground">{t("auth.noAccount")}</span>
             </div>
           </form>
         </Card>

@@ -189,10 +189,7 @@ const Register = () => {
             </Button>
 
             <div className="text-center text-sm">
-              <span className="text-muted-foreground">{t("auth.hasAccount")} </span>
-              <Link href="/login" className="text-primary hover:underline">
-                {t("auth.login")}
-              </Link>
+              <span className="text-muted-foreground">{t("auth.hasAccount")}</span>
             </div>
           </form>
         </Card>
