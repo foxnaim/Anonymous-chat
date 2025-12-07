@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { FiSend, FiCopy, FiCheckCircle, FiHome } from "react-icons/fi";
+import { FiSend, FiCopy, FiCheckCircle, FiHome, FiSearch, FiClock, FiShield } from "react-icons/fi";
 import { toast } from "sonner";
 import { useCreateMessage } from "@/lib/query";
 import { MessageType } from "@/types";
@@ -102,15 +102,16 @@ const SendMessageModal = ({
   if (submitted) {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-2xl max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle className="text-center">{t("sendMessage.messageSent")}</DialogTitle>
-            <DialogDescription className="text-center">
-              {t("sendMessage.saveIdDescription")}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-6 py-4">
+        <DialogContent className="max-w-3xl max-h-[90vh] min-h-[600px] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-center">{t("sendMessage.messageSent")}</DialogTitle>
+          <DialogDescription className="text-center">
+            {t("sendMessage.saveIdDescription")}
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="flex flex-col min-h-[500px]">
+          <div className="space-y-6 flex-1">
             <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
               <FiCheckCircle className="h-10 w-10 text-primary" />
             </div>
@@ -130,12 +131,47 @@ const SendMessageModal = ({
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button className="flex-1" onClick={handleClose}>
-                {t("common.close")}
-              </Button>
+            {/* Информационный блок о том, что делать с ID */}
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-6 space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <FiShield className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold text-foreground">{t("sendMessage.whatToDoWithId")}</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <FiSearch className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm text-foreground mb-1">{t("sendMessage.checkStatus")}</p>
+                    <p className="text-xs text-muted-foreground">{t("sendMessage.checkStatusDescription")}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <FiClock className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm text-foreground mb-1">{t("sendMessage.trackResponse")}</p>
+                    <p className="text-xs text-muted-foreground">{t("sendMessage.trackResponseDescription")}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-primary/10">
+                <p className="text-xs text-muted-foreground flex items-center gap-2">
+                  <FiShield className="h-4 w-4" />
+                  {t("sendMessage.idSecurityNote")}
+                </p>
+              </div>
             </div>
           </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 mt-auto">
+            <Button className="flex-1" onClick={handleClose}>
+              {t("common.close")}
+            </Button>
+          </div>
+        </div>
         </DialogContent>
       </Dialog>
     );
@@ -143,7 +179,7 @@ const SendMessageModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh]">
+      <DialogContent className="max-w-3xl max-h-[90vh] min-h-[600px] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("sendMessage.title")}</DialogTitle>
           <DialogDescription>

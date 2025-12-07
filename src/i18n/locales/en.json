@@ -32,6 +32,7 @@
     "checkStatus": "Check Status",
     "register": "Register",
     "login": "Login",
+    "business": "For Business",
     "companyCode": "Company Code",
     "companyCodePlaceholder": "Enter 8 characters",
     "enterCode": "Enter your company code",
@@ -91,7 +92,13 @@
     "step3Title": "Get message ID",
     "step3Description": "After sending, you will receive a unique ID to track the status of your feedback",
     "step4Title": "Check feedback status",
-    "step4Description": "Use the received ID to track the status of your message and get a response from the company"
+    "step4Description": "Use the received ID to track the status of your message and get a response from the company",
+    "whatToDoWithId": "Message ID Usage Instructions",
+    "checkStatus": "Check status",
+    "checkStatusDescription": "Use the 'Check Status' button on the main page and enter this ID",
+    "trackResponse": "Track response",
+    "trackResponseDescription": "The company may leave a response to your message. Check the status regularly",
+    "idSecurityNote": "Your ID is secure. It does not contain personal information and is only used to track the status of your message."
   },
   "checkStatus": {
     "title": "Check Message Status",
@@ -132,7 +139,24 @@
     "loginSuccess": "Login successful!",
     "logoutSuccess": "You have logged out",
     "loginError": "Invalid email or password",
-    "passwordMismatch": "Passwords do not match"
+    "passwordMismatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 6 characters long",
+    "invalidEmail": "Please enter a valid email address",
+    "startUsingToday": "Start using the platform today",
+    "afterRegistration": "After registration you will receive:",
+    "twoMonthsFree": "2 months free",
+    "trialPeriod": "Trial period",
+    "fullAccessDescription": "Full access to all features without restrictions",
+    "uniqueCompanyCode": "Unique company code",
+    "uniqueCompanyCodeDescription": "For employees to send feedback",
+    "controlPanel": "Control panel",
+    "controlPanelDescription": "Full access to analytics and settings",
+    "fillRegistrationForm": "Fill out the registration form",
+    "resetPasswordTitle": "Reset Password",
+    "resetPasswordDescription": "Enter your email and we'll send you password reset instructions",
+    "resetPasswordButton": "Send",
+    "resetPasswordSuccess": "Password reset instructions have been sent to your email",
+    "resetPasswordError": "Error sending email. Please check your email address"
   },
   "company": {
     "dashboard": "Dashboard",

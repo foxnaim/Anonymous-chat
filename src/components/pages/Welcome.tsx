@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FiMessageSquare, FiCheckCircle, FiSend, FiLogIn, FiHome, FiX, FiKey, FiHash, FiEye, FiEyeOff, FiSearch } from "react-icons/fi";
+import { FiMessageSquare, FiCheckCircle, FiSend, FiLogIn, FiHome, FiX, FiKey, FiHash, FiEye, FiEyeOff, FiSearch, FiUserPlus, FiChevronDown } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/redux";
 import { useCompanyByCode, companyService } from "@/lib/query";
@@ -17,6 +17,14 @@ import { SEO, WebsiteStructuredData, OrganizationStructuredData } from "@/lib/se
 import { useDebounce } from "@/hooks/use-debounce";
 import SendMessageModal from "./SendMessageModal";
 import CheckStatusModal from "./CheckStatusModal";
+import LoginModal from "./LoginModal";
+import RegisterModal from "./RegisterModal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Welcome = () => {
   const { t } = useTranslation();
@@ -29,6 +37,8 @@ const Welcome = () => {
   const [isVerifyingPassword, setIsVerifyingPassword] = useState(false);
   const [isSendMessageModalOpen, setIsSendMessageModalOpen] = useState(false);
   const [isCheckStatusModalOpen, setIsCheckStatusModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
   const debouncedCode = useDebounce(companyCode, 500);
 
@@ -130,25 +140,37 @@ const Welcome = () => {
           <div className="flex items-center justify-between">
             <h1 className="text-lg sm:text-xl font-semibold text-primary">FeedbackHub</h1>
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="hidden sm:block w-48">
+              <div className="hidden sm:block min-w-[140px]">
                 <LanguageSwitcher />
               </div>
               {isAuthenticated ? (
-                <Button variant="ghost" size="sm" onClick={() => router.push("/company")} className="text-xs sm:text-sm">
+                <Button variant="ghost" size="sm" onClick={() => router.push("/company")} className="text-xs sm:text-sm min-w-[140px]">
                   <span className="hidden sm:inline">{t("company.dashboard")}</span>
                   <span className="sm:hidden">{t("company.dashboard")}</span>
                 </Button>
               ) : (
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => router.push("/register")} className="text-xs sm:text-sm px-2 sm:px-3">
-                    <span className="hidden sm:inline">{t("welcome.register")}</span>
-                    <span className="sm:hidden">{t("welcome.register")}</span>
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => router.push("/login")} className="text-xs sm:text-sm px-2 sm:px-3">
-                    <FiLogIn className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">{t("welcome.login")}</span>
-                  </Button>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      className="text-xs sm:text-sm px-3 sm:px-4 bg-primary text-primary-foreground hover:bg-primary/90 min-w-[140px]"
+                    >
+                      <span className="hidden sm:inline">{t("welcome.business")}</span>
+                      <span className="sm:hidden">{t("welcome.business")}</span>
+                      <FiChevronDown className="ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => setIsLoginModalOpen(true)}>
+                      <FiLogIn className="mr-2 h-4 w-4" />
+                      <span>{t("welcome.login")}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsRegisterModalOpen(true)}>
+                      <FiUserPlus className="mr-2 h-4 w-4" />
+                      <span>{t("welcome.register")}</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
           </div>
@@ -170,7 +192,13 @@ const Welcome = () => {
           {/* Main Content: Form and Steps */}
           <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 lg:gap-8 items-start">
             {/* Company Code Input - Left Side */}
-            <Card className="w-full p-4 sm:p-5 md:p-6 order-2 lg:order-1">
+            <motion.div
+              initial={{ y: 120 }}
+              animate={{ y: validatedCode ? 0 : 120 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="order-2 lg:order-1"
+            >
+            <Card className="w-full p-4 sm:p-5 md:p-6">
             <div className="space-y-4">
               <div className="text-center space-y-1">
                 <h2 className="text-2xl font-bold text-foreground">{t("welcome.enterCode")}</h2>
@@ -308,6 +336,7 @@ const Welcome = () => {
               </div>
             </div>
           </Card>
+            </motion.div>
 
             {/* Three-Step Guide Section - Right Side */}
             <div className="w-full p-3 sm:p-4 md:p-5 order-1 lg:order-2 lg:sticky lg:top-8 flex flex-col h-full">
@@ -384,6 +413,18 @@ const Welcome = () => {
       <CheckStatusModal
         open={isCheckStatusModalOpen}
         onOpenChange={setIsCheckStatusModalOpen}
+      />
+
+      {/* Модальное окно входа */}
+      <LoginModal
+        open={isLoginModalOpen}
+        onOpenChange={setIsLoginModalOpen}
+      />
+
+      {/* Модальное окно регистрации */}
+      <RegisterModal
+        open={isRegisterModalOpen}
+        onOpenChange={setIsRegisterModalOpen}
       />
     </>
   );
