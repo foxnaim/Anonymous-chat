@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useCreateCompany, plansService } from "@/lib/query";
+import { plansService } from "@/lib/query";
 import { useAuth } from "@/lib/redux";
 import { toast } from "sonner";
 import { FiKey, FiSettings, FiGift, FiCheck, FiEye, FiEyeOff, FiArrowLeft, FiUserPlus } from "react-icons/fi";
@@ -23,7 +23,7 @@ interface RegisterModalProps {
 const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
   const { t } = useTranslation();
   const router = useRouter();
-  const { login } = useAuth();
+  const { register } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [freePeriodDays, setFreePeriodDays] = useState<number>(60);
   
@@ -58,43 +58,7 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
     }
   }, [open]);
 
-  const { mutate: registerCompany, isPending } = useCreateCompany({
-    onSuccess: async (company) => {
-      // В реальном приложении здесь будет API вызов для создания пользователя
-      // Пока сохраняем в localStorage для демо
-      const user = {
-        id: company.id.toString(),
-        email: formData.email,
-        role: "company" as const,
-        companyId: company.id,
-        name: formData.name,
-      };
-      
-      localStorage.setItem("feedbackhub_user", JSON.stringify(user));
-      localStorage.setItem(`feedbackhub_password_${formData.email}`, formData.password);
-
-      toast.success(t("auth.registerSuccess"));
-      
-      // Автоматически входим в систему
-      const loginSuccess = await login(formData.email, formData.password);
-      
-      if (loginSuccess) {
-        // Перенаправляем в панель компании
-        setTimeout(() => {
-          router.replace("/company");
-          onOpenChange(false);
-        }, 200);
-      } else {
-        // Если вход не удался, все равно перенаправляем (пользователь уже сохранен)
-        router.replace("/company");
-        onOpenChange(false);
-      }
-    },
-    onError: (error: Error | unknown) => {
-      const errorMessage = error instanceof Error ? error.message : t("common.error");
-      toast.error(errorMessage);
-    },
-  });
+  const [isPending, setIsPending] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,26 +82,40 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
       return;
     }
 
-    // Генерируем уникальный код компании
-    const code = `COMP${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    // Генерируем уникальный код компании (ровно 8 символов: буквы и цифры)
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
     
-    // Получаем настройки пробного плана для вычисления даты окончания
-    const freePlanSettings = await plansService.getFreePlanSettings();
-    const freePeriodDays = freePlanSettings.freePeriodDays || 60;
+    setIsPending(true);
     
-    // Вычисляем дату окончания пробного периода (из настроек админа)
-    const trialEndDate = new Date();
-    trialEndDate.setDate(trialEndDate.getDate() + freePeriodDays);
-
-    registerCompany({
-      name: formData.name,
-      code,
-      adminEmail: formData.email,
-      status: "Пробная",
-      plan: "Пробный",
-      trialEndDate: trialEndDate.toISOString().split("T")[0],
-      employees: 0,
-    });
+    try {
+      // Регистрируем пользователя с ролью company и создаем компанию
+      const success = await register(
+        formData.email,
+        formData.password,
+        formData.name,
+        'company',
+        formData.name,
+        code
+      );
+      
+      if (success) {
+        toast.success(t("auth.registerSuccess"));
+        // Перенаправляем в панель компании
+        setTimeout(() => {
+          router.replace("/company");
+          onOpenChange(false);
+        }, 200);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : t("common.error");
+      toast.error(errorMessage);
+    } finally {
+      setIsPending(false);
+    }
   };
 
   // Экран с преимуществами

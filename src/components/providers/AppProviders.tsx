@@ -21,13 +21,7 @@ const ThemeInitializer = ({ children }: { children: ReactNode }) => {
       setTheme('light');
       initialized.current = true;
     }
-    // Удаляем сохраненную темную тему из localStorage
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('theme');
-      if (stored === 'dark') {
-        localStorage.removeItem('theme');
-      }
-    }
+    // next-themes управляет темой, убеждаемся что тема светлая
   }, [theme, setTheme]); // Добавлены зависимости
 
   return <>{children}</>;
@@ -37,7 +31,7 @@ interface AppProvidersProps {
   children: ReactNode;
 }
 const AppProviders = ({ children }: AppProvidersProps) => (
-  <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="theme">
+  <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
     <ThemeInitializer>
       <ReduxProvider>
         <QueryProvider>

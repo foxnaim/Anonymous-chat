@@ -41,9 +41,8 @@ if (!i18n.isInitialized) {
         }
       },
       detection: {
-        order: ['localStorage', 'navigator'],
-        caches: ['localStorage'],
-        lookupLocalStorage: 'i18nextLng',
+        order: ['navigator'],
+        caches: [],
       },
       react: {
         useSuspense: false, // Disable suspense to prevent hydration issues
@@ -55,7 +54,19 @@ if (!i18n.isInitialized) {
   if (typeof window !== 'undefined') {
     // Use requestAnimationFrame to ensure this runs after React hydration
     requestAnimationFrame(() => {
-      const stored = localStorage.getItem('i18nextLng');
+      // Получаем язык из куки
+      const getCookie = (name: string): string | null => {
+        const nameEQ = `${name}=`;
+        const ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+          let c = ca[i];
+          while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+          if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+      };
+      
+      const stored = getCookie('i18nextLng');
       if (stored && ['en', 'ru', 'kk'].includes(stored) && stored !== 'ru') {
         i18n.changeLanguage(stored);
       } else {

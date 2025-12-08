@@ -21,7 +21,7 @@ interface LoginModalProps {
 const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
   const { t } = useTranslation();
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -35,19 +35,13 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
     if (success) {
       // Небольшая задержка для обновления состояния пользователя
       setTimeout(() => {
-        // Получаем пользователя из localStorage для определения роли
-        const savedUser = localStorage.getItem("feedbackhub_user");
-        if (savedUser) {
-          try {
-            const userData = JSON.parse(savedUser);
-            if (userData.role === "admin" || userData.role === "super_admin") {
-              router.replace("/admin");
-            } else if (userData.role === "company") {
-              router.replace("/company");
-            } else {
-              router.replace("/");
-            }
-          } catch {
+        // Используем пользователя из Redux state для определения роли
+        if (user) {
+          if (user.role === "admin" || user.role === "super_admin") {
+            router.replace("/admin");
+          } else if (user.role === "company") {
+            router.replace("/company");
+          } else {
             router.replace("/");
           }
         } else {

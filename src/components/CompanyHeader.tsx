@@ -18,7 +18,6 @@ import {
   FiX,
 } from "react-icons/fi";
 import { useAuth } from "@/lib/redux";
-import { STORAGE_KEYS } from "@/lib/redux/constants";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
@@ -34,12 +33,9 @@ export const CompanyHeader = () => {
 
   // Проверяем, был ли вход выполнен под админом
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const loginRole = localStorage.getItem(STORAGE_KEYS.LOGIN_ROLE);
-      // Показываем стрелку назад только если вход был выполнен как admin или super_admin
-      setShowBackButton(loginRole === 'admin' || loginRole === 'super_admin');
-    }
-  }, []);
+    // Показываем стрелку назад только если вход был выполнен как admin или super_admin
+    setShowBackButton(user?.role === 'admin' || user?.role === 'super_admin');
+  }, [user]);
 
   const navigation = [
     { name: t("company.dashboard"), path: "/company", icon: FiLayout },

@@ -1,24 +1,9 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import type { User, AuthState } from "@/types";
 import { toast } from "sonner";
-import { STORAGE_KEYS } from "../constants";
-
-// Моковые пользователи для демо
-const mockUsers = {
-  company: {
-    id: "1",
-    email: "admin@acme.com",
-    role: "company" as const,
-    companyId: 1,
-    name: "Acme Corporation Admin",
-  },
-  admin: {
-    id: "admin-1",
-    email: "admin@feedbackhub.com",
-    role: "super_admin" as const,
-    name: "Super Admin",
-  },
-};
+import { authService } from "@/lib/api/auth";
+import type { ApiError } from "@/lib/api/client";
+import { setToken, getToken, removeToken } from "@/lib/utils/cookies";
 
 const initialState: AuthState = {
   user: null,
@@ -34,18 +19,71 @@ export const loginAsync = createAsyncThunk<
 >(
   'auth/login',
   async ({ email, password }, { rejectWithValue }) => {
-    // Симуляция API запроса
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    
-    // Проверка моковых пользователей
-    if (email === mockUsers.company.email && password === "password") {
-      return mockUsers.company;
+    try {
+      const response = await authService.login({ email, password });
+      
+      // Сохраняем токен в куки
+      setToken(response.data.token);
+
+      // Преобразуем ответ в формат User
+      const user: User = {
+        id: response.data.user.id,
+        email: response.data.user.email,
+        role: response.data.user.role as User['role'],
+        companyId: response.data.user.companyId ? Number(response.data.user.companyId) : undefined,
+        name: response.data.user.name,
+      };
+
+      return user;
+    } catch (error) {
+      const apiError = error as ApiError;
+      return rejectWithValue(apiError.message || "Неверный email или пароль");
     }
-    if (email === mockUsers.admin.email && password === "admin") {
-      return mockUsers.admin;
+  }
+);
+
+// Async thunk для регистрации
+export const registerAsync = createAsyncThunk<
+  User,
+  {
+    email: string;
+    password: string;
+    name?: string;
+    role?: string;
+    companyName?: string;
+    companyCode?: string;
+  },
+  { rejectValue: string }
+>(
+  'auth/register',
+  async ({ email, password, name, role, companyName, companyCode }, { rejectWithValue }) => {
+    try {
+      const response = await authService.register({
+        email,
+        password,
+        name,
+        role,
+        companyName,
+        companyCode,
+      });
+      
+      // Сохраняем токен в куки
+      setToken(response.data.token);
+
+      // Преобразуем ответ в формат User
+      const user: User = {
+        id: response.data.user.id,
+        email: response.data.user.email,
+        role: response.data.user.role as User['role'],
+        companyId: response.data.user.companyId ? Number(response.data.user.companyId) : undefined,
+        name: response.data.user.name,
+      };
+
+      return user;
+    } catch (error) {
+      const apiError = error as ApiError;
+      return rejectWithValue(apiError.message || "Ошибка регистрации");
     }
-    
-    return rejectWithValue("Неверный email или пароль");
   }
 );
 
@@ -59,16 +97,30 @@ export const checkSessionAsync = createAsyncThunk<
   async () => {
     if (typeof window === 'undefined') return null;
     
-    const savedUser = localStorage.getItem(STORAGE_KEYS.USER);
-    if (savedUser) {
-      try {
-        return JSON.parse(savedUser) as User;
-      } catch (e) {
-        localStorage.removeItem(STORAGE_KEYS.USER);
-        return null;
-      }
+    // Получаем токен из куки
+    const token = getToken();
+    if (!token) {
+      return null;
     }
-    return null;
+
+    try {
+      const response = await authService.getMe();
+      
+      // Преобразуем ответ в формат User
+      const user: User = {
+        id: response.data.user.id,
+        email: response.data.user.email,
+        role: response.data.user.role as User['role'],
+        companyId: response.data.user.companyId ? Number(response.data.user.companyId) : undefined,
+        name: response.data.user.name,
+      };
+
+      return user;
+    } catch (error) {
+      // Если токен невалиден, удаляем его из куки
+      removeToken();
+      return null;
+    }
   }
 );
 
@@ -80,11 +132,9 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       state.isLoading = false; // Явно устанавливаем isLoading в false при выходе
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem(STORAGE_KEYS.USER);
-        localStorage.removeItem(STORAGE_KEYS.PASSWORD);
-        localStorage.removeItem(STORAGE_KEYS.LOGIN_ROLE);
-      }
+      
+      // Удаляем токен из куки
+      removeToken();
     },
     setUser: (state, action: PayloadAction<User | null>) => {
       state.user = action.payload;
@@ -101,12 +151,21 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.isAuthenticated = true;
         state.isLoading = false;
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(action.payload));
-          // Сохраняем роль, под которой был выполнен вход
-          localStorage.setItem(STORAGE_KEYS.LOGIN_ROLE, action.payload.role);
-        }
         toast.success("Вход выполнен успешно");
+      })
+      // Register
+      .addCase(registerAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(registerAsync.fulfilled, (state, action) => {
+        state.user = action.payload;
+        state.isAuthenticated = true;
+        state.isLoading = false;
+        toast.success("Регистрация выполнена успешно");
+      })
+      .addCase(registerAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        toast.error(action.payload as string || "Ошибка регистрации");
       })
       .addCase(loginAsync.rejected, (state, action) => {
         state.isLoading = false;

@@ -28,19 +28,6 @@ const Register = () => {
 
   const { mutate: registerCompany, isPending } = useCreateCompany({
     onSuccess: async (company) => {
-      // В реальном приложении здесь будет API вызов для создания пользователя
-      // Пока сохраняем в localStorage для демо
-      const user = {
-        id: company.id.toString(),
-        email: formData.email,
-        role: "company" as const,
-        companyId: company.id,
-        name: formData.name,
-      };
-      
-      localStorage.setItem("feedbackhub_user", JSON.stringify(user));
-      localStorage.setItem(`feedbackhub_password_${formData.email}`, formData.password);
-
       toast.success(t("auth.registerSuccess"));
       
       // Автоматически входим в систему
@@ -52,7 +39,6 @@ const Register = () => {
           router.replace("/company");
         }, 200);
       } else {
-        // Если вход не удался, все равно перенаправляем (пользователь уже сохранен)
         router.replace("/company");
       }
     },
@@ -75,8 +61,12 @@ const Register = () => {
       return;
     }
 
-    // Генерируем уникальный код компании
-    const code = `COMP${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    // Генерируем уникальный код компании (ровно 8 символов: буквы и цифры)
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
     
     // Получаем настройки пробного плана для вычисления даты окончания
     const freePlanSettings = await plansService.getFreePlanSettings();

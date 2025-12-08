@@ -4,6 +4,7 @@
  */
 
 import { API_CONFIG } from '../query/constants';
+import { getToken } from '../utils/cookies';
 
 export interface ApiError {
   message: string;
@@ -70,18 +71,45 @@ class ApiClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
 
+    // Получаем токен из куки
+    const token = getToken();
+    
+    // Добавляем токен в заголовки, если он есть
+    const headers = new Headers(options.headers);
+    
+    if (token && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+
     try {
       const response = await fetch(url, {
         ...options,
+        headers,
         signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        let errorCode: string | undefined;
+
+        try {
+          const errorData = await response.json();
+          if (errorData.error?.message) {
+            errorMessage = errorData.error.message;
+          }
+          if (errorData.error?.code) {
+            errorCode = errorData.error.code;
+          }
+        } catch {
+          // Если не удалось распарсить JSON, используем стандартное сообщение
+        }
+
         const error: ApiError = {
-          message: `HTTP error! status: ${response.status}`,
+          message: errorMessage,
           status: response.status,
+          code: errorCode,
         };
         throw error;
       }

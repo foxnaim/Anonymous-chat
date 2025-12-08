@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import type { UserRole } from "@/types";
+import { getCookie, setCookie, deleteCookie } from "@/lib/utils/cookies";
 
 const STORAGE_KEY = "feedbackhub_fullscreen_mode";
 
@@ -10,7 +11,7 @@ export const useFullscreen = (userRole: UserRole | null) => {
   
   const [isFullscreen, setIsFullscreen] = useState(() => {
     if (typeof window === "undefined" || !storageKey) return false;
-    const saved = localStorage.getItem(storageKey);
+    const saved = getCookie(storageKey);
     return saved === "true";
   });
 
@@ -26,8 +27,12 @@ export const useFullscreen = (userRole: UserRole | null) => {
       document.body.classList.remove("fullscreen-mode");
     }
 
-    // Сохраняем в localStorage
-    localStorage.setItem(storageKey, isFullscreen.toString());
+    // Сохраняем в куки
+    if (isFullscreen) {
+      setCookie(storageKey, isFullscreen.toString(), 365 * 24 * 60 * 60); // 1 год
+    } else {
+      deleteCookie(storageKey);
+    }
 
     // Cleanup при размонтировании - убеждаемся, что классы удалены
     return () => {

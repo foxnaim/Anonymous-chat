@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FiLock } from "react-icons/fi";
 import { toast } from "sonner";
+import { authService } from "@/lib/api/auth";
+import type { ApiError } from "@/lib/api/client";
 
 interface ForgotPasswordModalProps {
   open: boolean;
@@ -31,14 +33,27 @@ const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) =
 
     setIsLoading(true);
     
-    // Имитация отправки запроса на восстановление пароля
-    // В реальном приложении здесь будет API вызов
-    setTimeout(() => {
+    try {
+      const response = await authService.forgotPassword({ email });
       setIsLoading(false);
-      toast.success(t("auth.resetPasswordSuccess"));
+      
+      // В development режиме показываем токен для тестирования
+      if (response.resetToken && process.env.NODE_ENV === 'development') {
+        toast.success(
+          `${t("auth.resetPasswordSuccess")}\nТокен для тестирования: ${response.resetToken}`,
+          { duration: 10000 }
+        );
+      } else {
+        toast.success(response.message || t("auth.resetPasswordSuccess"));
+      }
+      
       setEmail("");
       onOpenChange(false);
-    }, 1500);
+    } catch (error) {
+      setIsLoading(false);
+      const apiError = error as ApiError;
+      toast.error(apiError.message || t("common.error"));
+    }
   };
 
   return (

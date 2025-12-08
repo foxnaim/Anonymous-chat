@@ -3,7 +3,7 @@
  */
 
 import { useAppDispatch, useAppSelector } from '../hooks';
-import { loginAsync, logout, checkSessionAsync } from '../slices/authSlice';
+import { loginAsync, registerAsync, logout, checkSessionAsync } from '../slices/authSlice';
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -29,6 +29,24 @@ export const useAuth = () => {
     try {
       const result = await dispatch(loginAsync({ email, password }));
       return loginAsync.fulfilled.match(result);
+    } catch {
+      return false;
+    }
+  };
+
+  const register = async (
+    email: string,
+    password: string,
+    name?: string,
+    role?: string,
+    companyName?: string,
+    companyCode?: string
+  ): Promise<boolean> => {
+    try {
+      const result = await dispatch(
+        registerAsync({ email, password, name, role, companyName, companyCode })
+      );
+      return registerAsync.fulfilled.match(result);
     } catch {
       return false;
     }
@@ -65,6 +83,7 @@ export const useAuth = () => {
     isAuthenticated: auth.isAuthenticated,
     isLoading: auth.isLoading,
     login,
+    register,
     logout: handleLogout,
   };
 };
