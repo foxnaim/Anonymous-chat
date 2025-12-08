@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FiMessageSquare, FiCheckCircle, FiSend, FiLogIn, FiHome, FiX, FiKey, FiHash, FiEye, FiEyeOff, FiSearch, FiUserPlus, FiChevronDown, FiLayout } from "react-icons/fi";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/lib/redux";
@@ -31,6 +31,7 @@ import {
 const Welcome = () => {
   const { t } = useTranslation();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isAuthenticated } = useAuth();
   const [companyCode, setCompanyCode] = useState("");
   const [validatedCode, setValidatedCode] = useState<string | null>(null);
@@ -41,6 +42,19 @@ const Welcome = () => {
   const [isCheckStatusModalOpen, setIsCheckStatusModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [codeFromUrlLoaded, setCodeFromUrlLoaded] = useState(false);
+
+  // Читаем код из URL при загрузке страницы (только один раз)
+  useEffect(() => {
+    if (!codeFromUrlLoaded) {
+      const codeFromUrl = searchParams.get("code");
+      if (codeFromUrl && codeFromUrl.length === 8) {
+        const normalizedCode = codeFromUrl.toUpperCase().trim();
+        setCompanyCode(normalizedCode);
+        setCodeFromUrlLoaded(true);
+      }
+    }
+  }, [searchParams, codeFromUrlLoaded]);
 
   const debouncedCode = useDebounce(companyCode, 500);
 
