@@ -2,168 +2,49 @@
  * API сервисы для работы с компаниями, статистикой, планами и админами
  */
 
-import { Company, Stats, MessageDistribution, GrowthMetrics, SubscriptionPlan, AdminUser, AchievementProgress } from "@/types";
-import { messageApi } from "./messages";
+import { Stats, MessageDistribution, GrowthMetrics, SubscriptionPlan, AdminUser, AchievementProgress } from "@/types";
+import type { GroupedAchievements } from "../achievements";
 import { API_CONFIG } from "../query/constants";
-import { getCompanyAchievements, getGroupedAchievements, type GroupedAchievements } from "../achievements";
 
-// Симуляция задержки API
+// Симуляция задержки API (больше не используется, но оставлено для совместимости)
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Моковые данные компаний
-const mockCompanies: Company[] = [
-  {
-    id: 1,
-    name: "Acme Corporation",
-    code: "ACME0001",
-    adminEmail: "admin@acme.com",
-    status: "Активна",
-    plan: "Про",
-    registered: "2024-01-15",
-    employees: 245,
-    messages: 127,
-    messagesThisMonth: 34,
-    messagesLimit: 100,
-    storageUsed: 2.4,
-    storageLimit: 10,
-  },
-  {
-    id: 2,
-    name: "TechStart Inc",
-    code: "TECH0001",
-    adminEmail: "sarah.smith@techstart.com",
-    status: "Пробная",
-    plan: "Пробный",
-    registered: "2024-03-10",
-    trialEndDate: "2024-05-10",
-    employees: 45,
-    messages: 23,
-    messagesThisMonth: 12,
-    messagesLimit: 999999,
-    storageUsed: 0.8,
-    storageLimit: 999999,
-  },
-  {
-    id: 3,
-    name: "Global Solutions",
-    code: "GLOB0001",
-    adminEmail: "mike.jones@global.com",
-    status: "Активна",
-    plan: "Бизнес",
-    registered: "2023-11-20",
-    employees: 890,
-    messages: 456,
-    messagesThisMonth: 89,
-    messagesLimit: 500,
-    storageUsed: 8.2,
-    storageLimit: 50,
-  },
-  {
-    id: 4,
-    name: "StartupCo",
-    code: "STUP0001",
-    adminEmail: "lisa.wang@startup.com",
-    status: "Заблокирована",
-    plan: "Пробный",
-    registered: "2024-02-28",
-    employees: 12,
-    messages: 8,
-    messagesThisMonth: 0,
-    messagesLimit: 10,
-    storageUsed: 0.1,
-    storageLimit: 1,
-  },
-];
+// Моковые данные компаний удалены - теперь используется реальный API через companyService в services.ts
+// Этот файл оставлен для обратной совместимости, но companyApi больше не используется
 
-export const companyApi = {
-  getAll: async (): Promise<Company[]> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
-    return mockCompanies;
-  },
+// Импортируем apiClient для реальных запросов
+import { apiClient } from './client';
 
-  getById: async (id: number): Promise<Company | null> => {
-    await delay(API_CONFIG.TIMEOUT / 3);
-    return mockCompanies.find((c) => c.id === id) || null;
-  },
-
-  getByCode: async (code: string): Promise<Company | null> => {
-    await delay(API_CONFIG.TIMEOUT / 3);
-    return mockCompanies.find((c) => c.code === code) || null;
-  },
-
-  create: async (company: Omit<Company, "id" | "registered" | "messages">): Promise<Company> => {
-    await delay(API_CONFIG.TIMEOUT);
-    const registeredDate = new Date().toISOString().split("T")[0];
-    const trialEndDate = company.trialEndDate || (() => {
-      const endDate = new Date(registeredDate);
-      endDate.setMonth(endDate.getMonth() + 2);
-      return endDate.toISOString().split("T")[0];
-    })();
-    
-    const isTrial = company.status === "Пробная";
-    
-    const newCompany: Company = {
-      ...company,
-      id: mockCompanies.length + 1,
-      registered: registeredDate,
-      messages: 0,
-      trialEndDate,
-      messagesLimit: isTrial ? 999999 : company.messagesLimit,
-      storageLimit: isTrial ? 999999 : company.storageLimit,
-      messagesThisMonth: 0,
-      storageUsed: 0,
-    };
-    mockCompanies.push(newCompany);
-    return newCompany;
-  },
-
-  update: async (id: number, updates: Partial<Company>): Promise<Company> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
-    const company = mockCompanies.find((c) => c.id === id);
-    if (!company) throw new Error("Company not found");
-    Object.assign(company, updates);
-    return company;
-  },
-
-  updateStatus: async (id: number, status: Company["status"]): Promise<Company> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
-    const company = mockCompanies.find((c) => c.id === id);
-    if (!company) throw new Error("Company not found");
-    company.status = status;
-    return company;
-  },
-};
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+}
 
 export const statsApi = {
-  getCompanyStats: async (companyId: number): Promise<Stats> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
-    const companyMessages = await messageApi.getAll();
-    const company = mockCompanies.find((c) => c.id === companyId);
-    const filteredMessages = company ? companyMessages.filter((m) => m.companyCode === company.code) : [];
-    return {
-      new: filteredMessages.filter((m) => m.status === "Новое").length,
-      inProgress: filteredMessages.filter((m) => m.status === "В работе").length,
-      resolved: filteredMessages.filter((m) => m.status === "Решено").length,
-      total: filteredMessages.length,
-    };
+  getCompanyStats: async (companyId: string | number): Promise<Stats> => {
+    try {
+      const response = await apiClient.get<ApiResponse<Stats>>(`/stats/company/${companyId}`);
+      return response.data;
+    } catch (error) {
+      // Если статистика не найдена, возвращаем пустую
+      return { new: 0, inProgress: 0, resolved: 0, total: 0 };
+    }
   },
 
-  getMessageDistribution: async (companyId: number): Promise<MessageDistribution> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
-    const company = mockCompanies.find((c) => c.id === companyId);
-    if (!company) return { complaints: 0, praises: 0, suggestions: 0 };
-    const companyMessages = await messageApi.getAll(company.code);
-    return {
-      complaints: companyMessages.filter((m) => m.type === "complaint").length,
-      praises: companyMessages.filter((m) => m.type === "praise").length,
-      suggestions: companyMessages.filter((m) => m.type === "suggestion").length,
-    };
+  getMessageDistribution: async (companyId: string | number): Promise<MessageDistribution> => {
+    try {
+      const response = await apiClient.get<ApiResponse<MessageDistribution>>(`/stats/distribution/${companyId}`);
+      return response.data;
+    } catch (error) {
+      return { complaints: 0, praises: 0, suggestions: 0 };
+    }
   },
 
-  getGrowthMetrics: async (companyId: number): Promise<GrowthMetrics> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
-    const company = mockCompanies.find((c) => c.id === companyId);
-    if (!company) {
+  getGrowthMetrics: async (companyId: string | number): Promise<GrowthMetrics> => {
+    try {
+      const response = await apiClient.get<ApiResponse<GrowthMetrics>>(`/stats/growth/${companyId}`);
+      return response.data;
+    } catch (error) {
       return {
         rating: 0,
         mood: "Нейтральный",
@@ -177,118 +58,24 @@ export const statsApi = {
         },
       };
     }
-
-    const companyMessages = await messageApi.getAll(company.code);
-    
-    // Получаем статистику напрямую
-    const filteredMessages = companyMessages;
-    
-    const distribution = {
-      complaints: filteredMessages.filter((m) => m.type === "complaint").length,
-      praises: filteredMessages.filter((m) => m.type === "praise").length,
-      suggestions: filteredMessages.filter((m) => m.type === "suggestion").length,
-    };
-
-    // Расчет баллов за решенные проблемы
-    // Учитываем только решенные жалобы и предложения
-    const resolvedComplaints = companyMessages.filter(
-      (m) => m.type === "complaint" && m.status === "Решено"
-    ).length;
-    const resolvedSuggestions = companyMessages.filter(
-      (m) => m.type === "suggestion" && m.status === "Решено"
-    ).length;
-    const totalResolved = resolvedComplaints + resolvedSuggestions;
-    const totalProblems = distribution.complaints + distribution.suggestions;
-    
-    // Баллы за решенные проблемы (максимум 50 баллов)
-    // Процент решенных проблем от общего количества проблем
-    const resolvedRatio = totalProblems > 0 ? (totalResolved / totalProblems) : 0;
-    const resolvedPoints = resolvedRatio * 50; // 0-50 баллов
-
-    // Расчет баллов за скорость ответа
-    // Учитываем только сообщения с ответами
-    let responseSpeedPoints = 0;
-    let totalResponses = 0;
-    
-    companyMessages.forEach((msg) => {
-      if (msg.companyResponse && msg.updatedAt) {
-        totalResponses++;
-        const created = new Date(msg.createdAt);
-        const updated = new Date(msg.updatedAt);
-        const daysDiff = Math.floor((updated.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
-        
-        // Баллы за скорость ответа (быстрее = больше баллов)
-        if (daysDiff <= 1) responseSpeedPoints += 5;
-        else if (daysDiff <= 3) responseSpeedPoints += 3;
-        else if (daysDiff <= 7) responseSpeedPoints += 1;
-      }
-    });
-    
-    // Нормализуем баллы за скорость ответа (максимум 50 баллов)
-    // Если есть ответы, нормализуем по максимальному количеству баллов
-    const maxSpeedPoints = totalResponses * 5; // Максимум если все ответы в течение 1 дня
-    const normalizedSpeedPoints = maxSpeedPoints > 0 ? (responseSpeedPoints / maxSpeedPoints) * 50 : 0;
-
-    // Общая сумма баллов (только решенные проблемы + скорость ответа)
-    // Максимум 100 баллов = 10.0 рейтинг
-    const totalPoints = resolvedPoints + normalizedSpeedPoints;
-    
-    // Конвертация в рейтинг (максимум 100 баллов = 10.0)
-    const rating = Math.min(10, Math.round((totalPoints / 10) * 10) / 10);
-
-    // Определение настроения
-    let mood: "Позитивный" | "Нейтральный" | "Негативный" = "Нейтральный";
-    if (rating >= 7) mood = "Позитивный";
-    else if (rating <= 4) mood = "Негативный";
-
-    // Определение тренда на основе изменения рейтинга
-    // Упрощенная версия - можно улучшить с историей
-    const trend: "up" | "down" | "stable" = "stable";
-
-    // Расчет прогресса до следующего уровня
-    const currentLevel = Math.floor(rating);
-    const nextLevel = Math.min(10, currentLevel + 1);
-    const progress = ((rating - currentLevel) / 1) * 100;
-
-    return {
-      rating,
-      mood,
-      trend,
-      pointsBreakdown: {
-        totalMessages: 0,
-        resolvedCases: resolvedPoints,
-        responseSpeed: normalizedSpeedPoints,
-        activityBonus: 0,
-        achievementsBonus: 0,
-      },
-      nextLevel: {
-        current: currentLevel,
-        next: nextLevel,
-        progress: Math.round(progress),
-      },
-    };
   },
 
-  getAchievements: async (companyId: number): Promise<AchievementProgress[]> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
-    const company = mockCompanies.find((c) => c.id === companyId);
-    if (!company) {
+  getAchievements: async (companyId: string | number): Promise<AchievementProgress[]> => {
+    try {
+      const response = await apiClient.get<ApiResponse<AchievementProgress[]>>(`/stats/achievements/${companyId}`);
+      return response.data;
+    } catch (error) {
       return [];
     }
-
-    const companyMessages = await messageApi.getAll(company.code);
-    return getCompanyAchievements(companyMessages, company);
   },
 
-  getGroupedAchievements: async (companyId: number): Promise<GroupedAchievements[]> => {
-    await delay(API_CONFIG.TIMEOUT / 2);
-    const company = mockCompanies.find((c) => c.id === companyId);
-    if (!company) {
+  getGroupedAchievements: async (companyId: string | number): Promise<GroupedAchievements[]> => {
+    try {
+      const response = await apiClient.get<ApiResponse<GroupedAchievements[]>>(`/stats/achievements/${companyId}/grouped`);
+      return response.data;
+    } catch (error) {
       return [];
     }
-
-    const companyMessages = await messageApi.getAll(company.code);
-    return getGroupedAchievements(companyMessages, company);
   },
 };
 

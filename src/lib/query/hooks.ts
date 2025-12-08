@@ -5,7 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient, type UseQueryOptions, type UseMutationOptions } from "@tanstack/react-query";
 import { queryKeys } from "./index";
-import type { Message, Company, Stats, MessageDistribution, GrowthMetrics, SubscriptionPlan, AdminUser, AchievementProgress } from "@/types";
+import type { Message, Company, Stats, MessageDistribution, GrowthMetrics, SubscriptionPlan, AdminUser, AchievementProgress, PlanType } from "@/types";
 import type { PlatformStats } from "./types";
 import type { GroupedAchievements } from "../achievements";
 import { 
@@ -15,6 +15,7 @@ import {
   plansService, 
   adminService 
 } from "./services";
+import { adminSettingsApi, type AdminSettings, type UpdateAdminSettingsRequest } from "../api/adminSettings";
 
 /**
  * Хук для получения всех сообщений
@@ -62,7 +63,7 @@ export const useCompanies = (options?: Omit<UseQueryOptions<Company[]>, 'queryKe
 /**
  * Хук для получения компании по ID
  */
-export const useCompany = (id: number, options?: Omit<UseQueryOptions<Company | null>, 'queryKey' | 'queryFn'>) => {
+export const useCompany = (id: string | number, options?: Omit<UseQueryOptions<Company | null>, 'queryKey' | 'queryFn'>) => {
   return useQuery({
     queryKey: queryKeys.company(id),
     queryFn: () => companyService.getById(id),
@@ -92,7 +93,7 @@ export const useCompanyByCode = (code: string, options?: Omit<UseQueryOptions<Co
  * Хук для получения статистики компании
  * Оптимизирован для быстрой работы и кэширования
  */
-export const useCompanyStats = (companyId: number, options?: Omit<UseQueryOptions<Stats>, 'queryKey' | 'queryFn'>) => {
+export const useCompanyStats = (companyId: string | number, options?: Omit<UseQueryOptions<Stats>, 'queryKey' | 'queryFn'>) => {
   return useQuery({
     queryKey: queryKeys.companyStats(companyId),
     queryFn: () => statsService.getCompanyStats(companyId),
@@ -107,7 +108,7 @@ export const useCompanyStats = (companyId: number, options?: Omit<UseQueryOption
  * Хук для получения распределения сообщений
  * Оптимизирован для быстрой работы и кэширования
  */
-export const useMessageDistribution = (companyId: number, options?: Omit<UseQueryOptions<MessageDistribution>, 'queryKey' | 'queryFn'>) => {
+export const useMessageDistribution = (companyId: string | number, options?: Omit<UseQueryOptions<MessageDistribution>, 'queryKey' | 'queryFn'>) => {
   return useQuery({
     queryKey: queryKeys.messageDistribution(companyId),
     queryFn: () => statsService.getMessageDistribution(companyId),
@@ -122,7 +123,7 @@ export const useMessageDistribution = (companyId: number, options?: Omit<UseQuer
  * Хук для получения метрик роста
  * Оптимизирован для быстрой работы и кэширования
  */
-export const useGrowthMetrics = (companyId: number, options?: Omit<UseQueryOptions<GrowthMetrics>, 'queryKey' | 'queryFn'>) => {
+export const useGrowthMetrics = (companyId: string | number, options?: Omit<UseQueryOptions<GrowthMetrics>, 'queryKey' | 'queryFn'>) => {
   return useQuery({
     queryKey: queryKeys.growthMetrics(companyId),
     queryFn: () => statsService.getGrowthMetrics(companyId),
@@ -137,7 +138,7 @@ export const useGrowthMetrics = (companyId: number, options?: Omit<UseQueryOptio
  * Хук для получения достижений компании
  * Оптимизирован для быстрой работы и кэширования
  */
-export const useAchievements = (companyId: number, options?: Omit<UseQueryOptions<AchievementProgress[]>, 'queryKey' | 'queryFn'>) => {
+export const useAchievements = (companyId: string | number, options?: Omit<UseQueryOptions<AchievementProgress[]>, 'queryKey' | 'queryFn'>) => {
   return useQuery({
     queryKey: queryKeys.achievements(companyId),
     queryFn: () => statsService.getAchievements(companyId),
@@ -151,7 +152,7 @@ export const useAchievements = (companyId: number, options?: Omit<UseQueryOption
 /**
  * Хук для получения сгруппированных достижений компании
  */
-export const useGroupedAchievements = (companyId: number, options?: Omit<UseQueryOptions<GroupedAchievements[]>, 'queryKey' | 'queryFn'>) => {
+export const useGroupedAchievements = (companyId: string | number, options?: Omit<UseQueryOptions<GroupedAchievements[]>, 'queryKey' | 'queryFn'>) => {
   return useQuery({
     queryKey: [...queryKeys.achievements(companyId), 'grouped'],
     queryFn: () => statsService.getGroupedAchievements(companyId),
@@ -252,6 +253,104 @@ export const useCreateCompany = (options?: UseMutationOptions<Company, Error, Om
     mutationFn: companyService.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.companies });
+    },
+    ...options,
+  });
+};
+
+/**
+ * Хук для обновления компании
+ */
+export const useUpdateCompany = (options?: UseMutationOptions<Company, Error, { id: string | number; updates: Partial<Company> }>) => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, updates }) => companyService.update(id, updates),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies });
+      queryClient.invalidateQueries({ queryKey: queryKeys.company(data.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companyByCode(data.code) });
+    },
+    ...options,
+  });
+};
+
+/**
+ * Хук для обновления статуса компании
+ */
+export const useUpdateCompanyStatus = (options?: UseMutationOptions<Company, Error, { id: string | number; status: Company["status"] }>) => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, status }) => companyService.updateStatus(id, status),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies });
+      queryClient.invalidateQueries({ queryKey: queryKeys.company(data.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companyByCode(data.code) });
+    },
+    ...options,
+  });
+};
+
+/**
+ * Хук для обновления плана компании
+ */
+export const useUpdateCompanyPlan = (options?: UseMutationOptions<Company, Error, { id: string | number; plan: PlanType; planEndDate?: string }>) => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, plan, planEndDate }) => companyService.updatePlan(id, plan, planEndDate),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies });
+      queryClient.invalidateQueries({ queryKey: queryKeys.company(data.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companyByCode(data.code) });
+    },
+    ...options,
+  });
+};
+
+/**
+ * Хук для удаления компании
+ */
+export const useDeleteCompany = (options?: UseMutationOptions<void, Error, string | number>) => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id) => companyService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies });
+    },
+    ...options,
+  });
+};
+
+/**
+ * Хук для получения настроек админа
+ */
+export const useAdminSettings = (options?: Omit<UseQueryOptions<AdminSettings>, 'queryKey' | 'queryFn'>) => {
+  return useQuery({
+    queryKey: queryKeys.adminSettings,
+    queryFn: async () => {
+      const response = await adminSettingsApi.get();
+      return response.data;
+    },
+    ...options,
+  });
+};
+
+/**
+ * Хук для обновления настроек админа
+ */
+export const useUpdateAdminSettings = (options?: UseMutationOptions<AdminSettings, Error, UpdateAdminSettingsRequest>) => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: UpdateAdminSettingsRequest) => {
+      const response = await adminSettingsApi.update(data);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(queryKeys.adminSettings, data);
     },
     ...options,
   });

@@ -23,13 +23,14 @@ import {
   FiX,
   FiCopy,
   FiEdit,
+  FiCheck,
+  FiTrash2,
 } from "react-icons/fi";
 import { AdminHeader } from "@/components/AdminHeader";
-import { useCompanies, useCreateCompany, usePlans, companyService } from "@/lib/query";
+import { useCompanies, useCreateCompany, useDeleteCompany, usePlans, companyService } from "@/lib/query";
 import { getTranslatedValue } from "@/lib/utils/translations";
 import { toast } from "sonner";
 import type { CompanyStatus, PlanType } from "@/types";
-import TrialCard from "@/components/TrialCard";
 
 // Константы статусов компании
 const COMPANY_STATUS: Record<string, CompanyStatus> = {
@@ -43,8 +44,8 @@ const PLAN_OPTIONS = ["Пробный", "Стандарт", "Бизнес"] as c
 const AdminPanel = () => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "trial" | "blocked">("all");
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "blocked">("all");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
@@ -59,7 +60,7 @@ const AdminPanel = () => {
     name: "",
     adminEmail: "",
     code: "",
-    status: COMPANY_STATUS.ACTIVE,
+    password: "",
     plan: "Пробный" as (typeof PLAN_OPTIONS)[number],
     employees: 0,
   });
@@ -76,6 +77,18 @@ const AdminPanel = () => {
     onError: () => toast.error(t("common.error")),
   });
 
+  const { mutateAsync: deleteCompany, isPending: isDeleting } = useDeleteCompany({
+    onSuccess: async () => {
+      await refetch();
+      setIsViewOpen(false);
+      setSelectedCompanyId(null);
+      toast.success(t("admin.deleteCompany") || "Компания удалена");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t("common.error"));
+    },
+  });
+
   const generateCode = () =>
     Math.random().toString(36).slice(2, 10).toUpperCase();
 
@@ -89,7 +102,6 @@ const AdminPanel = () => {
     const matchesStatus =
       statusFilter === "all" ||
       (statusFilter === "active" && status === t("admin.active").toLowerCase()) ||
-      (statusFilter === "trial" && status === t("admin.trial").toLowerCase()) ||
       (statusFilter === "blocked" && status === t("admin.blocked").toLowerCase());
 
     return matchesSearch && matchesStatus;
@@ -107,8 +119,6 @@ const AdminPanel = () => {
     switch (status) {
       case t("admin.active"):
         return "bg-success text-white"; /* Green */
-      case t("admin.trial"):
-        return "bg-[#2F2FA2] text-white"; /* Primary blue */
       case t("admin.blocked"):
         return "bg-accent text-white"; /* #F64C72 */
       default:
@@ -116,14 +126,19 @@ const AdminPanel = () => {
     }
   };
 
-  // Автовыбор первой компании после фильтра / поиска
+  // Автовыбор первой компании при загрузке и после фильтра / поиска
   useEffect(() => {
     if (filteredCompanies.length === 0) {
       setSelectedCompanyId(null);
       return;
     }
-    // если выбранная ушла из списка, выбрать первую
-    const exists = selectedCompanyId && filteredCompanies.some((c) => c.id === selectedCompanyId);
+    // Если нет выбранной компании, выбираем первую
+    if (!selectedCompanyId) {
+      setSelectedCompanyId(filteredCompanies[0].id);
+      return;
+    }
+    // Если выбранная компания ушла из списка, выбираем первую
+    const exists = filteredCompanies.some((c) => c.id === selectedCompanyId);
     if (!exists) {
       setSelectedCompanyId(filteredCompanies[0].id);
     }
@@ -145,7 +160,7 @@ const AdminPanel = () => {
         {/* Top Bar */}
         <header className="border-b border-border bg-card">
             <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
-            <h2 className="text-base sm:text-lg font-semibold text-foreground">{t("admin.title")}</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-foreground">{t("admin.companies")}</h2>
           </div>
         </header>
 
@@ -153,11 +168,6 @@ const AdminPanel = () => {
         <div className="flex-1 flex flex-col lg:flex-row">
           {/* Companies List */}
           <div className="flex-1 p-4 sm:p-6">
-            {/* Trial Card */}
-            <div className="mb-4 sm:mb-6">
-              <TrialCard />
-            </div>
-            
             <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
               <div>
                 <h3 className="text-xl sm:text-2xl font-bold text-foreground">{t("admin.companies")}</h3>
@@ -201,7 +211,6 @@ const AdminPanel = () => {
                     {[
                       { key: "all", label: t("common.all") },
                       { key: "active", label: t("admin.active") },
-                      { key: "trial", label: t("admin.trial") },
                       { key: "blocked", label: t("admin.blocked") },
                     ].map((item) => (
                       <button
@@ -252,17 +261,27 @@ const AdminPanel = () => {
                       filteredCompanies.map((company, index) => (
                         <tr
                           key={company.id}
-                          className={`border-b border-border/50 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors ${
-                            selectedCompanyId === company.id ? "bg-muted/30" : "bg-card"
+                          className={`border-b border-border/50 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors relative ${
+                            selectedCompanyId === company.id ? "bg-primary/5 border-l-4 border-l-primary" : "bg-card"
                           }`}
                           onClick={() => setSelectedCompanyId(company.id)}
                         >
                         <td className="p-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold">
+                            {selectedCompanyId === company.id && (
+                              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r"></div>
+                            )}
+                            <div className="w-10 h-10 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold relative">
                               {company.name.charAt(0)}
+                              {selectedCompanyId === company.id && (
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center border-2 border-background">
+                                  <FiCheck className="h-2.5 w-2.5 text-white" />
+                                </div>
+                              )}
                             </div>
-                            <span className="font-medium text-foreground">{company.name}</span>
+                            <span className={`font-medium ${selectedCompanyId === company.id ? "text-primary" : "text-foreground"}`}>
+                              {company.name}
+                            </span>
                           </div>
                         </td>
                         <td className="p-4 text-sm text-muted-foreground">{company.adminEmail || "—"}</td>
@@ -300,17 +319,29 @@ const AdminPanel = () => {
                   filteredCompanies.map((company, index) => (
                     <Card
                       key={company.id}
-                      className={`p-4 cursor-pointer transition-colors ${
-                        selectedCompanyId === company.id ? "bg-muted/30 border-primary" : ""
+                      className={`p-4 cursor-pointer transition-colors relative ${
+                        selectedCompanyId === company.id ? "bg-primary/5 border-primary border-2" : "border-border"
                       }`}
                       onClick={() => setSelectedCompanyId(company.id)}
                     >
+                      {selectedCompanyId === company.id && (
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                          <FiCheck className="h-3 w-3 text-white" />
+                        </div>
+                      )}
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold flex-shrink-0">
+                        <div className="w-10 h-10 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold flex-shrink-0 relative">
                           {company.name.charAt(0)}
+                          {selectedCompanyId === company.id && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center border-2 border-background">
+                              <FiCheck className="h-2.5 w-2.5 text-white" />
+                            </div>
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-foreground truncate">{company.name}</h4>
+                          <h4 className={`font-medium truncate ${selectedCompanyId === company.id ? "text-primary" : "text-foreground"}`}>
+                            {company.name}
+                          </h4>
                           <p className="text-xs text-muted-foreground truncate">{company.adminEmail || "—"}</p>
                         </div>
                       </div>
@@ -461,19 +492,37 @@ const AdminPanel = () => {
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-muted-foreground">{t("admin.messagesThisMonth")}</span>
-                    <span className="font-semibold">34 / 100</span>
+                    <span className="font-semibold">
+                      {selectedCompanyData?.messagesThisMonth ?? "—"} / {selectedCompanyData?.messagesLimit ?? "—"}
+                    </span>
                   </div>
                   <div className="h-2 bg-background rounded-full overflow-hidden">
-                    <div className="h-full bg-primary" style={{ width: "34%" }}></div>
+                    <div 
+                      className="h-full bg-primary" 
+                      style={{ 
+                        width: selectedCompanyData?.messagesLimit 
+                          ? `${Math.min(100, Math.round(((selectedCompanyData.messagesThisMonth || 0) / selectedCompanyData.messagesLimit) * 100))}%` 
+                          : "0%" 
+                      }}
+                    ></div>
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-muted-foreground">{t("admin.storageUsed")}</span>
-                    <span className="font-semibold">2.4 / 10 GB</span>
+                    <span className="font-semibold">
+                      {selectedCompanyData?.storageUsed ?? "—"} / {selectedCompanyData?.storageLimit ?? "—"} GB
+                    </span>
                   </div>
                   <div className="h-2 bg-background rounded-full overflow-hidden">
-                    <div className="h-full bg-secondary" style={{ width: "24%" }}></div>
+                    <div 
+                      className="h-full bg-secondary" 
+                      style={{ 
+                        width: selectedCompanyData?.storageLimit 
+                          ? `${Math.min(100, Math.round(((selectedCompanyData.storageUsed || 0) / selectedCompanyData.storageLimit) * 100))}%` 
+                          : "0%" 
+                      }}
+                    ></div>
                   </div>
                 </div>
               </div>
@@ -631,19 +680,37 @@ const AdminPanel = () => {
                               <div>
                                 <div className="flex justify-between text-sm mb-1">
                                   <span className="text-muted-foreground">{t("admin.messagesThisMonth")}</span>
-                                  <span className="font-semibold">34 / 100</span>
+                                  <span className="font-semibold">
+                                    {selectedCompanyData?.messagesThisMonth ?? "—"} / {selectedCompanyData?.messagesLimit ?? "—"}
+                                  </span>
                                 </div>
                                 <div className="h-2 bg-background rounded-full overflow-hidden">
-                                  <div className="h-full bg-primary" style={{ width: "34%" }}></div>
+                                  <div 
+                                    className="h-full bg-primary" 
+                                    style={{ 
+                                      width: selectedCompanyData?.messagesLimit 
+                                        ? `${Math.min(100, Math.round(((selectedCompanyData.messagesThisMonth || 0) / selectedCompanyData.messagesLimit) * 100))}%` 
+                                        : "0%" 
+                                    }}
+                                  ></div>
                                 </div>
                               </div>
                               <div>
                                 <div className="flex justify-between text-sm mb-1">
                                   <span className="text-muted-foreground">{t("admin.storageUsed")}</span>
-                                  <span className="font-semibold">2.4 / 10 GB</span>
+                                  <span className="font-semibold">
+                                    {selectedCompanyData?.storageUsed ?? "—"} / {selectedCompanyData?.storageLimit ?? "—"} GB
+                                  </span>
                                 </div>
                                 <div className="h-2 bg-background rounded-full overflow-hidden">
-                                  <div className="h-full bg-secondary" style={{ width: "24%" }}></div>
+                                  <div 
+                                    className="h-full bg-secondary" 
+                                    style={{ 
+                                      width: selectedCompanyData?.storageLimit 
+                                        ? `${Math.min(100, Math.round(((selectedCompanyData.storageUsed || 0) / selectedCompanyData.storageLimit) * 100))}%` 
+                                        : "0%" 
+                                    }}
+                                  ></div>
                                 </div>
                               </div>
                             </div>
@@ -731,18 +798,6 @@ const AdminPanel = () => {
                       <p className="text-xs text-muted-foreground">8 символов, используйте буквы/цифры</p>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm text-foreground">{t("admin.status")}</label>
-                      <select
-                        className="w-full p-2 border rounded-md bg-background"
-                        value={newCompany.status}
-                        onChange={(e) => setNewCompany({ ...newCompany, status: e.target.value as CompanyStatus })}
-                      >
-                        <option value={COMPANY_STATUS.ACTIVE}>{t("admin.active")}</option>
-                        <option value={COMPANY_STATUS.TRIAL}>{t("admin.trial")}</option>
-                        <option value={COMPANY_STATUS.BLOCKED}>{t("admin.blocked")}</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
                       <label className="text-sm text-foreground">{t("admin.plan")}</label>
                       <select
                         className="w-full p-2 border rounded-md bg-background"
@@ -753,6 +808,17 @@ const AdminPanel = () => {
                           <option key={plan} value={plan}>{plan}</option>
                         ))}
                       </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-foreground">Пароль администратора</label>
+                      <input
+                        type="password"
+                        className="w-full p-2 border rounded-md bg-background"
+                        value={newCompany.password}
+                        onChange={(e) => setNewCompany({ ...newCompany, password: e.target.value })}
+                        placeholder="Минимум 6 символов"
+                        minLength={6}
+                      />
                     </div>
                   </div>
                   <div className="flex justify-end gap-3 pt-2">
@@ -766,8 +832,12 @@ const AdminPanel = () => {
                     </Button>
                     <Button
                       onClick={async () => {
-                        if (!newCompany.name.trim() || !newCompany.adminEmail.trim() || newCompany.code.length !== 8) {
+                        if (!newCompany.name.trim() || !newCompany.adminEmail.trim() || newCompany.code.length !== 8 || !newCompany.password.trim()) {
                           toast.error(t("common.fillAllFields") || "Заполните все поля");
+                          return;
+                        }
+                        if (newCompany.password.length < 6) {
+                          toast.error("Пароль должен содержать минимум 6 символов");
                           return;
                         }
                         try {
@@ -775,6 +845,14 @@ const AdminPanel = () => {
                             ...newCompany,
                             messagesLimit: 100,
                             storageLimit: 10,
+                          });
+                          setNewCompany({
+                            name: "",
+                            adminEmail: "",
+                            code: generateCode(),
+                            password: "",
+                            plan: "Пробный",
+                            employees: 0,
                           });
                         } catch (e) {
                           toast.error(t("common.error"));
@@ -973,7 +1051,20 @@ const AdminPanel = () => {
                             <span className="text-sm font-semibold">{selectedCompanyData.registered}</span>
                           </div>
                         </div>
-                        <div className="pt-2 space-y-2">
+                        <div className="pt-4 border-t border-border space-y-2">
+                          <Button
+                            className="w-full"
+                            variant="destructive"
+                            onClick={() => {
+                              if (confirm(t("admin.deleteCompanyWarning") || "Вы уверены, что хотите удалить эту компанию? Это действие нельзя отменить.")) {
+                                deleteCompany(selectedCompanyData.id);
+                              }
+                            }}
+                            disabled={isDeleting}
+                          >
+                            <FiTrash2 className="h-4 w-4 mr-2" />
+                            {isDeleting ? t("common.loading") : (t("admin.deleteCompany") || "Удалить компанию")}
+                          </Button>
                           {selectedCompanyData.status === t("admin.active") ? (
                             <Button
                               className="w-full"
@@ -1013,6 +1104,24 @@ const AdminPanel = () => {
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">{t("admin.selectCompany")}</p>
+                  )}
+                  
+                  {selectedCompanyData && (
+                    <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border">
+                      <Button
+                        className="w-full sm:w-auto sm:ml-auto"
+                        variant="destructive"
+                        onClick={() => {
+                          if (confirm(t("admin.deleteCompanyWarning") || "Вы уверены, что хотите удалить эту компанию? Это действие нельзя отменить.")) {
+                            deleteCompany(selectedCompanyData.id);
+                          }
+                        }}
+                        disabled={isDeleting}
+                      >
+                        <FiTrash2 className="h-4 w-4 mr-2" />
+                        {isDeleting ? t("common.loading") : (t("admin.deleteCompany") || "Удалить компанию")}
+                      </Button>
+                    </div>
                   )}
                 </Dialog.Panel>
               </Transition.Child>

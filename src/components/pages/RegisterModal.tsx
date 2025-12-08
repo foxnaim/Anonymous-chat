@@ -104,11 +104,11 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
       
       if (success) {
         toast.success(t("auth.registerSuccess"));
-        // Перенаправляем в панель компании
-        setTimeout(() => {
+        // Перенаправляем в панель компании (используем requestAnimationFrame для неблокирующего редиректа)
+        requestAnimationFrame(() => {
           router.replace("/company");
           onOpenChange(false);
-        }, 200);
+        });
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : t("common.error");

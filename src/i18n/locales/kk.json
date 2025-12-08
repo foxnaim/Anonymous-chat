@@ -26,7 +26,8 @@
     "add": "Қосу",
     "copy": "Көшіру",
     "fillAllFields": "Барлық өрістерді толтырыңыз",
-    "passwordMinLength": "Ең аз дегенде {{length}} таңба"
+    "passwordMinLength": "Ең аз дегенде {{length}} таңба",
+    "controlPanel": "Басқару панелі"
   },
   "welcome": {
     "title": "Компанияңызға анонимді пікір жіберіңіз",

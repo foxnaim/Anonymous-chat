@@ -17,12 +17,24 @@ const ThemeInitializer = ({ children }: { children: ReactNode }) => {
   
   useEffect(() => {
     // При первой загрузке принудительно устанавливаем светлую тему
+    // Используем requestIdleCallback для неблокирующей установки темы
     if (!initialized.current && theme !== 'light') {
-      setTheme('light');
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          setTheme('light');
+          initialized.current = true;
+        });
+      } else {
+        // Fallback для браузеров без requestIdleCallback
+        setTimeout(() => {
+          setTheme('light');
+          initialized.current = true;
+        }, 0);
+      }
+    } else if (!initialized.current) {
       initialized.current = true;
     }
-    // next-themes управляет темой, убеждаемся что тема светлая
-  }, [theme, setTheme]); // Добавлены зависимости
+  }, [theme, setTheme]);
 
   return <>{children}</>;
 };

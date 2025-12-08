@@ -21,7 +21,7 @@ interface LoginModalProps {
 const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
   const { t } = useTranslation();
   const router = useRouter();
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -30,25 +30,18 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const success = await login(email, password);
+    const result = await login(email, password);
     setIsLoading(false);
-    if (success) {
-      // Небольшая задержка для обновления состояния пользователя
-      setTimeout(() => {
-        // Используем пользователя из Redux state для определения роли
-        if (user) {
-          if (user.role === "admin" || user.role === "super_admin") {
-            router.replace("/admin");
-          } else if (user.role === "company") {
-            router.replace("/company");
-          } else {
-            router.replace("/");
-          }
-        } else {
-          router.replace("/");
-        }
-        onOpenChange(false);
-      }, 200);
+    if (result.success && result.user) {
+      // Используем пользователя из результата логина для определения роли
+      if (result.user.role === "admin" || result.user.role === "super_admin") {
+        router.replace("/admin");
+      } else if (result.user.role === "company") {
+        router.replace("/company");
+      } else {
+        router.replace("/");
+      }
+      onOpenChange(false);
     }
   };
 

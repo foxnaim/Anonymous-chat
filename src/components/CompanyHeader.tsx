@@ -149,10 +149,10 @@ export const CompanyHeader = () => {
                           <button
                             onClick={() => {
                               logout();
-                              // Используем window.location для полного сброса состояния
-                              setTimeout(() => {
+                              // Используем window.location для полного сброса состояния (requestAnimationFrame для неблокирующего редиректа)
+                              requestAnimationFrame(() => {
                                 window.location.href = "/";
-                              }, 50);
+                              });
                             }}
                             className={cn(
                               "w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-md transition-colors",

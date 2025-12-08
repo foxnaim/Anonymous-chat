@@ -111,20 +111,39 @@ const CompanyDashboard = () => {
   const praisePercent = totalDistribution > 0 ? Math.round(((distribution?.praises || 0) / totalDistribution) * 100) : 0;
   const suggestionPercent = totalDistribution > 0 ? Math.round(((distribution?.suggestions || 0) / totalDistribution) * 100) : 0;
 
+  // Автоматический сброс состояния копирования через useEffect
+  React.useEffect(() => {
+    if (copiedCode) {
+      const timer = setTimeout(() => setCopiedCode(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [copiedCode]);
+
+  React.useEffect(() => {
+    if (copiedLink) {
+      const timer = setTimeout(() => setCopiedLink(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [copiedLink]);
+
+  React.useEffect(() => {
+    if (copiedPassword) {
+      const timer = setTimeout(() => setCopiedPassword(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [copiedPassword]);
+
   const handleCopy = (text: string, type: 'code' | 'link' | 'password') => {
     navigator.clipboard.writeText(text);
     if (type === 'code') {
       setCopiedCode(true);
       toast.success(t("company.codeCopiedToClipboard"));
-      setTimeout(() => setCopiedCode(false), 2000);
     } else if (type === 'link') {
       setCopiedLink(true);
       toast.success(t("company.linkCopied"));
-      setTimeout(() => setCopiedLink(false), 2000);
     } else if (type === 'password') {
       setCopiedPassword(true);
       toast.success(t("company.passwordCopiedToClipboard"));
-      setTimeout(() => setCopiedPassword(false), 2000);
     }
   };
 

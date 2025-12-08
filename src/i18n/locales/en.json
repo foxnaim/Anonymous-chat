@@ -26,7 +26,8 @@
     "add": "Add",
     "copy": "Copy",
     "fillAllFields": "Please fill all fields",
-    "passwordMinLength": "Minimum {{length}} characters"
+    "passwordMinLength": "Minimum {{length}} characters",
+    "controlPanel": "Control Panel"
   },
   "welcome": {
     "title": "Send anonymous feedback to your company",

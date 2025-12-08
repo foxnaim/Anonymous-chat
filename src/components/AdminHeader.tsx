@@ -22,14 +22,20 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Menu as HeadlessMenu, Transition } from "@headlessui/react";
 
-export const AdminHeader = () => {
+interface AdminHeaderProps {}
+
+export const AdminHeader = ({}: AdminHeaderProps = {}) => {
   const { t } = useTranslation();
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navigation = [
-    { name: t("admin.companies"), path: "/admin", icon: FiHome },
+    { 
+      name: t("admin.companies"), 
+      path: "/admin", 
+      icon: FiHome,
+    },
     { name: t("admin.messages"), path: "/admin/messages", icon: FiMessageSquare },
     { name: t("admin.plans"), path: "/admin/plans", icon: FiDollarSign },
     { name: t("admin.analytics"), path: "/admin/analytics", icon: FiBarChart2 },
@@ -60,7 +66,10 @@ export const AdminHeader = () => {
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-1">
           {navigation.map((item, index) => {
-            const isActive = pathname === item.path;
+            // Для /admin проверяем точное совпадение или что это корневой путь админки
+            const isActive = item.path === '/admin' 
+              ? pathname === '/admin' || pathname === '/admin/'
+              : pathname === item.path || pathname.startsWith(item.path + '/');
             const Icon = item.icon;
             return (
               <motion.div
@@ -130,10 +139,10 @@ export const AdminHeader = () => {
                           <button
                             onClick={() => {
                               logout();
-                              // Используем window.location для полного сброса состояния
-                              setTimeout(() => {
+                              // Используем window.location для полного сброса состояния (requestAnimationFrame для неблокирующего редиректа)
+                              requestAnimationFrame(() => {
                                 window.location.href = "/";
-                              }, 50);
+                              });
                             }}
                             className={cn(
                               "w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-md transition-colors",
@@ -177,7 +186,10 @@ export const AdminHeader = () => {
           >
             <nav className="container px-4 py-3 space-y-1">
               {navigation.map((item) => {
-                const isActive = pathname === item.path;
+                // Для /admin проверяем точное совпадение или что это корневой путь админки
+                const isActive = item.path === '/admin' 
+                  ? pathname === '/admin' || pathname === '/admin/'
+                  : pathname === item.path || pathname.startsWith(item.path + '/');
                 const Icon = item.icon;
                 return (
                   <Link

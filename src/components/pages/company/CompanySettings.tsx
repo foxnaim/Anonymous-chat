@@ -213,7 +213,23 @@ const CompanySettings = () => {
                   )}
                 </div>
                 {isEditingEmail ? (
-                  <div className="space-y-3">
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleEmailSave();
+                    }}
+                    className="space-y-3"
+                  >
+                    {/* Скрытое поле username для доступности и автозаполнения */}
+                    <input
+                      type="text"
+                      autoComplete="username"
+                      value={company?.adminEmail || user?.email || ""}
+                      readOnly
+                      tabIndex={-1}
+                      aria-hidden="true"
+                      style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0, pointerEvents: "none" }}
+                    />
                     <div className="space-y-2">
                       <Input
                         id="email"
@@ -251,15 +267,14 @@ const CompanySettings = () => {
                         {t("common.cancel")}
                       </Button>
                       <Button
-                        type="button"
-                        onClick={handleEmailSave}
+                        type="submit"
                         className="flex-1"
                         disabled={!emailPassword || !newEmail || newEmail === company?.adminEmail}
                       >
                         {t("common.save")}
                       </Button>
                     </div>
-                  </div>
+                  </form>
                 ) : (
                   <Input
                     id="email"
@@ -276,7 +291,23 @@ const CompanySettings = () => {
           {/* Change Password */}
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-6">{t("company.changePassword")}</h3>
-            <div className="space-y-4">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handlePasswordChange();
+              }}
+              className="space-y-4"
+            >
+              {/* Скрытое поле username для доступности и автозаполнения */}
+              <input
+                type="text"
+                autoComplete="username"
+                value={user?.email || company?.adminEmail || ""}
+                readOnly
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0, pointerEvents: "none" }}
+              />
               <div className="space-y-2">
                 <Label htmlFor="currentPassword">{t("company.currentPassword")}</Label>
                 <Input
@@ -307,10 +338,10 @@ const CompanySettings = () => {
                   autoComplete="new-password"
                 />
               </div>
-              <Button onClick={handlePasswordChange} className="w-full sm:w-auto">
+              <Button type="submit" className="w-full sm:w-auto">
                 {t("company.changePassword")}
               </Button>
-            </div>
+            </form>
           </Card>
 
           {/* Project Settings */}

@@ -1,8 +1,13 @@
 'use client';
 
 import AdminMessages from "@/components/pages/admin/AdminMessages";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export default function AdminMessagesPage() {
-  return <AdminMessages />;
+  return (
+    <ProtectedRoute requiredRole={['admin', 'super_admin']}>
+      <AdminMessages />
+    </ProtectedRoute>
+  );
 }
 

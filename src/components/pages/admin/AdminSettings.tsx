@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { AdminHeader } from "@/components/AdminHeader";
 import { useAuth } from "@/lib/redux";
 import { toast } from "sonner";
 import { useFullscreen } from "@/hooks/use-fullscreen";
+import { useAdminSettings, useUpdateAdminSettings } from "@/lib/query";
 
 const AdminSettings = () => {
   const { t, i18n: i18nInstance } = useTranslation();
@@ -23,9 +24,39 @@ const AdminSettings = () => {
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [emailPassword, setEmailPassword] = useState("");
+  
+  // Загружаем настройки из API
+  const { data: settings, isLoading: settingsLoading } = useAdminSettings();
+  const { mutateAsync: updateSettings, isPending: isUpdating } = useUpdateAdminSettings({
+    onSuccess: () => {
+      toast.success(t("admin.settingsSaved"));
+    },
+    onError: (error) => {
+      toast.error(error.message || t("common.error"));
+    },
+  });
+
+  // Используем настройки из API или локальный хук как fallback
   const { isFullscreen, toggleFullscreen } = useFullscreen(
     user?.role === "user" ? null : (user?.role || null)
   );
+
+  // Синхронизируем fullscreenMode с API
+  useEffect(() => {
+    if (settings && settings.fullscreenMode !== isFullscreen) {
+      // Обновляем API при изменении локального состояния
+      updateSettings({ fullscreenMode: isFullscreen }).catch(() => {
+        // Игнорируем ошибки при автосинхронизации
+      });
+    }
+  }, [isFullscreen, settings, updateSettings]);
+
+  // Синхронизируем язык с API
+  useEffect(() => {
+    if (settings && settings.language && settings.language !== i18nInstance.language) {
+      i18nInstance.changeLanguage(settings.language);
+    }
+  }, [settings, i18nInstance]);
 
   const handlePasswordChange = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -47,8 +78,16 @@ const AdminSettings = () => {
     setConfirmPassword("");
   };
 
-  const handleLanguageChange = (lang: string) => {
+  const handleLanguageChange = async (lang: string) => {
     i18nInstance.changeLanguage(lang);
+    // Сохраняем в API
+    await updateSettings({ language: lang as 'ru' | 'en' | 'kk' });
+  };
+
+  const handleFullscreenToggle = async (checked: boolean) => {
+    toggleFullscreen();
+    // Сохраняем в API
+    await updateSettings({ fullscreenMode: checked });
   };
 
   const handleEmailEdit = () => {
@@ -79,8 +118,17 @@ const AdminSettings = () => {
   };
 
   const handleSave = async () => {
-    // В реальном приложении здесь будет API вызов
-    toast.success(t("admin.settingsSaved"));
+    // Сохраняем все настройки
+    if (settings) {
+      await updateSettings({
+        fullscreenMode: isFullscreen,
+        language: i18nInstance.language as 'ru' | 'en' | 'kk',
+        theme: settings.theme,
+        itemsPerPage: settings.itemsPerPage,
+        notificationsEnabled: settings.notificationsEnabled,
+        emailNotifications: settings.emailNotifications,
+      });
+    }
   };
   return (
     <div className="min-h-screen bg-background">
@@ -98,7 +146,11 @@ const AdminSettings = () => {
                     {t("admin.fullscreenModeDescription")}
                   </p>
                 </div>
-                <Switch checked={isFullscreen} onCheckedChange={toggleFullscreen} />
+                <Switch 
+                  checked={settings?.fullscreenMode ?? isFullscreen} 
+                  onCheckedChange={handleFullscreenToggle}
+                  disabled={settingsLoading || isUpdating}
+                />
               </div>
             </div>
           </Card>
@@ -124,7 +176,23 @@ const AdminSettings = () => {
                   )}
                 </div>
                 {isEditingEmail ? (
-                  <div className="space-y-3">
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleEmailSave();
+                    }}
+                    className="space-y-3"
+                  >
+                    {/* Скрытое поле username для доступности и автозаполнения */}
+                    <input
+                      type="text"
+                      autoComplete="username"
+                      value={user?.email || ""}
+                      readOnly
+                      tabIndex={-1}
+                      aria-hidden="true"
+                      style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0, pointerEvents: "none" }}
+                    />
                     <div className="space-y-2">
                       <Input
                         id="email"
@@ -162,15 +230,14 @@ const AdminSettings = () => {
                         {t("common.cancel")}
                       </Button>
                       <Button
-                        type="button"
-                        onClick={handleEmailSave}
+                        type="submit"
                         className="flex-1"
                         disabled={!emailPassword || !newEmail || newEmail === user?.email}
                       >
                         {t("common.save")}
                       </Button>
                     </div>
-                  </div>
+                  </form>
                 ) : (
                   <Input
                     id="email"
@@ -188,7 +255,23 @@ const AdminSettings = () => {
           {/* Change Password */}
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-6">{t("admin.changePassword")}</h3>
-            <div className="space-y-4">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handlePasswordChange();
+              }}
+              className="space-y-4"
+            >
+              {/* Скрытое поле username для доступности и автозаполнения */}
+              <input
+                type="text"
+                autoComplete="username"
+                value={user?.email || ""}
+                readOnly
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0, pointerEvents: "none" }}
+              />
               <div className="space-y-2">
                 <Label htmlFor="currentPassword">{t("admin.currentPassword")}</Label>
                 <Input
@@ -219,10 +302,10 @@ const AdminSettings = () => {
                   autoComplete="new-password"
                 />
               </div>
-              <Button onClick={handlePasswordChange} className="w-full sm:w-auto">
+              <Button type="submit" className="w-full sm:w-auto">
                 {t("admin.changePassword")}
               </Button>
-            </div>
+            </form>
           </Card>
 
           {/* Project Settings */}
@@ -234,7 +317,11 @@ const AdminSettings = () => {
                 <p className="text-sm text-muted-foreground">
                   {t("admin.interfaceLanguageDescription")}
                 </p>
-                <Select value={i18nInstance.language} onValueChange={handleLanguageChange}>
+                <Select 
+                  value={settings?.language ?? i18nInstance.language} 
+                  onValueChange={handleLanguageChange}
+                  disabled={settingsLoading || isUpdating}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
@@ -249,8 +336,12 @@ const AdminSettings = () => {
           </Card>
 
           <div className="flex justify-end gap-3">
-            <Button variant="outline">{t("common.cancel")}</Button>
-            <Button onClick={handleSave}>{t("admin.saveChanges")}</Button>
+            <Button variant="outline" disabled={settingsLoading || isUpdating}>
+              {t("common.cancel")}
+            </Button>
+            <Button onClick={handleSave} disabled={settingsLoading || isUpdating}>
+              {isUpdating ? t("common.loading") : t("admin.saveChanges")}
+            </Button>
           </div>
         </main>
       </div>

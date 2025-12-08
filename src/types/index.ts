@@ -20,7 +20,7 @@ export interface Message {
 }
 
 export interface Company {
-  id: number;
+  id: string | number; // Может быть строкой (MongoDB ObjectId) или числом (для совместимости)
   name: string;
   code: string;
   adminEmail: string;

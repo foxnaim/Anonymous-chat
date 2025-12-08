@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SEO, WebsiteStructuredData, OrganizationStructuredData } from "@/lib/seo";
 import { useDebounce } from "@/hooks/use-debounce";
+import { getToken } from "@/lib/utils/cookies";
 import SendMessageModal from "./SendMessageModal";
 import CheckStatusModal from "./CheckStatusModal";
 import LoginModal from "./LoginModal";
@@ -32,7 +33,7 @@ const Welcome = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [companyCode, setCompanyCode] = useState("");
   const [validatedCode, setValidatedCode] = useState<string | null>(null);
   const [password, setPassword] = useState("");
@@ -168,36 +169,57 @@ const Welcome = () => {
               <div className="hidden sm:block min-w-[140px]">
                 <LanguageSwitcher />
               </div>
-              {isAuthenticated ? (
-                <Button variant="ghost" size="sm" onClick={() => router.push("/company")} className="text-xs sm:text-sm min-w-[140px]">
-                  <FiLayout className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">{t("company.dashboard")}</span>
-                  <span className="sm:hidden">{t("company.dashboard")}</span>
-                </Button>
-              ) : (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+              {(() => {
+                // Проверяем токен напрямую, чтобы сразу скрыть кнопку при его отсутствии
+                const token = getToken();
+                const hasValidAuth = token && isAuthenticated && user;
+                
+                if (hasValidAuth) {
+                  return (
                     <Button 
+                      variant="ghost" 
                       size="sm" 
-                      className="text-xs sm:text-sm px-3 sm:px-4 bg-primary text-primary-foreground hover:bg-primary/90 min-w-[140px]"
+                      onClick={() => {
+                        if (user!.role === "admin" || user!.role === "super_admin") {
+                          router.push("/admin");
+                        } else if (user!.role === "company") {
+                          router.push("/company");
+                        }
+                      }} 
+                      className="text-xs sm:text-sm min-w-[140px]"
                     >
-                      <span className="hidden sm:inline">{t("welcome.business")}</span>
-                      <span className="sm:hidden">{t("welcome.business")}</span>
-                      <FiChevronDown className="ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <FiLayout className="mr-2 h-4 w-4" />
+                      <span className="hidden sm:inline">{t("common.controlPanel")}</span>
+                      <span className="sm:hidden">{t("common.controlPanel")}</span>
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={() => setIsLoginModalOpen(true)}>
-                      <FiLogIn className="mr-2 h-4 w-4" />
-                      <span>{t("welcome.login")}</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setIsRegisterModalOpen(true)}>
-                      <FiUserPlus className="mr-2 h-4 w-4" />
-                      <span>{t("welcome.register")}</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+                  );
+                }
+                
+                return (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        size="sm" 
+                        className="text-xs sm:text-sm px-3 sm:px-4 bg-primary text-primary-foreground hover:bg-primary/90 min-w-[140px]"
+                      >
+                        <span className="hidden sm:inline">{t("welcome.business")}</span>
+                        <span className="sm:hidden">{t("welcome.business")}</span>
+                        <FiChevronDown className="ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => setIsLoginModalOpen(true)}>
+                        <FiLogIn className="mr-2 h-4 w-4" />
+                        <span>{t("welcome.login")}</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setIsRegisterModalOpen(true)}>
+                        <FiUserPlus className="mr-2 h-4 w-4" />
+                        <span>{t("welcome.register")}</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                );
+              })()}
             </div>
           </div>
         </div>

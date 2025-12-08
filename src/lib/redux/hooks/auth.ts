@@ -25,12 +25,15 @@ export const useAuth = () => {
     }
   }, [dispatch, auth.isLoading]);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; user?: any }> => {
     try {
       const result = await dispatch(loginAsync({ email, password }));
-      return loginAsync.fulfilled.match(result);
+      if (loginAsync.fulfilled.match(result)) {
+        return { success: true, user: result.payload };
+      }
+      return { success: false };
     } catch {
-      return false;
+      return { success: false };
     }
   };
 

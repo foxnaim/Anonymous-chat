@@ -16,36 +16,29 @@ const Login = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const success = await login(email, password);
+    const result = await login(email, password);
     setIsLoading(false);
-    if (success) {
-      // Небольшая задержка для обновления состояния пользователя
-      setTimeout(() => {
-        const from = searchParams?.get('from');
-        if (from) {
-          router.replace(from as any);
+    if (result.success && result.user) {
+      // Используем пользователя из результата логина для определения роли
+      const from = searchParams?.get('from');
+      if (from) {
+        router.replace(from as any);
+      } else {
+        if (result.user.role === "admin" || result.user.role === "super_admin") {
+          router.replace("/admin");
+        } else if (result.user.role === "company") {
+          router.replace("/company");
         } else {
-          // Используем пользователя из Redux state для определения роли
-          if (user) {
-            if (user.role === "admin" || user.role === "super_admin") {
-              router.replace("/admin");
-            } else if (user.role === "company") {
-              router.replace("/company");
-            } else {
-              router.replace("/");
-            }
-          } else {
-            router.replace("/");
-          }
+          router.replace("/");
         }
-      }, 200);
+      }
     }
   };
   return (

@@ -18,27 +18,47 @@ export const useFullscreen = (userRole: UserRole | null) => {
   useEffect(() => {
     if (!storageKey || typeof window === "undefined") return;
 
-    // Применяем класс к html и body
-    if (isFullscreen) {
-      document.documentElement.classList.add("fullscreen-mode");
-      document.body.classList.add("fullscreen-mode");
-    } else {
-      document.documentElement.classList.remove("fullscreen-mode");
-      document.body.classList.remove("fullscreen-mode");
-    }
+    // Используем requestAnimationFrame для батчинга изменений DOM и предотвращения forced reflow
+    const rafId = requestAnimationFrame(() => {
+      // Применяем класс к html и body
+      if (isFullscreen) {
+        document.documentElement.classList.add("fullscreen-mode");
+        document.body.classList.add("fullscreen-mode");
+      } else {
+        document.documentElement.classList.remove("fullscreen-mode");
+        document.body.classList.remove("fullscreen-mode");
+      }
 
-    // Сохраняем в куки
-    if (isFullscreen) {
-      setCookie(storageKey, isFullscreen.toString(), 365 * 24 * 60 * 60); // 1 год
-    } else {
-      deleteCookie(storageKey);
-    }
+      // Сохраняем в куки (используем requestIdleCallback для неблокирующей операции)
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          if (isFullscreen) {
+            setCookie(storageKey, isFullscreen.toString(), 365 * 24 * 60 * 60); // 1 год
+          } else {
+            deleteCookie(storageKey);
+          }
+        });
+      } else {
+        // Fallback для браузеров без requestIdleCallback
+        setTimeout(() => {
+          if (isFullscreen) {
+            setCookie(storageKey, isFullscreen.toString(), 365 * 24 * 60 * 60);
+          } else {
+            deleteCookie(storageKey);
+          }
+        }, 0);
+      }
+    });
 
     // Cleanup при размонтировании - убеждаемся, что классы удалены
     return () => {
+      cancelAnimationFrame(rafId);
       if (typeof window !== "undefined") {
-        document.documentElement.classList.remove("fullscreen-mode");
-        document.body.classList.remove("fullscreen-mode");
+        // Используем requestAnimationFrame для cleanup тоже
+        requestAnimationFrame(() => {
+          document.documentElement.classList.remove("fullscreen-mode");
+          document.body.classList.remove("fullscreen-mode");
+        });
       }
     };
   }, [isFullscreen, storageKey]);

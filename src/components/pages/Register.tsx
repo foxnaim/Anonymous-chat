@@ -34,10 +34,10 @@ const Register = () => {
       const loginSuccess = await login(formData.email, formData.password);
       
       if (loginSuccess) {
-        // Перенаправляем в панель компании
-        setTimeout(() => {
+        // Перенаправляем в панель компании (используем requestAnimationFrame для неблокирующего редиректа)
+        requestAnimationFrame(() => {
           router.replace("/company");
-        }, 200);
+        });
       } else {
         router.replace("/company");
       }

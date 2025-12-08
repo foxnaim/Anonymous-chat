@@ -3,4 +3,6 @@
  */
 
 export { messageApi } from './messages';
-export { companyApi, statsApi, plansApi, adminApi } from './companies';
+export { statsApi, plansApi, adminApi } from './companies';
+export { adminSettingsApi } from './adminSettings';
+export type { AdminSettings, UpdateAdminSettingsRequest } from './adminSettings';

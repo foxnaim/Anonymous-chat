@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -15,7 +15,7 @@ import { authService } from "@/lib/api/auth";
 import type { ApiError } from "@/lib/api/client";
 import { motion } from "framer-motion";
 
-const ResetPassword = () => {
+const ResetPasswordContent = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -60,10 +60,17 @@ const ResetPassword = () => {
       await authService.resetPassword({ token, password });
       toast.success("Пароль успешно изменен!");
       
-      // Перенаправляем на страницу входа
-      setTimeout(() => {
-        router.push("/login");
-      }, 1500);
+      // Перенаправляем на страницу входа (используем requestIdleCallback для неблокирующего редиректа)
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          router.push("/login" as any);
+        }, { timeout: 1500 });
+      } else {
+        // Fallback для браузеров без requestIdleCallback
+        setTimeout(() => {
+          router.push("/login" as any);
+        }, 1500);
+      }
     } catch (error) {
       setIsLoading(false);
       const apiError = error as ApiError;
@@ -113,7 +120,7 @@ const ResetPassword = () => {
                 Токен восстановления не найден. Пожалуйста, используйте ссылку из email.
               </p>
               <Button asChild variant="outline">
-                <Link href="/login">Вернуться к входу</Link>
+                <Link href={"/login" as any}>Вернуться к входу</Link>
               </Button>
             </div>
           ) : (
@@ -184,7 +191,7 @@ const ResetPassword = () => {
               </Button>
 
               <div className="text-center text-sm">
-                <Link href="/login" className="text-primary hover:underline">
+                <Link href={"/login" as any} className="text-primary hover:underline">
                   Вернуться к входу
                 </Link>
               </div>
@@ -193,6 +200,21 @@ const ResetPassword = () => {
         </Card>
       </motion.div>
     </div>
+  );
+};
+
+const ResetPassword = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Загрузка...</p>
+        </div>
+      </div>
+    }>
+      <ResetPasswordContent />
+    </Suspense>
   );
 };
 

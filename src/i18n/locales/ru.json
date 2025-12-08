@@ -26,7 +26,8 @@
     "add": "Добавить",
     "copy": "Скопировать",
     "fillAllFields": "Заполните все поля",
-    "passwordMinLength": "Минимум {{length}} символов"
+    "passwordMinLength": "Минимум {{length}} символов",
+    "controlPanel": "Панель управления"
   },
   "welcome": {
     "title": "Отправьте анонимный отзыв в свою компанию",
@@ -372,6 +373,7 @@
     "companyActivated": "Компания активирована",
     "activateError": "Ошибка при активации",
     "changePlan": "Изменить план",
+    "changeStatus": "Изменить статус",
     "planEndDate": "Дата окончания плана",
     "planEndDateDescription": "Оставьте пустым для бессрочного плана",
     "planUpdated": "План успешно обновлен",

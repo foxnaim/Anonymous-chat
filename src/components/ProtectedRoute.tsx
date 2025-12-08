@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/redux";
 import { UserRole } from "@/types";
 import { useEffect } from "react";
+import { getToken } from "@/lib/utils/cookies";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -17,19 +18,31 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/");
+    // Проверяем наличие токена
+    const token = getToken();
+    
+    // Если токена нет, сразу перенаправляем на главный экран
+    if (!token) {
+      router.replace("/");
       return;
     }
+
+    // Если загрузка завершена и пользователь не аутентифицирован, перенаправляем
+    if (!isLoading && !isAuthenticated) {
+      router.replace("/");
+      return;
+    }
+
+    // Проверяем роль пользователя, если требуется
     if (!isLoading && isAuthenticated && user && requiredRole) {
       const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
       if (!roles.includes(user.role)) {
         if (user.role === "company") {
-          router.push("/company");
+          router.replace("/company");
         } else if (user.role === "admin" || user.role === "super_admin") {
-          router.push("/admin");
+          router.replace("/admin");
         } else {
-          router.push("/");
+          router.replace("/");
         }
       }
     }
@@ -46,7 +59,9 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
-  if (!isAuthenticated || !user) {
+  // Проверяем токен еще раз перед рендером
+  const token = getToken();
+  if (!token || !isAuthenticated || !user) {
     return null;
   }
 

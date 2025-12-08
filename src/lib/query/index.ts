@@ -8,6 +8,7 @@ export * from './services';
 export * from './types';
 export * from './constants';
 
+
 // Re-export services for direct use if needed
 export { 
   messageService, 
@@ -19,20 +20,21 @@ export {
 
 // Query keys для централизованного управления
 export const queryKeys = {
+  adminSettings: ['admin-settings'] as const,
   // Messages
   messages: (companyCode?: string | null) => ['messages', companyCode ?? undefined] as const,
   message: (id: string) => ['message', id] as const,
   
   // Companies
   companies: ['admin-companies'] as const,
-  company: (id: number) => ['company', id] as const,
+  company: (id: string | number) => ['company', id] as const,
   companyByCode: (code: string) => ['company-by-code', code] as const,
   
   // Stats
-  companyStats: (companyId: number) => ['stats', companyId] as const,
-  messageDistribution: (companyId: number) => ['message-distribution', companyId] as const,
-  growthMetrics: (companyId: number) => ['growth-metrics', companyId] as const,
-  achievements: (companyId: number) => ['achievements', companyId] as const,
+  companyStats: (companyId: string | number) => ['stats', companyId] as const,
+  messageDistribution: (companyId: string | number) => ['message-distribution', companyId] as const,
+  growthMetrics: (companyId: string | number) => ['growth-metrics', companyId] as const,
+  achievements: (companyId: string | number) => ['achievements', companyId] as const,
   
   // Plans
   plans: ['plans'] as const,
