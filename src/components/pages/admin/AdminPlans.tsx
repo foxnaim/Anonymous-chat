@@ -55,7 +55,7 @@ const AdminPlans = () => {
             <div>
               <h2 className="text-base sm:text-lg font-semibold text-foreground">{t("admin.plansAndPrices")}</h2>
               <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                {t("admin.first2MonthsFullAccess")}
+                Первые {freePlanSettings.freePeriodDays} {freePlanSettings.freePeriodDays === 1 ? 'день' : freePlanSettings.freePeriodDays < 5 ? 'дня' : 'дней'} после регистрации - полный доступ без ограничений
               </p>
             </div>
             <Button variant="outline" onClick={() => setIsFreePlanSettingsOpen(true)} size="sm" className="w-full sm:w-auto">
@@ -73,7 +73,6 @@ const AdminPlans = () => {
               {plans.map((plan) => {
                 const isFree = plan.price === 0;
                 const isStandard = plan.id === "standard";
-                const isPro = plan.id === "pro";
                 
                 // Определяем цвета для каждого тарифа (как в CompanyBilling)
                 const gradientStyle = isFree 
@@ -97,7 +96,7 @@ const AdminPlans = () => {
                 return (
                   <Card
                     key={plan.id}
-                    className={`p-6 border-border shadow-lg relative overflow-hidden transition-all hover:shadow-xl`}
+                    className={`p-6 border-border shadow-lg relative overflow-hidden transition-all hover:shadow-xl hover:scale-[1.02]`}
                     style={gradientStyle}
                   >
                     <div className="absolute top-0 right-0 w-20 h-20 rounded-full -mr-10 -mt-10 opacity-10" style={{ backgroundColor: circleColor }}></div>
@@ -112,20 +111,29 @@ const AdminPlans = () => {
                           )}
                         </div>
                       </div>
-                      <div className="flex items-baseline gap-1 mb-4">
-                        <p className="text-3xl font-bold" style={{ color: textColor }}>
-                          {plan.price === 0 ? t("common.free") : `${plan.price} ₸`}
-                        </p>
-                        {plan.price > 0 && (
-                          <span className="text-xs text-muted-foreground">/{t("admin.perMonth")}</span>
+                      <div className="mb-4">
+                        {isFree && plan.freePeriodDays ? (
+                          <div className="flex flex-col">
+                            <p className="text-3xl font-bold text-foreground mb-1">
+                              {plan.freePeriodDays} {plan.freePeriodDays === 1 ? 'день' : plan.freePeriodDays < 5 ? 'дня' : 'дней'}
+                            </p>
+                            <p className="text-sm text-muted-foreground">пробного доступа</p>
+                          </div>
+                        ) : (
+                          <div className="flex items-baseline gap-1">
+                            <p className="text-3xl font-bold" style={{ color: textColor }}>
+                              {plan.price} ₸
+                            </p>
+                            <span className="text-xs text-muted-foreground">/{t("admin.perMonth")}</span>
+                          </div>
                         )}
                       </div>
-                      <ul className="space-y-2 mb-6">
+                      <ul className="space-y-2.5 mb-6">
                         {plan.features.map((feature, idx) => {
                           const isFirstFeature = idx === 0 && isFree;
                           return (
-                            <li key={idx} className={`flex items-start gap-2 ${isFirstFeature ? 'text-base font-semibold' : 'text-sm'} text-foreground`}>
-                              <div className={`mt-0.5 flex-shrink-0 rounded-full p-0.5 ${isFirstFeature ? 'p-1' : ''}`} style={{ backgroundColor: `${circleColor}20` }}>
+                            <li key={idx} className={`flex items-start gap-3 ${isFirstFeature ? 'text-base font-semibold' : 'text-sm'} text-foreground`}>
+                              <div className={`mt-0.5 flex-shrink-0 rounded-full ${isFirstFeature ? 'p-1.5' : 'p-1'}`} style={{ backgroundColor: `${circleColor}15` }}>
                                 <FiCheck className={isFirstFeature ? "h-4 w-4" : "h-3.5 w-3.5"} style={{ color: circleColor }} />
                               </div>
                               <span className={`leading-relaxed ${isFirstFeature ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>

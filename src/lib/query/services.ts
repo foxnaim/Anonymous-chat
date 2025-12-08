@@ -11,7 +11,8 @@ import type {
   GrowthMetrics, 
   SubscriptionPlan, 
   AdminUser,
-  AchievementProgress
+  AchievementProgress,
+  PlanType
 } from "@/types";
 import type { PlatformStats } from "./types";
 import type { GroupedAchievements } from "../achievements";

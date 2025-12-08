@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useCreateCompany } from "@/lib/query";
+import { useCreateCompany, plansService } from "@/lib/query";
 import { useAuth } from "@/lib/redux";
 import { toast } from "sonner";
 import { FiKey, FiSettings, FiGift, FiCheck, FiEye, FiEyeOff, FiArrowLeft, FiUserPlus } from "react-icons/fi";
@@ -25,6 +25,15 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
   const router = useRouter();
   const { login } = useAuth();
   const [showForm, setShowForm] = useState(false);
+  const [freePeriodDays, setFreePeriodDays] = useState<number>(60);
+  
+  useEffect(() => {
+    if (open) {
+      plansService.getFreePlanSettings().then((data) => {
+        setFreePeriodDays(data.freePeriodDays || 60);
+      });
+    }
+  }, [open]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -87,7 +96,7 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Проверка валидности email
@@ -112,15 +121,19 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
     // Генерируем уникальный код компании
     const code = `COMP${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     
-    // Вычисляем дату окончания пробного периода (2 месяца от сегодня)
+    // Получаем настройки пробного плана для вычисления даты окончания
+    const freePlanSettings = await plansService.getFreePlanSettings();
+    const freePeriodDays = freePlanSettings.freePeriodDays || 60;
+    
+    // Вычисляем дату окончания пробного периода (из настроек админа)
     const trialEndDate = new Date();
-    trialEndDate.setMonth(trialEndDate.getMonth() + 2);
+    trialEndDate.setDate(trialEndDate.getDate() + freePeriodDays);
 
     registerCompany({
       name: formData.name,
       code,
       adminEmail: formData.email,
-      status: "Пробная", // Первые 2 месяца - пробный период
+      status: "Пробная",
       plan: "Пробный",
       trialEndDate: trialEndDate.toISOString().split("T")[0],
       employees: 0,
@@ -167,7 +180,9 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <p className="font-bold text-sm text-foreground">{t("auth.twoMonthsFree")}</p>
+                      <p className="font-bold text-sm text-foreground">
+                        {freePeriodDays} {freePeriodDays === 1 ? 'день' : freePeriodDays < 5 ? 'дня' : 'дней'} бесплатно
+                      </p>
                       <Badge className="bg-accent text-accent-foreground border-0 text-xs">{t("auth.trialPeriod")}</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">{t("auth.fullAccessDescription")}</p>

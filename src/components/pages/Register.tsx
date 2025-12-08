@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FiArrowLeft } from "react-icons/fi";
-import { useCreateCompany } from "@/lib/query";
+import { useCreateCompany, plansService } from "@/lib/query";
 import { useAuth } from "@/lib/redux";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -62,7 +62,7 @@ const Register = () => {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
@@ -78,9 +78,13 @@ const Register = () => {
     // Генерируем уникальный код компании
     const code = `COMP${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     
-    // Вычисляем дату окончания пробного периода (2 месяца от сегодня)
+    // Получаем настройки пробного плана для вычисления даты окончания
+    const freePlanSettings = await plansService.getFreePlanSettings();
+    const freePeriodDays = freePlanSettings.freePeriodDays || 60;
+    
+    // Вычисляем дату окончания пробного периода (из настроек админа)
     const trialEndDate = new Date();
-    trialEndDate.setMonth(trialEndDate.getMonth() + 2);
+    trialEndDate.setDate(trialEndDate.getDate() + freePeriodDays);
 
     registerCompany({
       name: formData.name,
@@ -185,7 +189,7 @@ const Register = () => {
               <ul className="list-disc list-inside space-y-1">
                 <li>Уникальный код компании для сотрудников</li>
                 <li>Доступ к панели управления</li>
-                <li>Полный доступ ко всем функциям на 2 месяца бесплатно</li>
+                <li>Полный доступ ко всем функциям на период пробного доступа</li>
                 <li>После окончания пробного периода - автоматический переход на тарифную систему</li>
               </ul>
             </div>

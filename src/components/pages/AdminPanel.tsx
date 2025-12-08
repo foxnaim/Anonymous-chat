@@ -29,6 +29,7 @@ import { useCompanies, useCreateCompany, usePlans, companyService } from "@/lib/
 import { getTranslatedValue } from "@/lib/utils/translations";
 import { toast } from "sonner";
 import type { CompanyStatus, PlanType } from "@/types";
+import TrialCard from "@/components/TrialCard";
 
 // Константы статусов компании
 const COMPANY_STATUS: Record<string, CompanyStatus> = {
@@ -152,6 +153,11 @@ const AdminPanel = () => {
         <div className="flex-1 flex flex-col lg:flex-row">
           {/* Companies List */}
           <div className="flex-1 p-4 sm:p-6">
+            {/* Trial Card */}
+            <div className="mb-4 sm:mb-6">
+              <TrialCard />
+            </div>
+            
             <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
               <div>
                 <h3 className="text-xl sm:text-2xl font-bold text-foreground">{t("admin.companies")}</h3>

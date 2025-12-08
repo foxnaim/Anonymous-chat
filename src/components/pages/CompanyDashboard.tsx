@@ -23,6 +23,7 @@ import { useCompany, useCompanyStats, useMessageDistribution, useGroupedAchievem
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import TrialCard from "@/components/TrialCard";
 
 const CompanyDashboard = () => {
   const { t } = useTranslation();
@@ -139,6 +140,9 @@ const CompanyDashboard = () => {
               </div>
             ) : (
               <>
+                {/* Trial Card */}
+                <TrialCard />
+                
                 {/* Company Code, Link and Password Block */}
                 {company && (
                   <Card className="p-5 border-border shadow-lg relative overflow-hidden bg-card">
