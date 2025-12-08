@@ -219,75 +219,73 @@ const CompanyReports = () => {
             </div>
           </div>
         </div>
-        <main className="flex-1 p-6 flex flex-col overflow-hidden">
+        <main className="flex-1 px-6 py-6 overflow-auto w-full">
           {isLoading ? (
-            <div className="text-center py-12">
+            <div className="flex items-center justify-center h-full">
               <p className="text-muted-foreground">{t("common.loading")}</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-6 h-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 flex-1">
-                <Card className="p-8 border-primary/20 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.1), hsl(var(--primary) / 0.05))' }}>
+            <div className="max-w-7xl mx-auto space-y-6 h-full flex flex-col">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card className="p-6 border-border shadow-lg relative overflow-hidden h-full" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.03))' }}>
                   <div className="absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 opacity-20" style={{ backgroundColor: 'hsl(var(--primary))' }}></div>
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-4">
-                      <div className="p-3 rounded-lg" style={{ backgroundColor: 'hsl(var(--primary))' }}>
-                        <FiMessageSquare className="h-6 w-6 text-white" />
+                      <div className="p-1.5 rounded-lg" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                        <FiMessageSquare className="h-3.5 w-3.5 text-white" />
                       </div>
                     </div>
-                    <p className="text-sm font-medium mb-2" style={{ color: 'hsl(var(--primary))' }}>{t("admin.totalMessages")}</p>
-                    <p className="text-5xl font-bold mb-1" style={{ color: 'hsl(var(--primary))' }}>{total}</p>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">{t("admin.totalMessages")}</p>
+                    <p className="text-3xl font-bold mb-1" style={{ color: 'hsl(var(--primary))' }}>{total}</p>
                   </div>
                 </Card>
-                <Card className="p-8 border-accent/20 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden" style={{ background: 'linear-gradient(to bottom right, hsl(var(--accent) / 0.1), hsl(var(--accent) / 0.05))' }}>
+                <Card className="p-6 border-border shadow-lg relative overflow-hidden h-full" style={{ background: 'linear-gradient(to bottom right, hsl(var(--accent) / 0.08), hsl(var(--accent) / 0.03))' }}>
                   <div className="absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 opacity-20" style={{ backgroundColor: 'hsl(var(--accent))' }}></div>
                   <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="p-3 rounded-lg" style={{ backgroundColor: 'hsl(var(--accent))' }}>
-                        <FiAlertCircle className="h-6 w-6 text-white" />
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="p-1.5 rounded-lg" style={{ backgroundColor: 'hsl(var(--accent))' }}>
+                        <FiAlertCircle className="h-3.5 w-3.5 text-white" />
                       </div>
+                      <p className="text-xs font-medium text-muted-foreground">{t("sendMessage.complaint")}</p>
                     </div>
-                    <p className="text-sm font-medium mb-2" style={{ color: 'hsl(var(--accent))' }}>{t("sendMessage.complaint")}</p>
-                    <p className="text-5xl font-bold mb-1" style={{ color: 'hsl(var(--accent))' }}>{distribution?.complaints || 0}</p>
-                    <p className="text-lg font-semibold" style={{ color: 'hsl(var(--accent))' }}>{complaintsPercent}%</p>
+                    <p className="text-3xl font-bold mb-1" style={{ color: 'hsl(var(--accent))' }}>{distribution?.complaints || 0}</p>
+                    <p className="text-xs font-semibold" style={{ color: 'hsl(var(--accent))' }}>{complaintsPercent}%</p>
                   </div>
                 </Card>
-                <Card className="p-8 border-secondary/20 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden" style={{ background: 'linear-gradient(to bottom right, hsl(var(--secondary) / 0.1), hsl(var(--secondary) / 0.05))' }}>
+                <Card className="p-6 border-border shadow-lg relative overflow-hidden h-full" style={{ background: 'linear-gradient(to bottom right, hsl(var(--secondary) / 0.08), hsl(var(--secondary) / 0.03))' }}>
                   <div className="absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 opacity-20" style={{ backgroundColor: 'hsl(var(--secondary))' }}></div>
                   <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="p-3 rounded-lg" style={{ backgroundColor: 'hsl(var(--secondary))' }}>
-                        <FiAward className="h-6 w-6 text-white" />
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="p-1.5 rounded-lg" style={{ backgroundColor: 'hsl(var(--secondary))' }}>
+                        <FiAward className="h-3.5 w-3.5 text-white" />
                       </div>
+                      <p className="text-xs font-medium text-muted-foreground">{t("sendMessage.praise")}</p>
                     </div>
-                    <p className="text-sm font-medium mb-2" style={{ color: 'hsl(var(--secondary))' }}>{t("sendMessage.praise")}</p>
-                    <p className="text-5xl font-bold mb-1" style={{ color: 'hsl(var(--secondary))' }}>{distribution?.praises || 0}</p>
-                    <p className="text-lg font-semibold" style={{ color: 'hsl(var(--secondary))' }}>{praisesPercent}%</p>
+                    <p className="text-3xl font-bold mb-1" style={{ color: 'hsl(var(--secondary))' }}>{distribution?.praises || 0}</p>
+                    <p className="text-xs font-semibold" style={{ color: 'hsl(var(--secondary))' }}>{praisesPercent}%</p>
                   </div>
                 </Card>
-                <Card className="p-8 border-primary/20 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.08))' }}>
+                <Card className="p-6 border-border shadow-lg relative overflow-hidden h-full" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.03))' }}>
                   <div className="absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 opacity-20" style={{ backgroundColor: 'hsl(var(--primary))' }}></div>
                   <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="p-3 rounded-lg" style={{ backgroundColor: 'hsl(var(--primary))' }}>
-                        <FiZap className="h-6 w-6 text-white" />
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="p-1.5 rounded-lg" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                        <FiZap className="h-3.5 w-3.5 text-white" />
                       </div>
+                      <p className="text-xs font-medium text-muted-foreground">{t("sendMessage.suggestion")}</p>
                     </div>
-                    <p className="text-sm font-medium mb-2" style={{ color: 'hsl(var(--primary))' }}>{t("sendMessage.suggestion")}</p>
-                    <p className="text-5xl font-bold mb-1" style={{ color: 'hsl(var(--primary))' }}>{distribution?.suggestions || 0}</p>
-                    <p className="text-lg font-semibold" style={{ color: 'hsl(var(--primary))' }}>{suggestionsPercent}%</p>
+                    <p className="text-3xl font-bold mb-1" style={{ color: 'hsl(var(--primary))' }}>{distribution?.suggestions || 0}</p>
+                    <p className="text-xs font-semibold" style={{ color: 'hsl(var(--primary))' }}>{suggestionsPercent}%</p>
                   </div>
                 </Card>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
-                <Card className="p-8 border-border shadow-lg hover:shadow-xl transition-shadow bg-card">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 rounded-lg bg-muted">
-                      <FiBarChart2 className="h-5 w-5 text-foreground" />
-                    </div>
-                    <h3 className="text-xl font-bold text-foreground">{t("company.messageDistribution")}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0">
+                <Card className="p-6 border-border shadow-lg bg-card flex flex-col h-full">
+                  <div className="flex items-center gap-2 mb-4">
+                    <FiBarChart2 className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-semibold">{t("company.messageDistribution")}</h3>
                   </div>
-                  <div className="space-y-5">
+                  <div className="space-y-5 flex-1 flex flex-col justify-center">
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm font-medium">
                         <span className="text-muted-foreground">{t("sendMessage.complaint")}</span>
@@ -317,14 +315,12 @@ const CompanyReports = () => {
                     </div>
                   </div>
                 </Card>
-                <Card className="p-8 border-border shadow-lg hover:shadow-xl transition-shadow bg-card" style={{ background: 'linear-gradient(to bottom right, hsl(var(--success) / 0.08), hsl(var(--success) / 0.03))' }}>
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 rounded-lg" style={{ backgroundColor: 'hsl(var(--success))' }}>
-                      <FiCheckCircle className="h-5 w-5 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold text-foreground">{t("company.resolvedCases")}</h3>
+                <Card className="p-6 border-border shadow-lg bg-card flex flex-col h-full" style={{ background: 'linear-gradient(to bottom right, hsl(var(--success) / 0.08), hsl(var(--success) / 0.03))' }}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <FiCheckCircle className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-semibold">{t("company.resolvedCases")}</h3>
                   </div>
-                  <div className="space-y-6">
+                  <div className="space-y-6 flex-1 flex flex-col justify-center">
                     <div className="flex justify-between items-center p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--success) / 0.3)' }}>
                       <div className="flex items-center gap-3">
                         <FiCheckCircle className="h-5 w-5" style={{ color: 'hsl(var(--success))' }} />
@@ -350,20 +346,18 @@ const CompanyReports = () => {
                   </div>
                 </Card>
                 {growthMetrics && (
-                  <Card className="p-8 border-border shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden bg-card" style={{ background: 'linear-gradient(to bottom right, hsl(var(--secondary) / 0.1), hsl(var(--secondary) / 0.05))' }}>
+                  <Card className="p-6 border-border shadow-lg relative overflow-hidden bg-card flex flex-col h-full" style={{ background: 'linear-gradient(to bottom right, hsl(var(--secondary) / 0.08), hsl(var(--secondary) / 0.03))' }}>
                     <div className="absolute top-0 right-0 w-40 h-40 rounded-full -mr-20 -mt-20 opacity-20" style={{ backgroundColor: 'hsl(var(--secondary))' }}></div>
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 rounded-lg" style={{ backgroundColor: 'hsl(var(--secondary))' }}>
-                          <FiTrendingUp className="h-5 w-5 text-white" />
-                        </div>
-                        <h3 className="text-xl font-bold text-foreground">{t("company.teamMood")}</h3>
+                    <div className="relative z-10 flex flex-col h-full">
+                      <div className="flex items-center gap-2 mb-4">
+                        <FiTrendingUp className="h-4 w-4 text-primary" />
+                        <h3 className="text-sm font-semibold">{t("company.teamMood")}</h3>
                       </div>
-                      <div className="space-y-6">
+                      <div className="space-y-6 flex-1 flex flex-col justify-center">
                         <div className="p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-muted-foreground">{t("company.growthRating")}</span>
-                            <span className="text-5xl font-bold" style={{ color: 'hsl(var(--secondary))' }}>{growthMetrics.rating}</span>
+                            <span className="text-3xl font-bold" style={{ color: 'hsl(var(--secondary))' }}>{growthMetrics.rating}</span>
                           </div>
                         </div>
                         <div className="flex items-center justify-between p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>

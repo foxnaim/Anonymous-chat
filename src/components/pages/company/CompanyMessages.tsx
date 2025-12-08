@@ -112,12 +112,13 @@ const CompanyMessages = () => {
   };
   
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background flex flex-col overflow-hidden w-full">
       <CompanyHeader />
-      <div className="flex flex-col">
-        <main className="container flex-1 p-4 sm:p-6 space-y-4 sm:space-y-6">
-          {/* Filters */}
-          <Card className="p-4 sm:p-6">
+      <div className="flex flex-col flex-1 overflow-hidden w-full min-h-0">
+        <main className="flex-1 px-6 py-4 overflow-hidden w-full flex flex-col min-h-0">
+          <div className="flex flex-col gap-4 w-full h-full min-h-0">
+            {/* Filters */}
+            <Card className="p-4 border-border shadow-lg flex-shrink-0 bg-white">
             <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
               <div className="relative flex-1">
                 <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -220,7 +221,8 @@ const CompanyMessages = () => {
             </div>
           </Card>
           {/* Messages List */}
-          {isLoading ? (
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {isLoading ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">{t("common.loading")}</p>
             </div>
@@ -232,7 +234,7 @@ const CompanyMessages = () => {
           ) : (
             <div className="space-y-3 sm:space-y-4">
               {filteredMessages.map((message) => (
-                <Card key={message.id} className="p-4 sm:p-6 hover:bg-muted/50 transition-colors">
+                <Card key={message.id} className="p-4 sm:p-6 border-border shadow-lg hover:shadow-xl transition-shadow">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                     <div className="flex-1 space-y-2 sm:space-y-3 w-full">
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -269,6 +271,8 @@ const CompanyMessages = () => {
               ))}
             </div>
           )}
+          </div>
+        </div>
         </main>
       </div>
       {/* Message Detail Dialog */}

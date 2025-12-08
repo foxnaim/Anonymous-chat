@@ -1,363 +1,460 @@
 'use client';
 
-import { useState } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import {
-  FiBell,
-  FiSearch,
-  FiFilter,
-  FiMoreHorizontal,
+  FiMessageSquare,
+  FiClock,
+  FiCheckCircle,
+  FiArrowRight,
+  FiAward,
+  FiStar,
+  FiCopy,
+  FiShare2,
+  FiEye,
+  FiEyeOff,
 } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
-import { useCompany, useCompanyStats, useMessages } from "@/lib/query";
-import { motion } from "framer-motion";
+import { useCompany, useCompanyStats, useMessageDistribution, useGroupedAchievements, useGrowthMetrics } from "@/lib/query";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 const CompanyDashboard = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [copiedCode, setCopiedCode] = React.useState(false);
+  const [copiedLink, setCopiedLink] = React.useState(false);
+  const [copiedPassword, setCopiedPassword] = React.useState(false);
+  const [showSensitiveData, setShowSensitiveData] = React.useState(false);
 
   const { data: company, isLoading: companyLoading } = useCompany(user?.companyId || 0, {
     enabled: !!user?.companyId,
   });
 
+  // Генерация ежедневного пароля на основе даты
+  const dailyPassword = React.useMemo(() => {
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+    // Создаем пароль из 10 символов на основе даты
+    const hash = dateStr.split('').reduce((acc, char) => {
+      return ((acc << 5) - acc) + char.charCodeAt(0);
+    }, 0);
+    const password = Math.abs(hash).toString().padStart(10, '0').slice(0, 10);
+    return password;
+  }, []);
+
+  // Ссылка для отправки сообщений
+  const shareLink = React.useMemo(() => {
+    if (typeof window === 'undefined' || !company?.code) return '';
+    return `${window.location.origin}/?code=${company.code}`;
+  }, [company?.code]);
+
   const { data: stats, isLoading: statsLoading } = useCompanyStats(user?.companyId || 0, {
     enabled: !!user?.companyId,
   });
 
-  const { data: messages = [], isLoading: messagesLoading } = useMessages(company?.code, {
-    enabled: !!company?.code,
+  const { data: distribution, isLoading: distributionLoading } = useMessageDistribution(user?.companyId || 0, {
+    enabled: !!user?.companyId,
   });
 
-  const displayStats = [
-    { label: t("company.newMessages"), value: stats?.new || 0, color: "bg-accent text-accent-foreground" }, /* #F64C72 */
-    { label: t("company.inProgress"), value: stats?.inProgress || 0, color: "bg-secondary text-secondary-foreground" }, /* #553D67 */
-    { label: t("company.resolved"), value: stats?.resolved || 0, color: "bg-success text-success-foreground" }, /* Green */
-  ];
+  const { data: groupedAchievements = [], isLoading: achievementsLoading } = useGroupedAchievements(user?.companyId || 0, {
+    enabled: !!user?.companyId,
+  });
 
-  const filteredMessages = messages
-    .filter((msg) =>
-      msg.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      msg.id.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .slice(0, 5);
+  const { data: growthMetrics, isLoading: growthLoading } = useGrowthMetrics(user?.companyId || 0, {
+    enabled: !!user?.companyId,
+  });
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case "complaint":
-        return t("sendMessage.complaint");
-      case "praise":
-        return t("sendMessage.praise");
-      case "suggestion":
-        return t("sendMessage.suggestion");
-      default:
-        return type;
-    }
-  };
+  // Получаем достижения, близкие к получению (незавершенные с наибольшим прогрессом)
+  const nearCompletionAchievements = React.useMemo(() => {
+    if (!groupedAchievements.length) return [];
+    
+    // Собираем только незавершенные достижения из всех групп
+    const incompleteAchievements: Array<{
+      achievement: any;
+      current: number;
+      progress: number;
+      completed: boolean;
+      completedAt?: string;
+      categoryTitle: string;
+      category: string;
+    }> = [];
+    
+    groupedAchievements.forEach(group => {
+      const activeAchievement = group.achievements.find(a => !a.completed);
+      if (activeAchievement && activeAchievement.progress > 0) {
+        incompleteAchievements.push({
+          ...activeAchievement,
+          categoryTitle: group.categoryTitleKey,
+          category: group.category,
+        });
+      }
+    });
+    
+    // Сортируем по прогрессу (близкие к получению = высокий прогресс)
+    incompleteAchievements.sort((a, b) => b.progress - a.progress);
+    
+    // Возвращаем только 2 самых близких к получению
+    return incompleteAchievements.slice(0, 2);
+  }, [groupedAchievements]);
 
-  const getStatusLabel = (status: string) => {
-    // API возвращает статусы на русском, поэтому проверяем оба варианта
-    if (status === "Новое" || status === t("checkStatus.new")) {
-      return t("checkStatus.new");
-    }
-    if (status === "В работе" || status === t("checkStatus.inProgress")) {
-      return t("checkStatus.inProgress");
-    }
-    if (status === "Решено" || status === t("checkStatus.resolved")) {
-      return t("checkStatus.resolved");
-    }
-    if (status === "Отклонено" || status === t("checkStatus.rejected")) {
-      return t("checkStatus.rejected");
-    }
-    if (status === "Спам" || status === t("checkStatus.spam")) {
-      return t("checkStatus.spam");
-    }
-    return status;
-  };
+  // Рассчитываем проценты распределения
+  const totalDistribution = (distribution?.complaints || 0) + (distribution?.praises || 0) + (distribution?.suggestions || 0);
+  const complaintPercent = totalDistribution > 0 ? Math.round(((distribution?.complaints || 0) / totalDistribution) * 100) : 0;
+  const praisePercent = totalDistribution > 0 ? Math.round(((distribution?.praises || 0) / totalDistribution) * 100) : 0;
+  const suggestionPercent = totalDistribution > 0 ? Math.round(((distribution?.suggestions || 0) / totalDistribution) * 100) : 0;
 
-  const getStatusColor = (status: string) => {
-    // API возвращает статусы на русском, поэтому проверяем оба варианта
-    if (status === "Новое" || status === t("checkStatus.new")) {
-      return "bg-accent text-accent-foreground";
+  const handleCopy = (text: string, type: 'code' | 'link' | 'password') => {
+    navigator.clipboard.writeText(text);
+    if (type === 'code') {
+      setCopiedCode(true);
+      toast.success(t("company.codeCopiedToClipboard"));
+      setTimeout(() => setCopiedCode(false), 2000);
+    } else if (type === 'link') {
+      setCopiedLink(true);
+      toast.success(t("company.linkCopied"));
+      setTimeout(() => setCopiedLink(false), 2000);
+    } else if (type === 'password') {
+      setCopiedPassword(true);
+      toast.success(t("company.passwordCopiedToClipboard"));
+      setTimeout(() => setCopiedPassword(false), 2000);
     }
-    if (status === "В работе" || status === t("checkStatus.inProgress")) {
-      return "bg-secondary text-secondary-foreground";
-    }
-    if (status === "Решено" || status === t("checkStatus.resolved")) {
-      return "bg-success text-success-foreground";
-    }
-    if (status === "Спам" || status === t("checkStatus.spam")) {
-      return "bg-destructive text-destructive-foreground";
-    }
-    return "bg-muted text-muted-foreground";
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background flex flex-col overflow-hidden w-full">
       <CompanyHeader />
-
-      {/* Main Content */}
-      <div className="flex flex-col">
-        {/* Top Bar */}
-        <div className="border-b border-border bg-card">
-          <div className="container flex items-center justify-between px-6 py-4">
-            <div className="flex items-center gap-4">
-              <h2 className="text-lg font-semibold text-foreground">
-                {companyLoading ? t("common.loading") : company?.name || t("welcome.companyName")}
-              </h2>
-              {company && (
-                <Badge variant="secondary" className="bg-secondary text-secondary-foreground">
-                  {company.plan} {t("company.plan")}
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center gap-3">
-              <Button size="icon" variant="ghost">
-                <FiBell className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Dashboard Content */}
-        <main className="container flex-1 p-4 sm:p-6 space-y-4 sm:space-y-6">
-          {/* Stats Cards */}
-          {statsLoading ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">{t("common.loading")}</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {displayStats.map((stat, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className="p-4 sm:p-6">
-                    <div className="space-y-2">
-                      <p className="text-xs sm:text-sm font-medium text-muted-foreground">{stat.label}</p>
-                      <p className="text-3xl sm:text-4xl font-bold text-foreground">{stat.value}</p>
-                      <Badge className={`${stat.color} text-xs`}>{stat.label}</Badge>
+      <div className="flex flex-col flex-1 overflow-hidden w-full min-h-0">
+        <main className="flex-1 px-4 sm:px-6 py-4 overflow-y-auto w-full">
+          <div className="w-full space-y-4">
+            {statsLoading || distributionLoading || achievementsLoading || growthLoading || companyLoading ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">{t("common.loading")}</p>
+              </div>
+            ) : (
+              <>
+                {/* Company Code, Link and Password Block */}
+                {company && (
+                  <Card className="p-5 border-border shadow-lg relative overflow-hidden bg-card">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-semibold text-foreground">{t("company.companyInfo")}</h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowSensitiveData(!showSensitiveData)}
+                        className="h-8 w-8"
+                      >
+                        {showSensitiveData ? (
+                          <FiEyeOff className="h-4 w-4" />
+                        ) : (
+                          <FiEye className="h-4 w-4" />
+                        )}
+                      </Button>
                     </div>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          )}
-
-          {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            <Card className="p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">{t("company.messageDistribution")}</h3>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{t("sendMessage.complaint")}</span>
-                    <span className="font-semibold">45%</span>
-                  </div>
-                  <div className="h-3 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-accent" style={{ width: "45%" }}></div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{t("sendMessage.praise")}</span>
-                    <span className="font-semibold">30%</span>
-                  </div>
-                  <div className="h-3 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-secondary" style={{ width: "30%" }}></div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{t("sendMessage.suggestion")}</span>
-                    <span className="font-semibold">25%</span>
-                  </div>
-                  <div className="h-3 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-primary" style={{ width: "25%" }}></div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-4 sm:p-6">
-              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">{t("company.teamMood")}</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">{t("company.overallMood")}</span>
-                  <Badge className="bg-secondary text-secondary-foreground">{t("company.positive")}</Badge>
-                </div>
-                <div className="h-4 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-accent via-secondary to-primary" style={{ width: "70%" }}></div>
-                </div>
-                <div className="pt-4 border-t border-border">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">{t("company.growthRating")}</span>
-                    <span className="text-2xl font-bold text-primary">8.5</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {t("company.cultureStrong")}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Messages Table */}
-          <Card className="p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-3 mb-4 sm:mb-6">
-              <h3 className="text-base sm:text-lg font-semibold">{t("company.recentMessages")}</h3>
-              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                <div className="relative flex-1 sm:flex-initial">
-                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder={t("company.searchMessages")}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 w-full sm:w-64 text-sm sm:text-base"
-                    autoComplete="off"
-                  />
-                </div>
-                <Button variant="outline" size="icon" className="flex-shrink-0">
-                  <FiFilter className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-3 text-sm font-medium text-muted-foreground">ID</th>
-                    <th className="pb-3 text-sm font-medium text-muted-foreground">{t("messages.type")}</th>
-                    <th className="pb-3 text-sm font-medium text-muted-foreground">{t("checkStatus.created")}</th>
-                    <th className="pb-3 text-sm font-medium text-muted-foreground">{t("checkStatus.status")}</th>
-                    <th className="pb-3 text-sm font-medium text-muted-foreground">{t("sendMessage.message")}</th>
-                    <th className="pb-3 text-sm font-medium text-muted-foreground"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {messagesLoading ? (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
-                        {t("common.loading")}
-                      </td>
-                    </tr>
-                  ) : filteredMessages.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
-                        {t("company.noMessages")}
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredMessages.map((message) => (
-                      <tr key={message.id} className="border-b border-border last:border-0 hover:bg-muted/50">
-                        <td className="py-4">
-                          <code className="text-sm font-mono text-primary">{message.id}</code>
-                        </td>
-                        <td className="py-4">
-                          <Badge
-                            variant="outline"
-                            className={
-                              message.type === "complaint"
-                                ? "border-accent text-accent"
-                                : message.type === "praise"
-                                ? "border-secondary text-secondary"
-                                : "border-primary text-primary"
-                            }
-                          >
-                            {getTypeLabel(message.type)}
-                          </Badge>
-                        </td>
-                        <td className="py-4 text-sm text-muted-foreground">
-                          {new Date(message.createdAt).toLocaleDateString("ru-RU")}
-                        </td>
-                        <td className="py-4">
-                          <Badge className={getStatusColor(message.status)}>
-                            {getStatusLabel(message.status)}
-                          </Badge>
-                        </td>
-                        <td className="py-4 text-sm text-muted-foreground max-w-xs truncate">
-                          {message.content}
-                        </td>
-                        <td className="py-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                      {/* Company Code */}
+                      <div className="space-y-2.5">
+                        <label className="text-sm font-medium text-muted-foreground">{t("company.companyCode")}</label>
+                        <div className="flex items-center gap-2">
+                          <code className="flex-1 text-xl font-mono font-bold text-primary bg-muted px-4 py-3 rounded-md tracking-wider">
+                            {showSensitiveData ? company.code : '••••••••'}
+                          </code>
                           <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => router.push("/company/messages" as any)}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCopy(company.code, 'code')}
+                            className="h-10 w-10"
                           >
-                            <FiMoreHorizontal className="h-4 w-4" />
+                            {copiedCode ? (
+                              <FiCheckCircle className="h-4 w-4 text-success" />
+                            ) : (
+                              <FiCopy className="h-4 w-4" />
+                            )}
                           </Button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                      </div>
 
-            {/* Mobile Cards */}
-            <div className="md:hidden space-y-3">
-              {messagesLoading ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  {t("common.loading")}
-                </div>
-              ) : filteredMessages.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  {t("company.noMessages")}
-                </div>
-              ) : (
-                filteredMessages.map((message) => (
-                  <Card key={message.id} className="p-4 hover:bg-muted/50 transition-colors">
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <code className="text-xs font-mono text-primary break-all">{message.id}</code>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 flex-shrink-0"
-                          onClick={() => router.push("/company/messages" as any)}
-                        >
-                          <FiMoreHorizontal className="h-4 w-4" />
-                        </Button>
+                      {/* Share Link */}
+                      <div className="space-y-2.5">
+                        <label className="text-sm font-medium text-muted-foreground">{t("company.shareLink")}</label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={showSensitiveData ? shareLink : '••••••••••••••••••••••••••••'}
+                            readOnly
+                            className="font-mono text-sm h-10"
+                            autoComplete="off"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCopy(shareLink, 'link')}
+                            className="h-10 w-10"
+                          >
+                            {copiedLink ? (
+                              <FiCheckCircle className="h-4 w-4 text-success" />
+                            ) : (
+                              <FiShare2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className={`text-xs ${
-                            message.type === "complaint"
-                              ? "border-accent text-accent"
-                              : message.type === "praise"
-                              ? "border-secondary text-secondary"
-                              : "border-primary text-primary"
-                          }`}
-                        >
-                          {getTypeLabel(message.type)}
-                        </Badge>
-                        <Badge className={`text-xs ${getStatusColor(message.status)}`}>
-                          {getStatusLabel(message.status)}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(message.createdAt).toLocaleDateString("ru-RU")}
-                        </span>
+
+                      {/* Daily Password */}
+                      <div className="space-y-2.5">
+                        <label className="text-sm font-medium text-muted-foreground">{t("company.passwordForSendingMessages")}</label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={showSensitiveData ? dailyPassword : '••••••••••'}
+                            readOnly
+                            className="font-mono text-sm h-10"
+                            autoComplete="off"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCopy(dailyPassword, 'password')}
+                            className="h-10 w-10"
+                          >
+                            {copiedPassword ? (
+                              <FiCheckCircle className="h-4 w-4 text-success" />
+                            ) : (
+                              <FiCopy className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{t("company.updatesAutomaticallyDaily")}</p>
                       </div>
-                      <p className="text-sm text-foreground line-clamp-2">{message.content}</p>
                     </div>
                   </Card>
-                ))
-              )}
-            </div>
-          </Card>
+                )}
+
+                {/* Combined Stats Block */}
+                <Card className="p-5 border-border shadow-lg relative overflow-hidden bg-card">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    {/* Stats Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4 lg:col-span-2">
+                      <div className="flex items-center gap-3 p-4 rounded-lg" style={{ background: 'linear-gradient(to bottom right, hsl(var(--accent) / 0.08), hsl(var(--accent) / 0.03))' }}>
+                        <div className="p-2 rounded-lg" style={{ backgroundColor: 'hsl(var(--accent))' }}>
+                          <FiMessageSquare className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground mb-1">{t("company.newMessages")}</p>
+                          <p className="text-2xl font-bold" style={{ color: 'hsl(var(--accent))' }}>{stats?.new || 0}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 p-4 rounded-lg" style={{ background: 'linear-gradient(to bottom right, hsl(var(--secondary) / 0.08), hsl(var(--secondary) / 0.03))' }}>
+                        <div className="p-2 rounded-lg" style={{ backgroundColor: 'hsl(var(--secondary))' }}>
+                          <FiClock className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground mb-1">{t("company.inProgress")}</p>
+                          <p className="text-2xl font-bold" style={{ color: 'hsl(var(--secondary))' }}>{stats?.inProgress || 0}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 p-4 rounded-lg" style={{ background: 'linear-gradient(to bottom right, hsl(var(--success) / 0.08), hsl(var(--success) / 0.03))' }}>
+                        <div className="p-2 rounded-lg" style={{ backgroundColor: 'hsl(var(--success))' }}>
+                          <FiCheckCircle className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground mb-1">{t("company.resolved")}</p>
+                          <p className="text-2xl font-bold" style={{ color: 'hsl(var(--success))' }}>{stats?.resolved || 0}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Distribution Section */}
+                    {totalDistribution > 0 && (
+                      <div className="lg:col-span-1 lg:pl-5 lg:border-l lg:border-border/50">
+                        <h3 className="text-sm font-semibold mb-4">{t("company.messageDistribution")}</h3>
+                        <div className="space-y-3">
+                          <div>
+                            <div className="flex items-center justify-between text-sm mb-2">
+                              <span className="text-muted-foreground">{t("sendMessage.complaint")}</span>
+                              <span className="font-semibold">{complaintPercent}%</span>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-accent rounded-full transition-all duration-500" 
+                                style={{ width: `${complaintPercent}%` }}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <div className="flex items-center justify-between text-sm mb-2">
+                              <span className="text-muted-foreground">{t("sendMessage.praise")}</span>
+                              <span className="font-semibold">{praisePercent}%</span>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-secondary rounded-full transition-all duration-500" 
+                                style={{ width: `${praisePercent}%` }}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <div className="flex items-center justify-between text-sm mb-2">
+                              <span className="text-muted-foreground">{t("sendMessage.suggestion")}</span>
+                              <span className="font-semibold">{suggestionPercent}%</span>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-primary rounded-full transition-all duration-500" 
+                                style={{ width: `${suggestionPercent}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Button */}
+                  <div className="pt-4 mt-4 border-t border-border/50">
+                    <Button 
+                      onClick={() => router.push("/company/messages")}
+                      className="w-full h-10 text-base font-medium shadow-sm hover:shadow-md transition-all duration-200"
+                      size="lg"
+                    >
+                      {t("company.toMessages")}
+                      <FiArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+                </Card>
+                
+                {/* Near Completion Achievements and Growth Rating Block */}
+                <Card className="p-5 border-border shadow-lg relative overflow-hidden bg-card">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    {/* Achievements Section */}
+                    <div className="lg:col-span-2">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="p-2 rounded-lg" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                          <FiAward className="h-4 w-4 text-white" />
+                        </div>
+                        <h3 className="text-sm font-semibold">{t("company.achievements")}</h3>
+                      </div>
+                      {nearCompletionAchievements.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">{t("company.noAchievements")}</p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {nearCompletionAchievements.map((achievement) => {
+                            const categoryTitle = t(achievement.categoryTitle);
+                            const level = achievement.achievement.level || 1;
+                            const target = achievement.achievement.target;
+                            
+                            let description = "";
+                            const titleKey = achievement.achievement.titleKey;
+                            
+                            if (titleKey) {
+                              const translationParams: Record<string, any> = {};
+                              if (titleKey.includes("level") || titleKey.includes("reviews") || titleKey.includes("resolved") || titleKey.includes("responseSpeed") || titleKey.includes("longevity")) {
+                                translationParams.level = level;
+                                translationParams.target = target;
+                              } else {
+                                translationParams.target = target;
+                              }
+                              description = String(t(titleKey, translationParams));
+                            }
+                            
+                            // Вычисляем остаток до завершения
+                            const remaining = target - achievement.current;
+                            
+                            // Определяем текст в зависимости от прогресса
+                            const getRemainingText = () => {
+                              if (achievement.progress >= 90) return t("company.remainingLittle");
+                              if (achievement.progress >= 75) return t("company.almostReady");
+                              if (achievement.progress >= 50) return t("company.halfway");
+                              return t("company.remaining", { count: remaining });
+                            };
+                            
+                            return (
+                              <div key={`${achievement.category}-${achievement.achievement.id}`} className="p-4 border rounded-lg bg-card hover:shadow-sm transition-shadow">
+                                <div className="flex items-start justify-between gap-3 mb-3">
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="text-sm font-semibold text-foreground leading-tight mb-1">{categoryTitle}</h4>
+                                    {description && (
+                                      <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                                        {description}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex-shrink-0 flex flex-col items-end gap-1">
+                                    <span className="text-lg font-bold text-primary whitespace-nowrap">
+                                      {achievement.progress}%
+                                    </span>
+                                    {remaining > 0 && (
+                                      <span className={`text-xs whitespace-nowrap ${
+                                        achievement.progress >= 90 
+                                          ? "text-primary font-semibold" 
+                                          : "text-muted-foreground"
+                                      }`}>
+                                        {getRemainingText()}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <Progress value={achievement.progress} className="h-2" />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Growth Rating Section */}
+                    <div className="lg:col-span-1 lg:pl-5 lg:border-l lg:border-border/50">
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="p-2 rounded-lg" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                          <FiStar className="h-4 w-4 text-white fill-white" />
+                        </div>
+                        <h3 className="text-sm font-semibold">{t("company.growthRating")}</h3>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="p-4 rounded-lg" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.03))' }}>
+                          <div className="flex items-baseline gap-1 mb-2">
+                            <span className="text-3xl font-bold" style={{ color: 'hsl(var(--primary))' }}>
+                              {growthMetrics?.rating?.toFixed(1) || "0.0"}
+                            </span>
+                            <span className="text-sm font-semibold text-muted-foreground">/ 10</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            {growthMetrics?.rating && growthMetrics.rating >= 8
+                              ? t("company.cultureExcellent")
+                              : growthMetrics?.rating && growthMetrics.rating >= 6
+                              ? t("company.cultureStrong")
+                              : growthMetrics?.rating && growthMetrics.rating >= 4
+                              ? t("company.cultureDeveloping")
+                              : t("company.cultureNeedsAttention")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Button */}
+                  <div className="pt-4 mt-4 border-t border-border/50">
+                    <Button 
+                      onClick={() => router.push("/company/growth")}
+                      className="w-full h-10 text-base font-medium shadow-sm hover:shadow-md transition-all duration-200"
+                      size="lg"
+                    >
+                      {t("company.growth")}
+                      <FiArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+                </Card>
+              </>
+            )}
+          </div>
         </main>
       </div>
     </div>

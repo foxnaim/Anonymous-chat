@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { FiAward, FiStar, FiMessageSquare, FiCheckCircle, FiClock, FiHelpCircle } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
@@ -24,15 +24,15 @@ const CompanyGrowth = () => {
 
   const getRatingDescription = (rating: number) => {
     if (rating >= 8) {
-      return "Культура обратной связи в вашей компании отличная";
+      return t("company.cultureExcellent");
     } else if (rating >= 6) {
-      return "Культура обратной связи в вашей компании сильна";
+      return t("company.cultureStrong");
     } else if (rating >= 4) {
-      return "Культура обратной связи в вашей компании развивается";
+      return t("company.cultureDeveloping");
     } else if (rating >= 2) {
-      return "Культура обратной связи в вашей компании требует внимания";
+      return t("company.cultureNeedsAttention");
     } else {
-      return "Культура обратной связи в вашей компании нуждается в улучшении";
+      return t("company.cultureNeedsImprovement");
     }
   };
   return (
@@ -59,22 +59,25 @@ const CompanyGrowth = () => {
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <h3 className="text-lg font-bold text-foreground">{t("company.growthRating")}</h3>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    className="text-muted-foreground hover:text-foreground transition-colors"
-                                    aria-label={t("company.growthRatingInfo")}
-                                  >
-                                    <FiHelpCircle className="h-4 w-4" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent className="max-w-xs">
-                                  <p>{t("company.growthRatingTooltip")}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full p-0.5"
+                                  aria-label={t("company.growthRatingInfo")}
+                                >
+                                  <FiHelpCircle className="h-4 w-4" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent 
+                                side="bottom" 
+                                align="start"
+                                sideOffset={8}
+                                className="max-w-xs z-[100]"
+                              >
+                                <p className="text-sm">{t("company.growthRatingTooltip")}</p>
+                              </PopoverContent>
+                            </Popover>
                           </div>
                           <p className="text-xs text-muted-foreground mt-0.5">
                             {getRatingDescription(metrics?.rating || 0)}

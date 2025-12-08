@@ -4,11 +4,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FiHome, FiArrowLeft } from "react-icons/fi";
+import { FiArrowLeft } from "react-icons/fi";
 import { useCreateCompany } from "@/lib/query";
 import { useAuth } from "@/lib/redux";
 import { toast } from "sonner";
@@ -106,9 +107,16 @@ const Register = () => {
               {t("common.back")}
             </Link>
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <FiHome className="h-8 w-8 text-primary" />
-              </div>
+              <Link href="/" className="inline-block mb-4">
+                <Image
+                  src="/feedBack.svg"
+                  alt="Anonymous Chat"
+                  width={48}
+                  height={48}
+                  priority
+                  className="h-12 w-12 mx-auto"
+                />
+              </Link>
               <h1 className="text-3xl font-bold text-foreground mb-2" suppressHydrationWarning>
                 {t("auth.register")}
               </h1>

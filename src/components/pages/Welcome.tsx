@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FiMessageSquare, FiCheckCircle, FiSend, FiLogIn, FiHome, FiX, FiKey, FiHash, FiEye, FiEyeOff, FiSearch, FiUserPlus, FiChevronDown, FiLayout } from "react-icons/fi";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/lib/redux";
 import { useCompanyByCode, companyService } from "@/lib/query";
 import { motion } from "framer-motion";
@@ -138,7 +140,16 @@ const Welcome = () => {
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-lg sm:text-xl font-semibold text-primary">FeedbackHub</h1>
+            <Link href="/" className="flex items-center gap-2">
+              <Image
+                src="/feedBack.svg"
+                alt="Anonymous Chat"
+                width={32}
+                height={32}
+                priority
+                className="h-8 w-8 sm:h-9 sm:w-9"
+              />
+            </Link>
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="hidden sm:block min-w-[140px]">
                 <LanguageSwitcher />

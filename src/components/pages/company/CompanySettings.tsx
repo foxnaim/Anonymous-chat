@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FiCopy, FiShare2, FiCheckCircle, FiHome, FiUpload, FiX } from "react-icons/fi";
+import { FiUpload, FiX, FiEdit2, FiLock } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import { useCompany } from "@/lib/query";
@@ -23,25 +23,18 @@ const CompanySettings = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [copied, setCopied] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailPassword, setEmailPassword] = useState("");
   const { isFullscreen, toggleFullscreen } = useFullscreen(
     user?.role === "company" || user?.role === "admin" || user?.role === "super_admin" ? user.role : null
   );
   const { data: company, isLoading } = useCompany(user?.companyId || 0, {
     enabled: !!user?.companyId,
   });
-  // Очистка таймеров при размонтировании
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -72,7 +65,7 @@ const CompanySettings = () => {
   };
   const handlePasswordChange = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      toast.error("Заполните все поля");
+      toast.error(t("common.fillAllFields"));
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -80,7 +73,7 @@ const CompanySettings = () => {
       return;
     }
     if (newPassword.length < 6) {
-      toast.error("Пароль должен содержать минимум 6 символов");
+      toast.error(t("auth.passwordMinLengthError"));
       return;
     }
     // В реальном приложении здесь будет API вызов
@@ -92,6 +85,33 @@ const CompanySettings = () => {
 
   const handleLanguageChange = (lang: string) => {
     i18nInstance.changeLanguage(lang);
+  };
+
+  const handleEmailEdit = () => {
+    setIsEditingEmail(true);
+    setNewEmail(company?.adminEmail || "");
+  };
+
+  const handleEmailCancel = () => {
+    setIsEditingEmail(false);
+    setNewEmail("");
+    setEmailPassword("");
+  };
+
+  const handleEmailSave = async () => {
+    if (!emailPassword) {
+      toast.error(t("company.passwordRequiredForEmailChange"));
+      return;
+    }
+    if (!newEmail || newEmail === company?.adminEmail) {
+      toast.error(t("company.emailNotChanged"));
+      return;
+    }
+    // В реальном приложении здесь будет API вызов для проверки пароля и изменения email
+    // await companyService.changeEmail(user?.companyId, newEmail, emailPassword);
+    toast.success(t("company.emailChanged"));
+    setIsEditingEmail(false);
+    setEmailPassword("");
   };
 
   const handleSave = async () => {
@@ -177,142 +197,82 @@ const CompanySettings = () => {
                 <Input id="name" defaultValue={company?.name} autoComplete="organization" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="code">{t("company.companyCode")}</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="code"
-                    value={company?.code || ""}
-                    disabled
-                    className="text-lg font-mono tracking-wider font-bold uppercase"
-                    autoComplete="off"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      if (company?.code) {
-                        navigator.clipboard.writeText(company.code);
-                        setCopied(true);
-                        toast.success(t("company.codeCopied"));
-                        if (timeoutRef.current) {
-                          clearTimeout(timeoutRef.current);
-                        }
-                        timeoutRef.current = setTimeout(() => setCopied(false), 2000);
-                      }
-                    }}
-                  >
-                    {copied ? (
-                      <FiCheckCircle className="h-4 w-4 text-secondary" />
-                    ) : (
-                      <FiCopy className="h-4 w-4" />
-                    )}
-                  </Button>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="email">{t("auth.adminEmail")}</Label>
+                  {!isEditingEmail && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleEmailEdit}
+                      className="h-8"
+                    >
+                      <FiEdit2 className="h-4 w-4 mr-2" />
+                      {t("common.edit")}
+                    </Button>
+                  )}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {t("company.codeDescription")}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">{t("auth.adminEmail")}</Label>
-                <Input id="email" type="email" defaultValue={company?.adminEmail} autoComplete="email" />
+                {isEditingEmail ? (
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Input
+                        id="email"
+                        type="email"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        autoComplete="email"
+                        placeholder={t("auth.adminEmail")}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="emailPassword" className="flex items-center gap-2">
+                        <FiLock className="h-4 w-4" />
+                        {t("company.currentPasswordForEmail")}
+                      </Label>
+                      <Input
+                        id="emailPassword"
+                        type="password"
+                        value={emailPassword}
+                        onChange={(e) => setEmailPassword(e.target.value)}
+                        autoComplete="current-password"
+                        placeholder={t("company.enterPasswordToChangeEmail")}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t("company.passwordRequiredToChangeEmail")}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleEmailCancel}
+                        className="flex-1"
+                      >
+                        {t("common.cancel")}
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={handleEmailSave}
+                        className="flex-1"
+                        disabled={!emailPassword || !newEmail || newEmail === company?.adminEmail}
+                      >
+                        {t("common.save")}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Input
+                    id="email"
+                    type="email"
+                    value={company?.adminEmail || ""}
+                    readOnly
+                    autoComplete="email"
+                    className="bg-muted"
+                  />
+                )}
               </div>
             </div>
           </Card>
-          {/* Company Code Sharing */}
-          {company && (
-            <Card className="p-6 bg-primary/5 border-primary/20">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <FiHome className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-foreground">{t("company.codeForEmployees")}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {t("company.shareCodeWithEmployees")}
-                    </p>
-                  </div>
-                </div>
-                <div className="bg-background border border-border rounded-lg p-6 space-y-4">
-                  <div>
-                    <Label className="text-sm text-muted-foreground mb-2 block">{t("company.companyCode")}</Label>
-                    <div className="flex items-center gap-3">
-                      <code className="flex-1 text-2xl font-mono font-bold text-primary bg-muted px-4 py-3 rounded-md tracking-wider">
-                        {company.code}
-                      </code>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          navigator.clipboard.writeText(company.code);
-                          setCopied(true);
-                          toast.success(t("company.codeCopiedToClipboard"));
-                          if (timeoutRef.current) {
-                            clearTimeout(timeoutRef.current);
-                          }
-                          timeoutRef.current = setTimeout(() => setCopied(false), 2000);
-                        }}
-                      >
-                        {copied ? (
-                          <>
-                            <FiCheckCircle className="h-4 w-4 mr-2" />
-                            {t("company.copied")}
-                          </>
-                        ) : (
-                          <>
-                            <FiCopy className="h-4 w-4 mr-2" />
-                            {t("company.copy")}
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                  <Separator />
-                  <div>
-                    <Label className="text-sm text-muted-foreground mb-2 block">{t("company.shareLink")}</Label>
-                    <div className="flex items-center gap-3">
-                      <Input
-                        value={`${typeof window !== 'undefined' ? window.location.origin : ''}/?code=${company.code}`}
-                        readOnly
-                        className="font-mono text-sm"
-                        autoComplete="off"
-                      />
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          const link = `${typeof window !== 'undefined' ? window.location.origin : ''}/?code=${company.code}`;
-                          navigator.clipboard.writeText(link);
-                          toast.success(t("company.linkCopied"));
-                        }}
-                      >
-                        <FiShare2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {t("company.linkDescription")}
-                    </p>
-                  </div>
-                  <div className="pt-4 border-t border-border">
-                    <p className="text-sm font-medium text-foreground mb-2">{t("company.howToUse")}:</p>
-                    <ul className="space-y-1 text-sm text-muted-foreground">
-                      <li className="flex items-start gap-2">
-                        <span className="text-primary">•</span>
-                        <span>{t("company.howToUseStep1")}</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-primary">•</span>
-                        <span>{t("company.howToUseStep2")}</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-primary">•</span>
-                        <span>{t("company.howToUseStep3")}</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          )}
           {/* Change Password */}
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-6">{t("company.changePassword")}</h3>

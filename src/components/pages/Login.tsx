@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/redux";
-import { FiLogIn, FiArrowLeft } from "react-icons/fi";
+import { FiArrowLeft } from "react-icons/fi";
 import { motion } from "framer-motion";
 const Login = () => {
   const { t } = useTranslation();
@@ -67,9 +68,16 @@ const Login = () => {
               {t("common.back")}
             </Link>
             <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <FiLogIn className="h-8 w-8 text-primary" />
-              </div>
+              <Link href="/" className="inline-block mb-4">
+                <Image
+                  src="/feedBack.svg"
+                  alt="Anonymous Chat"
+                  width={48}
+                  height={48}
+                  priority
+                  className="h-12 w-12 mx-auto"
+                />
+              </Link>
               <h1 className="text-3xl font-bold text-foreground mb-2">FeedbackHub</h1>
               <p className="text-muted-foreground">{t("auth.login")}</p>
             </div>

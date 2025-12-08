@@ -1,6 +1,7 @@
 'use client';
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -17,9 +18,10 @@ import {
   FiX,
 } from "react-icons/fi";
 import { useAuth } from "@/lib/redux";
+import { STORAGE_KEYS } from "@/lib/redux/constants";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu as HeadlessMenu, Transition } from "@headlessui/react";
 
 export const CompanyHeader = () => {
@@ -28,6 +30,16 @@ export const CompanyHeader = () => {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showBackButton, setShowBackButton] = useState(false);
+
+  // Проверяем, был ли вход выполнен под админом
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const loginRole = localStorage.getItem(STORAGE_KEYS.LOGIN_ROLE);
+      // Показываем стрелку назад только если вход был выполнен как admin или super_admin
+      setShowBackButton(loginRole === 'admin' || loginRole === 'super_admin');
+    }
+  }, []);
 
   const navigation = [
     { name: t("company.dashboard"), path: "/company", icon: FiLayout },
@@ -42,16 +54,29 @@ export const CompanyHeader = () => {
       <div className="container flex h-14 sm:h-16 items-center justify-between px-4 sm:px-6">
         {/* Logo */}
         <div className="flex items-center gap-2 sm:gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden sm:flex h-9 w-9"
-            onClick={() => router.push("/admin")}
+          {showBackButton && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden sm:flex h-9 w-9"
+              onClick={() => router.push("/admin")}
+            >
+              <FiArrowLeft className="h-4 w-4" />
+            </Button>
+          )}
+          <Link
+            href="/company"
+            className="flex items-center gap-2"
+            onClick={() => setMobileMenuOpen(false)}
           >
-            <FiArrowLeft className="h-4 w-4" />
-          </Button>
-          <Link href="/company" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
-            <h1 className="text-lg sm:text-xl font-bold text-primary">FeedbackHub</h1>
+            <Image
+              src="/feedBack.svg"
+              alt="Anonymous Chat"
+              width={32}
+              height={32}
+              priority
+              className="h-8 w-8 sm:h-9 sm:w-9"
+            />
           </Link>
         </div>
 

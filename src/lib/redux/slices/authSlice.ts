@@ -83,6 +83,7 @@ const authSlice = createSlice({
       if (typeof window !== 'undefined') {
         localStorage.removeItem(STORAGE_KEYS.USER);
         localStorage.removeItem(STORAGE_KEYS.PASSWORD);
+        localStorage.removeItem(STORAGE_KEYS.LOGIN_ROLE);
       }
     },
     setUser: (state, action: PayloadAction<User | null>) => {
@@ -102,6 +103,8 @@ const authSlice = createSlice({
         state.isLoading = false;
         if (typeof window !== 'undefined') {
           localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(action.payload));
+          // Сохраняем роль, под которой был выполнен вход
+          localStorage.setItem(STORAGE_KEYS.LOGIN_ROLE, action.payload.role);
         }
         toast.success("Вход выполнен успешно");
       })

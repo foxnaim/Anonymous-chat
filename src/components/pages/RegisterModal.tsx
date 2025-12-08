@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -132,6 +134,16 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
         <DialogContent className="sm:max-w-lg min-h-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex flex-col items-center mb-3">
+              <Link href="/" className="mb-3">
+                <Image
+                  src="/feedBack.svg"
+                  alt="Anonymous Chat"
+                  width={48}
+                  height={48}
+                  priority
+                  className="h-12 w-12"
+                />
+              </Link>
               <DialogTitle className="text-2xl font-bold" suppressHydrationWarning>
                 {t("auth.register")}
               </DialogTitle>
@@ -215,6 +227,16 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
         </button>
         <DialogHeader>
           <div className="flex flex-col items-center mb-4">
+            <Link href="/" className="mb-4">
+              <Image
+                src="/feedBack.svg"
+                alt="Anonymous Chat"
+                width={48}
+                height={48}
+                priority
+                className="h-12 w-12"
+              />
+            </Link>
             <DialogTitle className="text-2xl font-bold" suppressHydrationWarning>
               {t("auth.register")}
             </DialogTitle>
