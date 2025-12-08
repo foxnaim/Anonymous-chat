@@ -4,7 +4,7 @@ export type MessageType = "complaint" | "praise" | "suggestion";
 export type MessageStatus = "Новое" | "В работе" | "Решено" | "Отклонено" | "Спам";
 export type UserRole = "user" | "company" | "admin" | "super_admin";
 export type CompanyStatus = "Активна" | "Пробная" | "Заблокирована";
-export type PlanType = "Бесплатный" | "Про" | "Бизнес" | string; // string для кастомных планов
+export type PlanType = "Пробный" | "Про" | "Бизнес" | string; // string для кастомных планов
 
 export interface Message {
   id: string;

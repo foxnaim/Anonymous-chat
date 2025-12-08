@@ -53,7 +53,8 @@ const AdminAnalytics = () => {
     const newStatus = t("checkStatus.new");
     const inProgressStatus = t("checkStatus.inProgress");
     const resolvedStatus = t("checkStatus.resolved");
-    const freePlanText = t("common.free");
+    // Названия планов (используем прямые значения, так как они хранятся в БД)
+    const trialPlanText = "Пробный";
     const proPlanText = t("admin.planPro");
     const businessPlanText = t("admin.planBusiness");
 
@@ -74,7 +75,7 @@ const AdminAnalytics = () => {
     const suggestions = messages.filter((m) => m.type === "suggestion").length;
     
     // Распределение по планам
-    const freePlan = companies.filter((c) => c.plan === freePlanText).length;
+    const freePlan = companies.filter((c) => c.plan === trialPlanText).length;
     const proPlan = companies.filter((c) => c.plan === proPlanText).length;
     const businessPlan = companies.filter((c) => c.plan === businessPlanText).length;
     
@@ -333,7 +334,7 @@ const AdminAnalytics = () => {
               </h3>
               <div className="space-y-3">
                 {[
-                  { name: t("common.free"), count: analytics.freePlan, color: "bg-muted" },
+                  { name: "Пробный", count: analytics.freePlan, color: "bg-muted" },
                   { name: t("admin.planPro"), count: analytics.proPlan, color: "bg-primary" },
                   { name: t("admin.planBusiness"), count: analytics.businessPlan, color: "bg-secondary" },
                 ].map((plan) => {

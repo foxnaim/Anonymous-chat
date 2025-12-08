@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FiPlus, FiShield, FiTrash2, FiEdit2 } from "react-icons/fi";
+import { FiPlus, FiShield, FiTrash2, FiEdit2, FiEye, FiEyeOff } from "react-icons/fi";
 import { AdminHeader } from "@/components/AdminHeader";
 import { useAdmins } from "@/lib/query";
 import type { AdminUser } from "@/types";
@@ -25,18 +25,41 @@ const AdminAdmins = () => {
     name: string;
     email: string;
     password: string;
+    confirmPassword: string;
   } | null>(null);
   const [createAdmin, setCreateAdmin] = useState({
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false);
+  const [showEditConfirmPassword, setShowEditConfirmPassword] = useState(false);
   const { user } = useAuth();
 
   // Синхронизируем с моковыми данными
   useEffect(() => {
     setAdminsLocal(admins);
   }, [admins]);
+
+  // Сбрасываем состояние при закрытии модальных окон
+  useEffect(() => {
+    if (!isDialogOpen) {
+      setCreateAdmin({ name: "", email: "", password: "", confirmPassword: "" });
+      setShowPassword(false);
+      setShowConfirmPassword(false);
+    }
+  }, [isDialogOpen]);
+
+  useEffect(() => {
+    if (!isEditOpen) {
+      setEditAdmin(null);
+      setShowEditPassword(false);
+      setShowEditConfirmPassword(false);
+    }
+  }, [isEditOpen]);
 
   // Фильтруем супер-админа из списка (он управляется через настройки)
   const filteredAdmins = adminsLocal.filter(admin => admin.role !== "super_admin");
@@ -46,11 +69,34 @@ const AdminAdmins = () => {
     
   };
 
-  const handleCreate = (name: string, email: string, password: string) => {
-    if (!name.trim() || !email.trim() || !password.trim()) {
+  const handleCreate = () => {
+    const { name, email, password, confirmPassword } = createAdmin;
+
+    // Проверка заполненности полей
+    if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
       toast.error(t("common.fillAllFields"));
       return;
     }
+
+    // Проверка валидности email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error(t("auth.invalidEmail"));
+      return;
+    }
+
+    // Проверка длины пароля
+    if (password.length < 6) {
+      toast.error(t("auth.passwordTooShort"));
+      return;
+    }
+
+    // Проверка совпадения паролей
+    if (password !== confirmPassword) {
+      toast.error(t("auth.passwordMismatch"));
+      return;
+    }
+
     const newAdmin: AdminUser = {
       id: `admin-${Date.now()}`,
       name,
@@ -61,16 +107,45 @@ const AdminAdmins = () => {
     };
     setAdminsLocal((prev) => [...prev, newAdmin]);
     toast.success(t("common.success"));
-    setCreateAdmin({ name: "", email: "", password: "" });
+    setCreateAdmin({ name: "", email: "", password: "", confirmPassword: "" });
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     setIsDialogOpen(false);
   };
 
   const handleEdit = () => {
     if (!editAdmin) return;
-    if (!editAdmin.name.trim() || !editAdmin.email.trim()) {
+    
+    const { name, email, password, confirmPassword } = editAdmin;
+
+    // Проверка заполненности обязательных полей
+    if (!name.trim() || !email.trim()) {
       toast.error(t("common.fillAllFields"));
       return;
     }
+
+    // Проверка валидности email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error(t("auth.invalidEmail"));
+      return;
+    }
+
+    // Если пароль введен, проверяем его
+    if (password.trim()) {
+      // Проверка длины пароля
+      if (password.length < 6) {
+        toast.error(t("auth.passwordTooShort"));
+        return;
+      }
+
+      // Проверка совпадения паролей
+      if (password !== confirmPassword) {
+        toast.error(t("auth.passwordMismatch"));
+        return;
+      }
+    }
+
     setAdminsLocal((prev) =>
       prev.map((adm) =>
         adm.id === editAdmin.id
@@ -80,6 +155,9 @@ const AdminAdmins = () => {
     );
     toast.success(t("common.success"));
     setIsEditOpen(false);
+    setEditAdmin(null);
+    setShowEditPassword(false);
+    setShowEditConfirmPassword(false);
   };
   return (
     <div className="min-h-screen bg-background">
@@ -144,6 +222,7 @@ const AdminAdmins = () => {
                                 name: admin.name,
                                 email: admin.email,
                                 password: "",
+                                confirmPassword: "",
                               });
                               setIsEditOpen(true);
                             }}
@@ -219,20 +298,64 @@ const AdminAdmins = () => {
                     </div>
                     <div>
                       <Label>{t("auth.password")}</Label>
-                      <Input
-                        type="password"
-                        placeholder="********"
-                        autoComplete="new-password"
-                        value={createAdmin.password}
-                        onChange={(e) => setCreateAdmin({ ...createAdmin, password: e.target.value })}
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="********"
+                          autoComplete="new-password"
+                          value={createAdmin.password}
+                          onChange={(e) => setCreateAdmin({ ...createAdmin, password: e.target.value })}
+                          className="pr-10"
+                          minLength={6}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <FiEyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <FiEye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         {t("auth.passwordMinLength", { length: 6 }) || "Минимум 6 символов"}
                       </p>
                     </div>
+                    <div>
+                      <Label>{t("auth.confirmPassword")}</Label>
+                      <div className="relative">
+                        <Input
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="********"
+                          autoComplete="new-password"
+                          value={createAdmin.confirmPassword}
+                          onChange={(e) => setCreateAdmin({ ...createAdmin, confirmPassword: e.target.value })}
+                          className="pr-10"
+                          minLength={6}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          {showConfirmPassword ? (
+                            <FiEyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <FiEye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
                     <Button
                       className="w-full"
-                      onClick={() => handleCreate(createAdmin.name, createAdmin.email, createAdmin.password)}
+                      onClick={handleCreate}
                     >
                       {t("common.create")}
                     </Button>
@@ -295,16 +418,60 @@ const AdminAdmins = () => {
                     </div>
                     <div>
                       <Label>{t("auth.password")}</Label>
-                      <Input
-                        type="password"
-                        placeholder="********"
-                        autoComplete="new-password"
-                        value={editAdmin?.password || ""}
-                        onChange={(e) => setEditAdmin((prev) => prev ? { ...prev, password: e.target.value } : prev)}
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showEditPassword ? "text" : "password"}
+                          placeholder={t("auth.password")}
+                          autoComplete="new-password"
+                          value={editAdmin?.password || ""}
+                          onChange={(e) => setEditAdmin((prev) => prev ? { ...prev, password: e.target.value } : prev)}
+                          className="pr-10"
+                          minLength={6}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          onClick={() => setShowEditPassword(!showEditPassword)}
+                        >
+                          {showEditPassword ? (
+                            <FiEyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <FiEye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         {t("auth.passwordMinLength", { length: 6 }) || "Минимум 6 символов"}
                       </p>
+                    </div>
+                    <div>
+                      <Label>{t("auth.confirmPassword")}</Label>
+                      <div className="relative">
+                        <Input
+                          type={showEditConfirmPassword ? "text" : "password"}
+                          placeholder={t("auth.confirmPassword")}
+                          autoComplete="new-password"
+                          value={editAdmin?.confirmPassword || ""}
+                          onChange={(e) => setEditAdmin((prev) => prev ? { ...prev, confirmPassword: e.target.value } : prev)}
+                          className="pr-10"
+                          minLength={6}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          onClick={() => setShowEditConfirmPassword(!showEditConfirmPassword)}
+                        >
+                          {showEditConfirmPassword ? (
+                            <FiEyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <FiEye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
                     <div className="flex gap-3">
                       <Button variant="outline" className="flex-1" onClick={() => setIsEditOpen(false)}>

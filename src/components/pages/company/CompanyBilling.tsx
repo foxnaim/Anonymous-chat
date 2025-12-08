@@ -168,13 +168,20 @@ const CompanyBilling = () => {
                     <div className="absolute top-0 right-0 w-20 h-20 rounded-full -mr-10 -mt-10 opacity-10" style={{ backgroundColor: circleColor }}></div>
                     <div className="relative z-10">
                       <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-lg font-bold text-foreground">{getTranslatedValue(plan.name)}</h4>
-                        {isCurrent && (
-                          <Badge className={`${badgeColor} shadow-sm`}>
-                            <FiCheck className="h-3 w-3 mr-1" />
-                            {t("company.current")}
-                          </Badge>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-lg font-bold text-foreground">{getTranslatedValue(plan.name)}</h4>
+                          {isFree && !isCurrent && (
+                            <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                              {t("common.free")}
+                            </Badge>
+                          )}
+                          {isCurrent && (
+                            <Badge className={`${badgeColor} shadow-sm`}>
+                              <FiCheck className="h-3 w-3 mr-1" />
+                              {t("company.current")}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-baseline gap-1 mb-4">
                         <p className="text-3xl font-bold" style={{ color: textColor }}>
@@ -185,14 +192,19 @@ const CompanyBilling = () => {
                         )}
                       </div>
                       <ul className="space-y-2 mb-6">
-                        {plan.features.map((feature, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-sm text-foreground">
-                            <div className="mt-0.5 flex-shrink-0 rounded-full p-0.5" style={{ backgroundColor: `${circleColor}20` }}>
-                              <FiCheck className="h-3.5 w-3.5" style={{ color: circleColor }} />
-                            </div>
-                            <span className="leading-relaxed text-muted-foreground">{getTranslatedValue(feature)}</span>
-                          </li>
-                        ))}
+                        {plan.features.map((feature, idx) => {
+                          const isFirstFeature = idx === 0 && isFree;
+                          return (
+                            <li key={idx} className={`flex items-start gap-2 ${isFirstFeature ? 'text-base font-semibold' : 'text-sm'} text-foreground`}>
+                              <div className={`mt-0.5 flex-shrink-0 rounded-full p-0.5 ${isFirstFeature ? 'p-1' : ''}`} style={{ backgroundColor: `${circleColor}20` }}>
+                                <FiCheck className={isFirstFeature ? "h-4 w-4" : "h-3.5 w-3.5"} style={{ color: circleColor }} />
+                              </div>
+                              <span className={`leading-relaxed ${isFirstFeature ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
+                                {getTranslatedValue(feature)}
+                              </span>
+                            </li>
+                          );
+                        })}
                       </ul>
                       <Button
                         className={`w-full ${

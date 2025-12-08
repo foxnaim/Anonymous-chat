@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { FiSettings, FiCheck } from "react-icons/fi";
 import { AdminHeader } from "@/components/AdminHeader";
 import { usePlans, plansService } from "@/lib/query";
@@ -17,6 +18,7 @@ const AdminPlans = () => {
   const { t } = useTranslation();
   const [isFreePlanSettingsOpen, setIsFreePlanSettingsOpen] = useState(false);
   const [freePlanSettings, setFreePlanSettings] = useState({
+    messagesLimit: 10,
     freePeriodDays: 60,
   });
 
@@ -26,6 +28,7 @@ const AdminPlans = () => {
   useEffect(() => {
     plansService.getFreePlanSettings().then((data) => {
       setFreePlanSettings({
+        messagesLimit: data.messagesLimit || 10,
         freePeriodDays: data.freePeriodDays || 60,
       });
     });
@@ -72,52 +75,65 @@ const AdminPlans = () => {
                 const isStandard = plan.id === "standard";
                 const isPro = plan.id === "pro";
                 
-                // Определяем цвета для каждого тарифа
-                let cardBorderColor = "border-border";
-                let cardBgGradient = "";
+                // Определяем цвета для каждого тарифа (как в CompanyBilling)
+                const gradientStyle = isFree 
+                  ? { background: 'linear-gradient(to bottom right, hsl(var(--muted) / 0.08), hsl(var(--muted) / 0.03))' }
+                  : isStandard
+                    ? { background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.03))' }
+                    : { background: 'linear-gradient(to bottom right, hsl(var(--secondary) / 0.08), hsl(var(--secondary) / 0.03))' };
                 
-                if (isFree) {
-                  cardBorderColor = "border-muted";
-                } else if (isStandard) {
-                  cardBorderColor = "border-primary/50";
-                  cardBgGradient = "bg-gradient-to-br from-primary/5 to-primary/10";
-                } else if (isPro) {
-                  cardBorderColor = "border-primary";
-                  cardBgGradient = "bg-gradient-to-br from-primary/10 to-primary/20";
-                }
+                const circleColor = isFree 
+                  ? 'hsl(var(--muted))'
+                  : isStandard
+                    ? 'hsl(var(--primary))'
+                    : 'hsl(var(--secondary))';
+                
+                const textColor = isFree 
+                  ? 'hsl(var(--foreground))'
+                  : isStandard
+                    ? 'hsl(var(--primary))'
+                    : 'hsl(var(--secondary))';
                 
                 return (
                   <Card
                     key={plan.id}
-                    className={`p-6 relative overflow-hidden transition-all hover:shadow-lg ${cardBorderColor} ${cardBgGradient}`}
+                    className={`p-6 border-border shadow-lg relative overflow-hidden transition-all hover:shadow-xl`}
+                    style={gradientStyle}
                   >
-                    <div className="space-y-4 relative z-10">
-                      <div>
-                        <h3 className="text-xl font-bold text-foreground mb-2">{getTranslatedValue(plan.name)}</h3>
-                        <div className="flex items-baseline gap-1">
-                          <p className={`text-3xl font-bold ${
-                            isPro ? "text-primary" : isStandard ? "text-primary/80" : "text-foreground"
-                          }`}>
-                            {plan.price === 0 ? t("common.free") : `${plan.price} ₸`}
-                          </p>
-                          {plan.price > 0 && (
-                            <span className="text-sm text-muted-foreground">/{t("admin.perMonth")}</span>
+                    <div className="absolute top-0 right-0 w-20 h-20 rounded-full -mr-10 -mt-10 opacity-10" style={{ backgroundColor: circleColor }}></div>
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-lg font-bold text-foreground">{getTranslatedValue(plan.name)}</h4>
+                          {isFree && (
+                            <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                              {t("common.free")}
+                            </Badge>
                           )}
                         </div>
                       </div>
-                      <ul className="space-y-3">
-                        {plan.features.map((feature, idx) => (
-                          <li key={idx} className="flex items-start gap-3 text-sm text-foreground">
-                            <div className={`mt-0.5 flex-shrink-0 rounded-full p-0.5 ${
-                              isPro ? "bg-primary/20" : isStandard ? "bg-primary/10" : "bg-muted"
-                            }`}>
-                              <FiCheck className={`h-3.5 w-3.5 ${
-                                isPro ? "text-primary" : isStandard ? "text-primary/80" : "text-muted-foreground"
-                              }`} />
-                            </div>
-                            <span className="leading-relaxed">{getTranslatedValue(feature)}</span>
-                          </li>
-                        ))}
+                      <div className="flex items-baseline gap-1 mb-4">
+                        <p className="text-3xl font-bold" style={{ color: textColor }}>
+                          {plan.price === 0 ? t("common.free") : `${plan.price} ₸`}
+                        </p>
+                        {plan.price > 0 && (
+                          <span className="text-xs text-muted-foreground">/{t("admin.perMonth")}</span>
+                        )}
+                      </div>
+                      <ul className="space-y-2 mb-6">
+                        {plan.features.map((feature, idx) => {
+                          const isFirstFeature = idx === 0 && isFree;
+                          return (
+                            <li key={idx} className={`flex items-start gap-2 ${isFirstFeature ? 'text-base font-semibold' : 'text-sm'} text-foreground`}>
+                              <div className={`mt-0.5 flex-shrink-0 rounded-full p-0.5 ${isFirstFeature ? 'p-1' : ''}`} style={{ backgroundColor: `${circleColor}20` }}>
+                                <FiCheck className={isFirstFeature ? "h-4 w-4" : "h-3.5 w-3.5"} style={{ color: circleColor }} />
+                              </div>
+                              <span className={`leading-relaxed ${isFirstFeature ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
+                                {getTranslatedValue(feature)}
+                              </span>
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   </Card>
@@ -158,12 +174,32 @@ const AdminPlans = () => {
                   </Dialog.Title>
                   <div className="space-y-4">
                     <div className="space-y-2">
+                      <Label>{t("admin.messagesLimit")}</Label>
+                      <Input
+                        type="number"
+                        value={freePlanSettings.messagesLimit}
+                        onChange={(e) =>
+                          setFreePlanSettings({
+                            ...freePlanSettings,
+                            messagesLimit: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        placeholder="10"
+                        min="1"
+                        autoComplete="off"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t("admin.messagesLimitDescription")}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
                       <Label>{t("admin.freePeriodDays")}</Label>
                       <Input
                         type="number"
                         value={freePlanSettings.freePeriodDays}
                         onChange={(e) =>
                           setFreePlanSettings({
+                            ...freePlanSettings,
                             freePeriodDays: parseInt(e.target.value) || 0,
                           })
                         }
@@ -187,7 +223,7 @@ const AdminPlans = () => {
                     <Button
                       className="flex-1"
                       onClick={() => updateFreePlan({
-                        messagesLimit: 10,
+                        messagesLimit: freePlanSettings.messagesLimit,
                         storageLimit: 1,
                         freePeriodDays: freePlanSettings.freePeriodDays,
                       })}

@@ -7,6 +7,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   FiSearch,
   FiFilter,
@@ -14,11 +22,13 @@ import {
   FiEye,
   FiX,
   FiCopy,
+  FiEdit,
 } from "react-icons/fi";
 import { AdminHeader } from "@/components/AdminHeader";
-import { useCompanies, useCreateCompany, companyService } from "@/lib/query";
+import { useCompanies, useCreateCompany, usePlans, companyService } from "@/lib/query";
+import { getTranslatedValue } from "@/lib/utils/translations";
 import { toast } from "sonner";
-import type { CompanyStatus } from "@/types";
+import type { CompanyStatus, PlanType } from "@/types";
 
 // Константы статусов компании
 const COMPANY_STATUS: Record<string, CompanyStatus> = {
@@ -27,7 +37,7 @@ const COMPANY_STATUS: Record<string, CompanyStatus> = {
   BLOCKED: "Заблокирована",
 };
 
-const PLAN_OPTIONS = ["Бесплатный", "Стандарт", "Бизнес"] as const;
+const PLAN_OPTIONS = ["Пробный", "Стандарт", "Бизнес"] as const;
 
 const AdminPanel = () => {
   const { t } = useTranslation();
@@ -37,6 +47,9 @@ const AdminPanel = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string>("");
+  const [planEndDate, setPlanEndDate] = useState<string>("");
   const detailCloseRef = useRef<HTMLButtonElement | null>(null);
   const createCloseRef = useRef<HTMLButtonElement | null>(null);
   const viewCloseRef = useRef<HTMLButtonElement | null>(null);
@@ -46,11 +59,12 @@ const AdminPanel = () => {
     adminEmail: "",
     code: "",
     status: COMPANY_STATUS.ACTIVE,
-    plan: "Бесплатный" as (typeof PLAN_OPTIONS)[number],
+    plan: "Пробный" as (typeof PLAN_OPTIONS)[number],
     employees: 0,
   });
 
   const { data: companies = [], isLoading, refetch } = useCompanies();
+  const { data: plans = [] } = usePlans();
   const { mutateAsync: createCompany, isPending: isCreating } = useCreateCompany({
     onSuccess: async (data) => {
       await refetch();
@@ -353,7 +367,21 @@ const AdminPanel = () => {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">{t("admin.plan")}</p>
-                    <Badge variant="outline">{selectedCompanyData.plan}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{selectedCompanyData.plan}</Badge>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => {
+                          setSelectedPlan(selectedCompanyData.plan);
+                          setPlanEndDate(selectedCompanyData.trialEndDate || "");
+                          setIsPlanModalOpen(true);
+                        }}
+                      >
+                        <FiEdit className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
@@ -514,7 +542,21 @@ const AdminPanel = () => {
                               </div>
                               <div>
                                 <p className="text-xs text-muted-foreground mb-1">{t("admin.plan")}</p>
-                                <Badge variant="outline">{selectedCompanyData.plan}</Badge>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline">{selectedCompanyData.plan}</Badge>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => {
+                                      setSelectedPlan(selectedCompanyData.plan);
+                                      setPlanEndDate(selectedCompanyData.trialEndDate || "");
+                                      setIsPlanModalOpen(true);
+                                    }}
+                                  >
+                                    <FiEdit className="h-4 w-4 text-muted-foreground" />
+                                  </Button>
+                                </div>
                               </div>
                             </div>
 
@@ -904,7 +946,21 @@ const AdminPanel = () => {
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">{t("admin.plan")}</span>
-                            <Badge variant="outline">{selectedCompanyData.plan}</Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline">{selectedCompanyData.plan}</Badge>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => {
+                                  setSelectedPlan(selectedCompanyData.plan);
+                                  setPlanEndDate(selectedCompanyData.trialEndDate || "");
+                                  setIsPlanModalOpen(true);
+                                }}
+                              >
+                                <FiEdit className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </div>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">{t("admin.registration")}</span>
@@ -952,6 +1008,119 @@ const AdminPanel = () => {
                   ) : (
                     <p className="text-sm text-muted-foreground">{t("admin.selectCompany")}</p>
                   )}
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* Update Plan Dialog */}
+      <Transition show={isPlanModalOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-50"
+          onClose={() => setIsPlanModalOpen(false)}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/50" />
+          </Transition.Child>
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-xl bg-card border border-border shadow-xl transition-all p-6 space-y-4">
+                  <Dialog.Title className="text-lg font-semibold text-foreground">
+                    {t("admin.changePlan")}
+                  </Dialog.Title>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>{t("admin.plan")}</Label>
+                      <Select
+                        value={selectedPlan}
+                        onValueChange={setSelectedPlan}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("admin.selectPlan")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {plans.map((plan) => {
+                            const planName = getTranslatedValue(plan.name);
+                            return (
+                              <SelectItem key={plan.id} value={planName}>
+                                {planName}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t("admin.planEndDate")}</Label>
+                      <Input
+                        type="date"
+                        value={planEndDate}
+                        onChange={(e) => setPlanEndDate(e.target.value)}
+                        min={new Date().toISOString().split("T")[0]}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t("admin.planEndDateDescription")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 pt-4">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        setIsPlanModalOpen(false);
+                        setSelectedPlan("");
+                        setPlanEndDate("");
+                      }}
+                    >
+                      {t("common.cancel")}
+                    </Button>
+                    <Button
+                      className="flex-1"
+                      onClick={async () => {
+                        if (!selectedCompanyId || !selectedPlan) {
+                          toast.error(t("common.fillAllFields"));
+                          return;
+                        }
+                        try {
+                          await companyService.updatePlan(
+                            selectedCompanyId,
+                            selectedPlan as PlanType,
+                            planEndDate || undefined
+                          );
+                          toast.success(t("admin.planUpdated"));
+                          setIsPlanModalOpen(false);
+                          setSelectedPlan("");
+                          setPlanEndDate("");
+                          refetch();
+                        } catch (error) {
+                          toast.error(t("admin.planUpdateError"));
+                        }
+                      }}
+                    >
+                      {t("common.save")}
+                    </Button>
+                  </div>
                 </Dialog.Panel>
               </Transition.Child>
             </div>

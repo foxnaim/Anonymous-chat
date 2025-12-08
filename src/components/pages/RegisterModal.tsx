@@ -121,7 +121,7 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
       code,
       adminEmail: formData.email,
       status: "Пробная", // Первые 2 месяца - пробный период
-      plan: "Бесплатный",
+      plan: "Пробный",
       trialEndDate: trialEndDate.toISOString().split("T")[0],
       employees: 0,
     });

@@ -121,7 +121,7 @@ const mockCompanies: Company[] = [
     code: "TECH0001",
     adminEmail: "sarah.smith@techstart.com",
     status: "Пробная",
-    plan: "Бесплатный",
+    plan: "Пробный",
     registered: "2024-03-10",
     trialEndDate: "2024-05-10",
     employees: 45,
@@ -152,7 +152,7 @@ const mockCompanies: Company[] = [
     code: "STUP0001",
     adminEmail: "lisa.wang@startup.com",
     status: "Заблокирована",
-    plan: "Бесплатный",
+    plan: "Пробный",
     registered: "2024-02-28",
     employees: 12,
     messages: 8,
@@ -164,9 +164,9 @@ const mockCompanies: Company[] = [
 ];
 
 let freePlanSettings = {
-  messagesLimit: 10, // Фиксированные значения
-  storageLimit: 1, // Фиксированные значения
-  freePeriodDays: 60, // Настраивается через админ-панель
+  messagesLimit: 10, // Настраивается через админ-панель
+  storageLimit: 1, // Фиксированное значение
+  freePeriodDays: 60, // Настраивается через админ-панель (в днях)
 };
 
 const customPlans: SubscriptionPlan[] = [];
@@ -283,6 +283,18 @@ export const companyService = {
     return company;
   },
 
+  updatePlan: async (id: number, plan: PlanType, planEndDate?: string): Promise<Company> => {
+    await delay(DELAYS.NORMAL);
+    const company = mockCompanies.find((c) => c.id === id);
+    if (!company) throw new Error("Company not found");
+    company.plan = plan;
+    if (planEndDate) {
+      // Если указана дата окончания плана, можно сохранить её в trialEndDate или создать отдельное поле
+      company.trialEndDate = planEndDate;
+    }
+    return company;
+  },
+
   verifyPassword: async (code: string, password: string): Promise<boolean> => {
     await delay(DELAYS.FAST);
     const company = mockCompanies.find((c) => c.code === code);
@@ -381,9 +393,9 @@ export const plansService = {
       {
         id: "free",
         name: {
-          ru: "Бесплатный",
-          en: "Free",
-          kk: "Тегін"
+          ru: "Пробный",
+          en: "Trial",
+          kk: "Сынақ"
         },
         price: 0,
         messagesLimit: freePlanSettings.messagesLimit,
@@ -392,9 +404,32 @@ export const plansService = {
         freePeriodDays: freePlanSettings.freePeriodDays,
         features: [
           {
-            ru: `До ${freePlanSettings.messagesLimit} сообщений в месяц`,
-            en: `Up to ${freePlanSettings.messagesLimit} messages per month`,
-            kk: `Айына ${freePlanSettings.messagesLimit} хабарламаға дейін`
+            ru: `Все функции на ${freePlanSettings.freePeriodDays} ${freePlanSettings.freePeriodDays === 1 ? 'день' : freePlanSettings.freePeriodDays < 5 ? 'дня' : 'дней'}`,
+            en: `All features for ${freePlanSettings.freePeriodDays} ${freePlanSettings.freePeriodDays === 1 ? 'day' : 'days'}`,
+            kk: `Барлық функциялар ${freePlanSettings.freePeriodDays} ${freePlanSettings.freePeriodDays === 1 ? 'күн' : 'күнге'}`
+          }
+        ],
+      },
+      {
+        id: "standard",
+        name: {
+          ru: "Стандарт",
+          en: "Standard",
+          kk: "Стандарт"
+        },
+        price: 2999,
+        messagesLimit: 100,
+        storageLimit: 10,
+        features: [
+          {
+            ru: "До 100 сообщений в месяц",
+            en: "Up to 100 messages per month",
+            kk: "Айына 100 хабарламаға дейін"
+          },
+          {
+            ru: "Без ограничений по времени",
+            en: "No time restrictions",
+            kk: "Уақыт шектеулері жоқ"
           },
           {
             ru: "Приём сообщений",
@@ -420,29 +455,6 @@ export const plansService = {
             ru: "Базовая статистика по типам",
             en: "Basic statistics by type",
             kk: "Түрлер бойынша негізгі статистика"
-          }
-        ],
-      },
-      {
-        id: "standard",
-        name: {
-          ru: "Стандарт",
-          en: "Standard",
-          kk: "Стандарт"
-        },
-        price: 2999,
-        messagesLimit: 100,
-        storageLimit: 10,
-        features: [
-          {
-            ru: "До 100 сообщений в месяц",
-            en: "Up to 100 messages per month",
-            kk: "Айына 100 хабарламаға дейін"
-          },
-          {
-            ru: "Все функции бесплатного плана",
-            en: "All free plan features",
-            kk: "Тегін жоспардың барлық функциялары"
           },
           {
             ru: "Ответы на сообщения",
@@ -481,6 +493,11 @@ export const plansService = {
             ru: "До 500 сообщений в месяц",
             en: "Up to 500 messages per month",
             kk: "Айына 500 хабарламаға дейін"
+          },
+          {
+            ru: "Без ограничений по времени",
+            en: "No time restrictions",
+            kk: "Уақыт шектеулері жоқ"
           },
           {
             ru: "Все функции плана Стандарт",
@@ -540,9 +557,10 @@ export const plansService = {
 
   updateFreePlanSettings: async (settings: { messagesLimit: number; storageLimit: number; freePeriodDays: number }): Promise<void> => {
     await delay(DELAYS.NORMAL);
-    // Обновляем только freePeriodDays, messagesLimit и storageLimit остаются фиксированными
+    // Обновляем messagesLimit и freePeriodDays (настраиваются админом), storageLimit остается фиксированным
     freePlanSettings = { 
       ...freePlanSettings, 
+      messagesLimit: settings.messagesLimit,
       freePeriodDays: settings.freePeriodDays 
     };
   },
