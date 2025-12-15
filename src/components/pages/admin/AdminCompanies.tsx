@@ -117,8 +117,29 @@ const AdminCompanies = () => {
       resetNewCompanyForm();
       toast.success(t("admin.companyCreated") || "Компания создана");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || t("common.error"));
+    onError: (error: any) => {
+      // Получаем сообщение об ошибке с бэкенда
+      const backendMessage = error?.message || error?.response?.data?.error?.message || "";
+      
+      // Маппинг сообщений об ошибках на ключи переводов
+      let translationKey = "common.error";
+      
+      if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
+        translationKey = "auth.companyCodeAlreadyExists";
+      } else if (backendMessage.includes("User with this email already exists") || backendMessage.includes("user already exists")) {
+        translationKey = "auth.userEmailAlreadyExists";
+      } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.includes("required")) {
+        translationKey = "auth.companyFieldsRequired";
+      } else if (backendMessage.includes("Password must be at least 6 characters")) {
+        translationKey = "auth.passwordMinLength";
+      } else if (backendMessage.includes("Access denied")) {
+        translationKey = "auth.accessDenied";
+      }
+      
+      // Показываем переведенное сообщение или оригинальное, если перевода нет
+      const translatedMessage = t(translationKey);
+      const finalMessage = translatedMessage !== translationKey ? translatedMessage : backendMessage || t("common.error");
+      toast.error(finalMessage);
     },
   });
 
@@ -127,8 +148,29 @@ const AdminCompanies = () => {
       await refetch();
       toast.success(t("admin.deleteCompany") || "Компания удалена");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || t("common.error"));
+    onError: (error: any) => {
+      // Получаем сообщение об ошибке с бэкенда
+      const backendMessage = error?.message || error?.response?.data?.error?.message || "";
+      
+      // Маппинг сообщений об ошибках на ключи переводов
+      let translationKey = "common.error";
+      
+      if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
+        translationKey = "auth.companyCodeAlreadyExists";
+      } else if (backendMessage.includes("User with this email already exists") || backendMessage.includes("user already exists")) {
+        translationKey = "auth.userEmailAlreadyExists";
+      } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.includes("required")) {
+        translationKey = "auth.companyFieldsRequired";
+      } else if (backendMessage.includes("Password must be at least 6 characters")) {
+        translationKey = "auth.passwordMinLength";
+      } else if (backendMessage.includes("Access denied")) {
+        translationKey = "auth.accessDenied";
+      }
+      
+      // Показываем переведенное сообщение или оригинальное, если перевода нет
+      const translatedMessage = t(translationKey);
+      const finalMessage = translatedMessage !== translationKey ? translatedMessage : backendMessage || t("common.error");
+      toast.error(finalMessage);
     },
   });
 
@@ -138,8 +180,29 @@ const AdminCompanies = () => {
       setIsEditOpen(false);
       toast.success(t("common.success"));
     },
-    onError: (error: Error) => {
-      toast.error(error.message || t("common.error"));
+    onError: (error: any) => {
+      // Получаем сообщение об ошибке с бэкенда
+      const backendMessage = error?.message || error?.response?.data?.error?.message || "";
+      
+      // Маппинг сообщений об ошибках на ключи переводов
+      let translationKey = "common.error";
+      
+      if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
+        translationKey = "auth.companyCodeAlreadyExists";
+      } else if (backendMessage.includes("User with this email already exists") || backendMessage.includes("user already exists")) {
+        translationKey = "auth.userEmailAlreadyExists";
+      } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.includes("required")) {
+        translationKey = "auth.companyFieldsRequired";
+      } else if (backendMessage.includes("Password must be at least 6 characters")) {
+        translationKey = "auth.passwordMinLength";
+      } else if (backendMessage.includes("Access denied")) {
+        translationKey = "auth.accessDenied";
+      }
+      
+      // Показываем переведенное сообщение или оригинальное, если перевода нет
+      const translatedMessage = t(translationKey);
+      const finalMessage = translatedMessage !== translationKey ? translatedMessage : backendMessage || t("common.error");
+      toast.error(finalMessage);
     },
   });
 
@@ -149,8 +212,29 @@ const AdminCompanies = () => {
       setIsStatusModalOpen(false);
       toast.success(t("common.success"));
     },
-    onError: (error: Error) => {
-      toast.error(error.message || t("common.error"));
+    onError: (error: any) => {
+      // Получаем сообщение об ошибке с бэкенда
+      const backendMessage = error?.message || error?.response?.data?.error?.message || "";
+      
+      // Маппинг сообщений об ошибках на ключи переводов
+      let translationKey = "common.error";
+      
+      if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
+        translationKey = "auth.companyCodeAlreadyExists";
+      } else if (backendMessage.includes("User with this email already exists") || backendMessage.includes("user already exists")) {
+        translationKey = "auth.userEmailAlreadyExists";
+      } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.includes("required")) {
+        translationKey = "auth.companyFieldsRequired";
+      } else if (backendMessage.includes("Password must be at least 6 characters")) {
+        translationKey = "auth.passwordMinLength";
+      } else if (backendMessage.includes("Access denied")) {
+        translationKey = "auth.accessDenied";
+      }
+      
+      // Показываем переведенное сообщение или оригинальное, если перевода нет
+      const translatedMessage = t(translationKey);
+      const finalMessage = translatedMessage !== translationKey ? translatedMessage : backendMessage || t("common.error");
+      toast.error(finalMessage);
     },
   });
 
@@ -695,6 +779,7 @@ const AdminCompanies = () => {
                     {t("admin.createCompany")}
                   </Dialog.Title>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsCreateOpen(false)}
@@ -702,7 +787,13 @@ const AdminCompanies = () => {
                     <FiX className="h-4 w-4" />
                   </Button>
                 </div>
-                <div className="space-y-4">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleCreate();
+                  }}
+                  className="space-y-4"
+                >
                   <div>
                     <Label>{t("admin.companyName")}</Label>
                     <Input
@@ -831,15 +922,15 @@ const AdminCompanies = () => {
                       </div>
                     </>
                   )}
-                </div>
-                <div className="flex justify-end gap-3 mt-6">
-                  <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                    {t("common.cancel")}
-                  </Button>
-                  <Button onClick={handleCreate} disabled={isCreating}>
-                    {isCreating ? t("common.loading") : t("common.create")}
-                  </Button>
-                </div>
+                  <div className="flex justify-end gap-3 mt-6">
+                    <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
+                      {t("common.cancel")}
+                    </Button>
+                    <Button type="submit" disabled={isCreating}>
+                      {isCreating ? t("common.loading") : t("common.create")}
+                    </Button>
+                  </div>
+                </form>
               </Dialog.Panel>
             </Transition.Child>
           </div>

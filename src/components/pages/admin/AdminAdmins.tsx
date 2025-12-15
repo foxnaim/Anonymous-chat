@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FiPlus, FiShield, FiTrash2, FiEdit2, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiPlus, FiShield, FiTrash2, FiEdit2, FiEye, FiEyeOff, FiAlertTriangle } from "react-icons/fi";
 import { AdminHeader } from "@/components/AdminHeader";
-import { useAdmins } from "@/lib/query";
+import { useAdmins, useDeleteAdmin, useCreateAdmin, useUpdateAdmin } from "@/lib/query";
 import type { AdminUser } from "@/types";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/redux";
@@ -18,7 +18,9 @@ const AdminAdmins = () => {
   const { t } = useTranslation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const { data: admins = [], isLoading } = useAdmins();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [adminToDelete, setAdminToDelete] = useState<AdminUser | null>(null);
+  const { data: admins = [], isLoading, refetch } = useAdmins();
   const [adminsLocal, setAdminsLocal] = useState<AdminUser[]>(admins);
   const [editAdmin, setEditAdmin] = useState<{
     id: string;
@@ -63,10 +65,104 @@ const AdminAdmins = () => {
 
   // Фильтруем супер-админа из списка (он управляется через настройки)
   const filteredAdmins = adminsLocal.filter(admin => admin.role !== "super_admin");
-  const handleDelete = async (adminId: string) => {
-    // В реальном приложении здесь будет API вызов
-    toast.success(t("admin.adminDeleted"));
-    
+  
+  const createAdminMutation = useCreateAdmin({
+    onSuccess: (newAdmin) => {
+      toast.success(t("common.success"));
+      setCreateAdmin({ name: "", email: "", password: "", confirmPassword: "" });
+      setShowPassword(false);
+      setShowConfirmPassword(false);
+      setIsDialogOpen(false);
+      // Явно обновляем список админов
+      refetch().then(() => {
+        // После обновления данных синхронизируем локальное состояние
+        // Это гарантирует, что новый админ появится сразу
+      });
+    },
+    onError: (error: any) => {
+      // Получаем сообщение об ошибке с бэкенда
+      const backendMessage = error?.message || error?.response?.data?.error?.message || "";
+      
+      // Маппинг сообщений об ошибках на ключи переводов
+      let translationKey = "admin.createError";
+      
+      if (backendMessage.includes("Admin with this email already exists") || backendMessage.includes("admin already exists")) {
+        translationKey = "auth.adminEmailAlreadyExists";
+      } else if (backendMessage.includes("User with this email already exists") || backendMessage.includes("user already exists")) {
+        translationKey = "auth.userEmailAlreadyExists";
+      } else if (backendMessage.includes("Email is required") || backendMessage.includes("required")) {
+        translationKey = "auth.emailAndPasswordRequired";
+      } else if (backendMessage.includes("Access denied")) {
+        translationKey = "auth.accessDenied";
+      }
+      
+      // Показываем переведенное сообщение или оригинальное, если перевода нет
+      const translatedMessage = t(translationKey);
+      const finalMessage = translatedMessage !== translationKey ? translatedMessage : backendMessage || t("admin.createError");
+      toast.error(finalMessage);
+    },
+  });
+
+  const updateAdminMutation = useUpdateAdmin({
+    onSuccess: () => {
+      toast.success(t("common.success"));
+      setIsEditOpen(false);
+      setEditAdmin(null);
+      setShowEditPassword(false);
+      setShowEditConfirmPassword(false);
+      // Явно обновляем список админов
+      refetch();
+    },
+    onError: (error: any) => {
+      // Получаем сообщение об ошибке с бэкенда
+      const backendMessage = error?.message || error?.response?.data?.error?.message || "";
+      
+      // Маппинг сообщений об ошибках на ключи переводов
+      let translationKey = "admin.updateError";
+      
+      if (backendMessage.includes("Admin with this email already exists") || backendMessage.includes("admin already exists")) {
+        translationKey = "auth.adminEmailAlreadyExists";
+      } else if (backendMessage.includes("User with this email already exists") || backendMessage.includes("user already exists")) {
+        translationKey = "auth.userEmailAlreadyExists";
+      } else if (backendMessage.includes("Access denied")) {
+        translationKey = "auth.accessDenied";
+      }
+      
+      // Показываем переведенное сообщение или оригинальное, если перевода нет
+      const translatedMessage = t(translationKey);
+      const finalMessage = translatedMessage !== translationKey ? translatedMessage : backendMessage || t("admin.updateError");
+      toast.error(finalMessage);
+    },
+  });
+
+  const deleteAdminMutation = useDeleteAdmin({
+    onSuccess: (_, adminId) => {
+      toast.success(t("admin.adminDeleted"));
+      setAdminsLocal(prev => prev.filter(admin => admin.id !== adminId));
+      // Явно обновляем список админов
+      refetch();
+    },
+    onError: () => {
+      toast.error(t("admin.deleteError"));
+    },
+  });
+
+  const handleDeleteClick = (admin: AdminUser) => {
+    setAdminToDelete(admin);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (adminToDelete) {
+      deleteAdminMutation.mutate(adminToDelete.id);
+      setIsDeleteDialogOpen(false);
+      setAdminToDelete(null);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setIsDeleteDialogOpen(false);
+    setAdminToDelete(null);
   };
 
   const handleCreate = () => {
@@ -97,20 +193,12 @@ const AdminAdmins = () => {
       return;
     }
 
-    const newAdmin: AdminUser = {
-      id: `admin-${Date.now()}`,
-      name,
+    // Создаем админа через API (пароль не передается, бэкенд создаст дефолтный)
+    createAdminMutation.mutate({
       email,
+      name,
       role: "admin",
-      createdAt: new Date().toISOString(),
-      lastLogin: null,
-    };
-    setAdminsLocal((prev) => [...prev, newAdmin]);
-    toast.success(t("common.success"));
-    setCreateAdmin({ name: "", email: "", password: "", confirmPassword: "" });
-    setShowPassword(false);
-    setShowConfirmPassword(false);
-    setIsDialogOpen(false);
+    });
   };
 
   const handleEdit = () => {
@@ -144,20 +232,18 @@ const AdminAdmins = () => {
         toast.error(t("auth.passwordMismatch"));
         return;
       }
+      // Примечание: изменение пароля через этот endpoint не поддерживается
+      // Нужен отдельный endpoint для смены пароля
     }
 
-    setAdminsLocal((prev) =>
-      prev.map((adm) =>
-        adm.id === editAdmin.id
-          ? { ...adm, name: editAdmin.name, email: editAdmin.email }
-          : adm
-      )
-    );
-    toast.success(t("common.success"));
-    setIsEditOpen(false);
-    setEditAdmin(null);
-    setShowEditPassword(false);
-    setShowEditConfirmPassword(false);
+    // Обновляем админа через API
+    updateAdminMutation.mutate({
+      id: editAdmin.id,
+      data: {
+        name,
+        // role можно добавить, если нужно
+      },
+    });
   };
   return (
     <div className="min-h-screen bg-background">
@@ -232,7 +318,7 @@ const AdminAdmins = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDelete(admin.id)}
+                            onClick={() => handleDeleteClick(admin)}
                             className="text-destructive"
                           >
                             <FiTrash2 className="h-4 w-4" />
@@ -276,7 +362,13 @@ const AdminAdmins = () => {
                   <Dialog.Title className="text-lg font-semibold text-foreground mb-4">
                     {t("admin.addAdmin")}
                   </Dialog.Title>
-                  <div className="space-y-4">
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleCreate();
+                    }}
+                    className="space-y-4"
+                  >
                     <div>
                       <Label>{t("admin.name")}</Label>
                       <Input
@@ -354,12 +446,12 @@ const AdminAdmins = () => {
                       </div>
                     </div>
                     <Button
+                      type="submit"
                       className="w-full"
-                      onClick={handleCreate}
                     >
                       {t("common.create")}
                     </Button>
-                  </div>
+                  </form>
                 </Dialog.Panel>
               </Transition.Child>
             </div>
@@ -396,7 +488,13 @@ const AdminAdmins = () => {
                   <Dialog.Title className="text-lg font-semibold text-foreground mb-4">
                     {t("common.edit")}
                   </Dialog.Title>
-                  <div className="space-y-4">
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleEdit();
+                    }}
+                    className="space-y-4"
+                  >
                     <div>
                       <Label>{t("admin.name")}</Label>
                       <Input
@@ -474,11 +572,80 @@ const AdminAdmins = () => {
                       </div>
                     </div>
                     <div className="flex gap-3">
-                      <Button variant="outline" className="flex-1" onClick={() => setIsEditOpen(false)}>
+                      <Button type="button" variant="outline" className="flex-1" onClick={() => setIsEditOpen(false)}>
                         {t("common.cancel")}
                       </Button>
-                      <Button className="flex-1" onClick={handleEdit} disabled={!editAdmin}>
+                      <Button type="submit" className="flex-1" disabled={!editAdmin}>
                         {t("common.save")}
+                      </Button>
+                    </div>
+                  </form>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* Delete Confirmation Dialog */}
+      <Transition show={isDeleteDialogOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={handleDeleteCancel}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/50" />
+          </Transition.Child>
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-lg bg-card border border-border shadow-xl transition-all p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                      <FiAlertTriangle className="h-5 w-5 text-destructive" />
+                    </div>
+                    <Dialog.Title className="text-lg font-semibold text-foreground">
+                      {t("admin.confirmDelete") || "Подтвердите удаление"}
+                    </Dialog.Title>
+                  </div>
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      {adminToDelete && (
+                        <>
+                          {t("admin.deleteAdminWarning") || `Вы уверены, что хотите удалить администратора "${adminToDelete.name}" (${adminToDelete.email})? Это действие нельзя отменить.`}
+                        </>
+                      )}
+                    </p>
+                    <div className="flex gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={handleDeleteCancel}
+                      >
+                        {t("common.cancel")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        className="flex-1"
+                        onClick={handleDeleteConfirm}
+                        disabled={deleteAdminMutation.isPending}
+                      >
+                        {deleteAdminMutation.isPending ? t("common.loading") : (t("common.delete") || "Удалить")}
                       </Button>
                     </div>
                   </div>

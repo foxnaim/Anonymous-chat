@@ -34,6 +34,8 @@ export interface Company {
   messagesLimit?: number;
   storageUsed?: number;
   storageLimit?: number;
+  logoUrl?: string;
+  fullscreenMode?: boolean;
 }
 
 export interface User {

@@ -9,19 +9,32 @@ import { apiClient } from "./client";
 interface ApiResponse<T> {
   success: boolean;
   data: T;
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export const messageApi = {
   /**
    * Получить все сообщения или по коду компании
    */
-  getAll: async (companyCode?: string): Promise<Message[]> => {
+  getAll: async (companyCode?: string, page?: number, limit?: number): Promise<{ data: Message[]; pagination?: ApiResponse<Message[]>['pagination'] }> => {
     try {
-      const params = companyCode ? `?companyCode=${encodeURIComponent(companyCode)}` : '';
-      const response = await apiClient.get<ApiResponse<Message[]>>(`/messages${params}`);
-      return response.data;
+      const params = new URLSearchParams();
+      if (companyCode) params.append('companyCode', companyCode);
+      if (page) params.append('page', page.toString());
+      if (limit) params.append('limit', limit.toString());
+      const queryString = params.toString();
+      const response = await apiClient.get<ApiResponse<Message[]>>(`/messages${queryString ? `?${queryString}` : ''}`);
+      return {
+        data: response.data,
+        pagination: response.pagination,
+      };
     } catch (error) {
-      return [];
+      return { data: [] };
     }
   },
 
@@ -54,5 +67,13 @@ export const messageApi = {
   update: async (id: string, updates: Partial<Message>): Promise<Message> => {
     // Бэкенд не имеет отдельного эндпоинта для update, используем updateStatus
     throw new Error('Update message not implemented - use updateStatus instead');
+  },
+
+  /**
+   * Модерировать сообщение (approve/reject) - только для админов
+   */
+  moderate: async (id: string, action: 'approve' | 'reject'): Promise<Message> => {
+    const response = await apiClient.post<ApiResponse<Message>>(`/messages/${id}/moderate`, { action });
+    return response.data;
   },
 };

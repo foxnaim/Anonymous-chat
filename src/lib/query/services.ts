@@ -23,10 +23,14 @@ import type { GroupedAchievements } from "../achievements";
 // ========== MESSAGE SERVICES ==========
 // Используем реальный API вместо моковых данных
 export const messageService = {
-  getAll: async (companyCode?: string): Promise<Message[]> => {
+  getAll: async (companyCode?: string, page?: number, limit?: number): Promise<Message[]> => {
     try {
-      const params = companyCode ? `?companyCode=${encodeURIComponent(companyCode)}` : '';
-      const response = await apiClient.get<ApiResponse<Message[]>>(`/messages${params}`);
+      const params = new URLSearchParams();
+      if (companyCode) params.append('companyCode', companyCode);
+      if (page) params.append('page', page.toString());
+      if (limit) params.append('limit', limit.toString());
+      const queryString = params.toString();
+      const response = await apiClient.get<ApiResponse<Message[]>>(`/messages${queryString ? `?${queryString}` : ''}`);
       return response.data;
     } catch (error) {
       // При ошибке возвращаем пустой массив
@@ -65,6 +69,11 @@ export const messageService = {
     const responseData = await apiClient.put<ApiResponse<Message>>(`/messages/${id}/status`, body);
     return responseData.data;
   },
+
+  moderate: async (id: string, action: 'approve' | 'reject'): Promise<Message> => {
+    const response = await apiClient.post<ApiResponse<Message>>(`/messages/${id}/moderate`, { action });
+    return response.data;
+  },
 };
 
 // ========== COMPANY SERVICES ==========
@@ -77,8 +86,19 @@ interface ApiResponse<T> {
 }
 
 export const companyService = {
-  getAll: async (): Promise<Company[]> => {
-    const response = await apiClient.get<ApiResponse<Company[]>>('/companies');
+  getAll: async (page?: number, limit?: number): Promise<Company[] | { data: Company[]; pagination?: { page: number; limit: number; total: number; totalPages: number } }> => {
+    const params = new URLSearchParams();
+    if (page) params.append('page', page.toString());
+    if (limit) params.append('limit', limit.toString());
+    const queryString = params.toString();
+    const response = await apiClient.get<ApiResponse<Company[]>>(`/companies${queryString ? `?${queryString}` : ''}`);
+    // Если есть пагинация, возвращаем объект, иначе массив (для обратной совместимости)
+    if ((response as any).pagination) {
+      return {
+        data: response.data,
+        pagination: (response as any).pagination,
+      };
+    }
     return response.data;
   },
 
@@ -263,15 +283,50 @@ export const plansService = {
 
 // ========== ADMIN SERVICES ==========
 // Используем реальный API вместо моковых данных
+
+// Вспомогательная функция для преобразования _id в id
+const transformAdminUser = (admin: any): AdminUser => {
+  return {
+    id: admin._id?.toString() || admin.id,
+    email: admin.email,
+    name: admin.name,
+    role: admin.role,
+    createdAt: admin.createdAt,
+    lastLogin: admin.lastLogin || null,
+  };
+};
+
 export const adminService = {
-  getAdmins: async (): Promise<AdminUser[]> => {
+  getAdmins: async (page?: number, limit?: number): Promise<{ data: AdminUser[]; pagination?: { page: number; limit: number; total: number; totalPages: number } }> => {
     try {
-      const response = await apiClient.get<ApiResponse<AdminUser[]>>('/admins');
-      return response.data;
+      const params = new URLSearchParams();
+      if (page) params.append('page', page.toString());
+      if (limit) params.append('limit', limit.toString());
+      const queryString = params.toString();
+      const response = await apiClient.get<ApiResponse<any[]>>(`/admins${queryString ? `?${queryString}` : ''}`);
+      // Преобразуем _id в id для каждого админа
+      return {
+        data: response.data.map(transformAdminUser),
+        pagination: (response as any).pagination,
+      };
     } catch (error) {
       // При ошибке возвращаем пустой массив
-      return [];
+      return { data: [] };
     }
+  },
+
+  createAdmin: async (data: { email: string; name: string; role?: 'admin' | 'super_admin' }): Promise<AdminUser> => {
+    const response = await apiClient.post<ApiResponse<any>>('/admins', data);
+    return transformAdminUser(response.data);
+  },
+
+  updateAdmin: async (id: string, data: { name?: string; role?: 'admin' | 'super_admin' }): Promise<AdminUser> => {
+    const response = await apiClient.put<ApiResponse<any>>(`/admins/${id}`, data);
+    return transformAdminUser(response.data);
+  },
+
+  deleteAdmin: async (id: string): Promise<void> => {
+    await apiClient.delete(`/admins/${id}`);
   },
 };
 

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { FiSearch, FiEye, FiCheckCircle, FiX, FiChevronDown, FiCheck } from "react-icons/fi";
 import { AdminHeader } from "@/components/AdminHeader";
 import { useMessages } from "@/lib/query";
+import { messageService } from "@/lib/query/services";
 import { Message } from "@/types";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -38,7 +39,7 @@ const AdminMessages = () => {
   const handleModerate = async (action: "approve" | "reject") => {
     if (!selectedMessage) return;
     try {
-      // В реальном приложении здесь будет API вызов для модерации
+      await messageService.moderate(selectedMessage.id, action);
       toast.success(action === "approve" ? t("admin.messageApproved") : t("admin.messageRejected"));
       setIsDialogOpen(false);
       refetch();

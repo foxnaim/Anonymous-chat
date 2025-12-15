@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/redux";
 import { FiLogIn } from "react-icons/fi";
 import ForgotPasswordModal from "./ForgotPasswordModal";
+import { toast } from "sonner";
 
 interface LoginModalProps {
   open: boolean;
@@ -30,18 +31,41 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const result = await login(email, password);
-    setIsLoading(false);
-    if (result.success && result.user) {
-      // Используем пользователя из результата логина для определения роли
-      if (result.user.role === "admin" || result.user.role === "super_admin") {
-        router.replace("/admin");
-      } else if (result.user.role === "company") {
-        router.replace("/company");
+    try {
+      const result = await login(email, password);
+      setIsLoading(false);
+      if (result.success && result.user) {
+        // Используем пользователя из результата логина для определения роли
+        if (result.user.role === "admin" || result.user.role === "super_admin") {
+          router.replace("/admin");
+        } else if (result.user.role === "company") {
+          router.replace("/company");
+        } else {
+          router.replace("/");
+        }
+        onOpenChange(false);
       } else {
-        router.replace("/");
+        // Показываем переведенное сообщение об ошибке
+        toast.error(t("auth.loginError"));
       }
-      onOpenChange(false);
+    } catch (error: any) {
+      setIsLoading(false);
+      // Получаем сообщение об ошибке с бэкенда
+      const backendMessage = error?.message || error?.response?.data?.error?.message || "";
+      
+      // Маппинг сообщений об ошибках на ключи переводов
+      let translationKey = "auth.loginError";
+      
+      if (backendMessage.includes("Email and password are required")) {
+        translationKey = "auth.emailAndPasswordRequired";
+      } else if (backendMessage.includes("Invalid email or password") || backendMessage.includes("invalid") || backendMessage.includes("incorrect")) {
+        translationKey = "auth.loginError";
+      }
+      
+      // Показываем переведенное сообщение или оригинальное, если перевода нет
+      const translatedMessage = t(translationKey);
+      const finalMessage = translatedMessage !== translationKey ? translatedMessage : backendMessage || t("auth.loginError");
+      toast.error(finalMessage);
     }
   };
 

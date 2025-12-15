@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslation } from "react-i18next";
-import { useCompany, usePlans, plansService } from "@/lib/query";
+import { useCompany, usePlans, useFreePlanSettings, useUpdateCompanyPlan } from "@/lib/query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,27 +11,61 @@ import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import { toast } from "sonner";
 import { getTranslatedValue } from "@/lib/utils/translations";
-import { useState, useEffect } from "react";
 const CompanyBilling = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { data: company, isLoading: companyLoading } = useCompany(user?.companyId || 0, {
+  const { data: company, isLoading: companyLoading, refetch: refetchCompany } = useCompany(user?.companyId || 0, {
     enabled: !!user?.companyId,
   });
   const { data: plans = [], isLoading: plansLoading } = usePlans();
-  const [freePeriodDays, setFreePeriodDays] = useState<number>(60);
+  const { data: freePlanSettings, isLoading: freePlanSettingsLoading } = useFreePlanSettings();
   
-  useEffect(() => {
-    plansService.getFreePlanSettings().then((data) => {
-      setFreePeriodDays(data.freePeriodDays || 60);
-    });
-  }, []);
+  const { mutate: updatePlan, isPending: isUpdatingPlan } = useUpdateCompanyPlan({
+    onSuccess: () => {
+      toast.success(t("company.switchingPlan"));
+      refetchCompany();
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || t("company.planSwitchError"));
+    },
+  });
+  
+  // Получаем количество дней пробного периода из плана (который обновляется на бэкенде)
+  // Если план еще не загружен, используем настройки как fallback
+  const freePlan = plans.find((p) => p.id === 'free' || p.isFree);
+  const freePeriodDays = freePlan?.freePeriodDays || freePlanSettings?.freePeriodDays || 60;
   
   const handleUpgrade = async (planId: string) => {
-    // В реальном приложении здесь будет API вызов
-    toast.success(t("company.switchingPlan"));
+    if (!user?.companyId || !company) {
+      toast.error(t("common.error"));
+      return;
+    }
+    
+    const selectedPlan = plans.find((p) => p.id === planId);
+    if (!selectedPlan) {
+      toast.error(t("company.planNotFound"));
+      return;
+    }
+    
+    const planName = typeof selectedPlan.name === "string" 
+      ? selectedPlan.name 
+      : selectedPlan.name?.ru || selectedPlan.name?.en || selectedPlan.name?.kk || "";
+    
+    // Вычисляем дату окончания плана (если не пробный)
+    let planEndDate: string | undefined;
+    if (planName !== "Пробный" && planName !== "Free" && planName !== "Бесплатный") {
+      const endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + 1); // 1 месяц
+      planEndDate = endDate.toISOString().split('T')[0];
+    }
+    
+    updatePlan({
+      id: user.companyId,
+      plan: planName as any,
+      planEndDate,
+    });
   };
-  if (companyLoading || plansLoading) {
+  if (companyLoading || plansLoading || freePlanSettingsLoading) {
     return (
       <div className="flex min-h-screen bg-background">
         <div className="flex-1 flex items-center justify-center">

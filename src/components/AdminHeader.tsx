@@ -19,8 +19,9 @@ import {
 import { useAuth } from "@/lib/redux";
 import { cn } from "@/lib/utils/cn";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu as HeadlessMenu, Transition } from "@headlessui/react";
+import { useAdminSettings } from "@/lib/query";
 
 interface AdminHeaderProps {}
 
@@ -29,6 +30,35 @@ export const AdminHeader = ({}: AdminHeaderProps = {}) => {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Загружаем настройки для применения полноэкранного режима на всех страницах
+  const { data: settings } = useAdminSettings();
+  const isFullscreen = settings?.fullscreenMode ?? false;
+  
+  // Применяем полноэкранный режим к DOM на всех страницах админки
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    // Используем requestAnimationFrame для батчинга изменений DOM
+    const rafId = requestAnimationFrame(() => {
+      if (isFullscreen) {
+        document.documentElement.classList.add("fullscreen-mode");
+        document.body.classList.add("fullscreen-mode");
+      } else {
+        document.documentElement.classList.remove("fullscreen-mode");
+        document.body.classList.remove("fullscreen-mode");
+      }
+    });
+    
+    return () => {
+      cancelAnimationFrame(rafId);
+      // Cleanup при размонтировании - используем requestAnimationFrame для избежания forced reflow
+      requestAnimationFrame(() => {
+        document.documentElement.classList.remove("fullscreen-mode");
+        document.body.classList.remove("fullscreen-mode");
+      });
+    };
+  }, [isFullscreen]);
 
   const navigation = [
     { 

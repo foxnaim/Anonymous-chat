@@ -153,22 +153,22 @@ const AdminPanel = () => {
   const shouldShowMobileModal = selectedCompanyId !== null && filteredCompanies.length > 0;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background overflow-hidden">
       <AdminHeader />
       
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col flex-1 overflow-hidden">
         {/* Top Bar */}
-        <header className="border-b border-border bg-card">
+        <header className="flex-shrink-0 border-b border-border bg-card">
             <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
             <h2 className="text-base sm:text-lg font-semibold text-foreground">{t("admin.companies")}</h2>
           </div>
         </header>
 
         {/* Main Dashboard */}
-        <div className="flex-1 flex flex-col lg:flex-row">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
           {/* Companies List */}
-          <div className="flex-1 p-4 sm:p-6">
-            <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+          <div className="flex-1 flex flex-col overflow-hidden p-4 sm:p-6">
+            <div className="flex-shrink-0 mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
               <div>
                 <h3 className="text-xl sm:text-2xl font-bold text-foreground">{t("admin.companies")}</h3>
                 <p className="text-xs sm:text-sm text-muted-foreground mt-1">
@@ -185,7 +185,7 @@ const AdminPanel = () => {
               </Button>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6 relative">
+            <div className="flex-shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6 relative">
               <div className="relative flex-1">
                 <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -231,9 +231,9 @@ const AdminPanel = () => {
               </div>
             </div>
 
-            <Card>
+            <Card className="flex-1 flex flex-col overflow-hidden min-h-0">
               {/* Desktop Table */}
-              <div className="hidden lg:block overflow-x-auto">
+              <div className="hidden lg:block flex-1 overflow-auto">
                 <table className="w-full">
                   <thead>
                   <tr className="border-b border-border text-left bg-muted/30">
@@ -306,7 +306,7 @@ const AdminPanel = () => {
               </div>
 
               {/* Mobile Cards */}
-              <div className="lg:hidden space-y-3 p-4">
+              <div className="lg:hidden flex-1 overflow-auto space-y-3 p-4">
                 {isLoading ? (
                   <div className="text-center py-8 text-muted-foreground">
                     {t("admin.loadingCompanies")}

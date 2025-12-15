@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { FiSettings, FiCheck } from "react-icons/fi";
 import { AdminHeader } from "@/components/AdminHeader";
-import { usePlans, plansService } from "@/lib/query";
+import { usePlans, plansService, queryKeys } from "@/lib/query";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getTranslatedValue } from "@/lib/utils/translations";
 const AdminPlans = () => {
@@ -23,6 +24,7 @@ const AdminPlans = () => {
   });
 
   const { data: plans = [], isLoading, refetch } = usePlans();
+  const queryClient = useQueryClient();
 
   // Загружаем настройки бесплатного плана при монтировании
   useEffect(() => {
@@ -39,6 +41,9 @@ const AdminPlans = () => {
     onSuccess: () => {
       toast.success(t("admin.freePlanSettingsUpdated"));
       setIsFreePlanSettingsOpen(false);
+      // Инвалидируем кэш планов и настроек бесплатного плана
+      queryClient.invalidateQueries({ queryKey: queryKeys.plans });
+      queryClient.invalidateQueries({ queryKey: queryKeys.freePlanSettings });
       refetch();
     },
     onError: () => {

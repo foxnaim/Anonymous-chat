@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -40,11 +42,12 @@ const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) =
       // В development режиме показываем токен для тестирования
       if (response.resetToken && process.env.NODE_ENV === 'development') {
         toast.success(
-          `${t("auth.resetPasswordSuccess")}\nТокен для тестирования: ${response.resetToken}`,
+          `${t("auth.resetPasswordSuccess")}\n${t("auth.resetPasswordTokenLabel")}: ${response.resetToken}`,
           { duration: 10000 }
         );
       } else {
-        toast.success(response.message || t("auth.resetPasswordSuccess"));
+        // Всегда используем перевод вместо сообщения из бэкенда
+        toast.success(t("auth.resetPasswordSuccess"));
       }
       
       setEmail("");
@@ -61,9 +64,16 @@ const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) =
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex flex-col items-center mb-4">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-              <FiLock className="h-8 w-8 text-primary" />
-            </div>
+            <Link href="/" className="mb-4">
+              <Image
+                src="/feedBack.svg"
+                alt="FeedbackHub"
+                width={48}
+                height={48}
+                priority
+                className="h-12 w-12"
+              />
+            </Link>
             <DialogTitle className="text-2xl font-bold" suppressHydrationWarning>
               {t("auth.resetPasswordTitle")}
             </DialogTitle>

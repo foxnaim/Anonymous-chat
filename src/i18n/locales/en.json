@@ -161,8 +161,17 @@
     "resetPasswordTitle": "Reset Password",
     "resetPasswordDescription": "Enter your email and we'll send you password reset instructions",
     "resetPasswordButton": "Send",
-    "resetPasswordSuccess": "Password reset instructions have been sent to your email",
-    "resetPasswordError": "Error sending email. Please check your email address"
+    "resetPasswordSuccess": "If the email exists, a password reset link has been sent",
+    "resetPasswordTokenLabel": "Test token",
+    "resetPasswordError": "Error sending email. Please check your email address",
+    "userAlreadyExists": "A user with this email already exists. Please try logging in or resetting your password.",
+    "emailAndPasswordRequired": "Email and password are required for registration. Please fill in all fields.",
+    "companyCodeAlreadyExists": "A company with this code already exists. Please choose a different code.",
+    "adminEmailAlreadyExists": "An administrator with this email already exists. Please use a different email.",
+    "userEmailAlreadyExists": "A user with this email already exists. Please try logging in or use a different email.",
+    "companyFieldsRequired": "To create a company, you must provide a name, code, administrator email, and password. Please fill in all fields.",
+    "passwordMinLength": "Password must be at least 6 characters long. Please choose a longer password.",
+    "accessDenied": "Access denied. You do not have permission to perform this action."
   },
   "company": {
     "dashboard": "Dashboard",
@@ -265,6 +274,8 @@
     "logoDescription": "Recommended size: 200x200px. Maximum file size: 5MB. Supported formats: JPG, PNG, GIF.",
     "logoInvalidFormat": "Unsupported file format. Please use an image (JPG, PNG, GIF).",
     "logoTooLarge": "File is too large. Maximum size: 5MB.",
+    "logoUploaded": "Logo uploaded successfully",
+    "logoUploadError": "Error uploading logo",
     "settingsSaved": "Settings saved successfully",
     "preferences": "Settings",
     "notifications": "Notifications",
@@ -492,7 +503,14 @@
     "yourResponse": "Your Response",
     "complaint": "Complaint",
     "praise": "Praise",
-    "suggestion": "Suggestion"
+    "suggestion": "Suggestion",
+    "emailChangeAuthError": "Authentication required. Please log in to change your email.",
+    "emailChangeFieldsRequired": "Both new email address and current password are required to change your email. Please fill in all fields.",
+    "emailChangeInvalidFormat": "The email address format is incorrect. Please enter a valid email address (e.g., user@example.com).",
+    "emailChangeUserNotFound": "User account not found. Please try logging in again.",
+    "emailChangeInvalidPassword": "The current password you entered is incorrect. Please check your password and try again. Make sure Caps Lock is off and you are using the correct password.",
+    "emailChangeSameEmail": "The new email address must be different from your current email address. Please enter a different email.",
+    "emailChangeEmailInUse": "This email address is already registered to another account. Please choose a different email address."
   },
   "seo": {
     "defaultTitle": "FeedbackHub - Anonymous Feedback Platform",

@@ -8,6 +8,9 @@ export * from './services';
 export * from './types';
 export * from './constants';
 
+// Re-export specific hooks for convenience
+export { usePlans, useFreePlanSettings } from './hooks';
+
 
 // Re-export services for direct use if needed
 export { 

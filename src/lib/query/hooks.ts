@@ -23,13 +23,15 @@ import { adminSettingsApi, type AdminSettings, type UpdateAdminSettingsRequest }
  * Если companyCode === null - запрос отключен
  * Если companyCode === string - получает сообщения конкретной компании
  */
-export const useMessages = (companyCode?: string | null, options?: Omit<UseQueryOptions<Message[]>, 'queryKey' | 'queryFn'>) => {
+export const useMessages = (companyCode?: string | null, page?: number, limit?: number, options?: Omit<UseQueryOptions<Message[]>, 'queryKey' | 'queryFn'>) => {
   // Нормализуем null в undefined для queryKey
   const normalizedCode = companyCode ?? undefined;
   return useQuery({
-    queryKey: queryKeys.messages(normalizedCode),
-    queryFn: () => messageService.getAll(normalizedCode),
+    queryKey: [...queryKeys.messages(normalizedCode), page, limit],
+    queryFn: () => messageService.getAll(normalizedCode, page, limit),
     enabled: companyCode !== null, // enabled если не null (undefined разрешен для админа)
+    staleTime: 1000 * 30, // 30 секунд - сообщения могут обновляться часто, но не нужно рефетчить постоянно
+    gcTime: 1000 * 60 * 5, // 5 минут в кэше
     ...options,
   });
 };
@@ -50,10 +52,17 @@ export const useMessage = (id: string, options?: Omit<UseQueryOptions<Message | 
  * Хук для получения всех компаний
  * Оптимизирован для кэширования
  */
-export const useCompanies = (options?: Omit<UseQueryOptions<Company[]>, 'queryKey' | 'queryFn'>) => {
+export const useCompanies = (page?: number, limit?: number, options?: Omit<UseQueryOptions<Company[]>, 'queryKey' | 'queryFn'>) => {
   return useQuery({
-    queryKey: queryKeys.companies,
-    queryFn: () => companyService.getAll(),
+    queryKey: [...queryKeys.companies, page, limit],
+    queryFn: async () => {
+      const result = await companyService.getAll(page, limit);
+      // Если результат - объект с пагинацией, возвращаем только data
+      if (result && typeof result === 'object' && 'data' in result) {
+        return (result as { data: Company[] }).data;
+      }
+      return result as Company[];
+    },
     staleTime: 1000 * 60 * 2, // 2 минуты
     gcTime: 1000 * 60 * 10, // 10 минут в кэше
     ...options,
@@ -178,12 +187,91 @@ export const usePlans = (options?: Omit<UseQueryOptions<SubscriptionPlan[]>, 'qu
 };
 
 /**
+ * Хук для получения настроек бесплатного плана
+ * Используется для получения freePeriodDays и других настроек
+ */
+export const useFreePlanSettings = (options?: Omit<UseQueryOptions<{ messagesLimit: number; storageLimit: number; freePeriodDays: number }>, 'queryKey' | 'queryFn'>) => {
+  return useQuery({
+    queryKey: queryKeys.freePlanSettings,
+    queryFn: () => plansService.getFreePlanSettings(),
+    staleTime: 1000 * 60 * 5, // 5 минут - настройки могут меняться админом
+    gcTime: 1000 * 60 * 15, // 15 минут в кэше
+    ...options,
+  });
+};
+
+/**
  * Хук для получения админов
  */
-export const useAdmins = (options?: Omit<UseQueryOptions<AdminUser[]>, 'queryKey' | 'queryFn'>) => {
+export const useAdmins = (page?: number, limit?: number, options?: Omit<UseQueryOptions<AdminUser[]>, 'queryKey' | 'queryFn'>) => {
   return useQuery({
-    queryKey: queryKeys.admins,
-    queryFn: () => adminService.getAdmins(),
+    queryKey: [...queryKeys.admins, page, limit],
+    queryFn: async () => {
+      const result = await adminService.getAdmins(page, limit);
+      return result.data;
+    },
+    ...options,
+  });
+};
+
+/**
+ * Хук для создания админа
+ */
+export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { email: string; name: string; role?: 'admin' | 'super_admin' }>) => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: { email: string; name: string; role?: 'admin' | 'super_admin' }) => adminService.createAdmin(data),
+    onSuccess: (newAdmin) => {
+      // Инвалидируем кэш для обновления списка
+      queryClient.invalidateQueries({ queryKey: queryKeys.admins });
+      // Также обновляем кэш оптимистично
+      queryClient.setQueryData<AdminUser[]>(queryKeys.admins, (old = []) => {
+        // Проверяем, нет ли уже такого админа
+        const exists = old.some(admin => admin.id === newAdmin.id || admin.email === newAdmin.email);
+        if (exists) {
+          return old.map(admin => 
+            (admin.id === newAdmin.id || admin.email === newAdmin.email) ? newAdmin : admin
+          );
+        }
+        return [newAdmin, ...old];
+      });
+    },
+    ...options,
+  });
+};
+
+/**
+ * Хук для обновления админа
+ */
+export const useUpdateAdmin = (options?: UseMutationOptions<AdminUser, Error, { id: string; data: { name?: string; role?: 'admin' | 'super_admin' } }>) => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { name?: string; role?: 'admin' | 'super_admin' } }) => adminService.updateAdmin(id, data),
+    onSuccess: (updatedAdmin) => {
+      // Инвалидируем кэш для обновления списка
+      queryClient.invalidateQueries({ queryKey: queryKeys.admins });
+      // Также обновляем кэш оптимистично
+      queryClient.setQueryData<AdminUser[]>(queryKeys.admins, (old = []) => {
+        return old.map(admin => admin.id === updatedAdmin.id ? updatedAdmin : admin);
+      });
+    },
+    ...options,
+  });
+};
+
+/**
+ * Хук для удаления админа
+ */
+export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>) => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => adminService.deleteAdmin(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admins });
+    },
     ...options,
   });
 };
@@ -326,6 +414,7 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
 
 /**
  * Хук для получения настроек админа
+ * Всегда активен, так как настройки нужны на странице настроек
  */
 export const useAdminSettings = (options?: Omit<UseQueryOptions<AdminSettings>, 'queryKey' | 'queryFn'>) => {
   return useQuery({
@@ -334,6 +423,10 @@ export const useAdminSettings = (options?: Omit<UseQueryOptions<AdminSettings>, 
       const response = await adminSettingsApi.get();
       return response.data;
     },
+    staleTime: 1000 * 60 * 5, // 5 минут - настройки меняются редко, считаем их свежими
+    gcTime: 1000 * 60 * 30, // 30 минут в кэше
+    enabled: true, // Всегда активен
+    refetchOnMount: true, // Рефетчим при монтировании для актуальных данных
     ...options,
   });
 };
@@ -350,7 +443,15 @@ export const useUpdateAdminSettings = (options?: UseMutationOptions<AdminSetting
       return response.data;
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(queryKeys.adminSettings, data);
+      // Обновляем кэш с новыми данными и помечаем как свежие
+      queryClient.setQueryData(queryKeys.adminSettings, data, {
+        updatedAt: Date.now(), // Помечаем данные как только что обновленные
+      });
+      // Инвалидируем запрос, чтобы обновить статус
+      queryClient.invalidateQueries({ 
+        queryKey: queryKeys.adminSettings,
+        exact: true,
+      });
     },
     ...options,
   });

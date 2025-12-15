@@ -82,6 +82,36 @@ export interface GetMeResponse {
   };
 }
 
+export interface ChangeEmailRequest {
+  newEmail: string;
+  password: string;
+}
+
+export interface ChangeEmailResponse {
+  success: boolean;
+  data: {
+    user: {
+      id: string;
+      email: string;
+      role: string;
+      companyId?: string;
+      name?: string;
+      lastLogin?: string;
+    };
+  };
+  message: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  success: boolean;
+  message: string;
+}
+
 class AuthService {
   /**
    * Вход в систему
@@ -123,6 +153,22 @@ class AuthService {
     return apiClient.get<GetMeResponse>('/auth/me', {
       headers,
     });
+  }
+
+  /**
+   * Изменить email пользователя
+   * Требует подтверждения текущего пароля
+   */
+  async changeEmail(data: ChangeEmailRequest): Promise<ChangeEmailResponse> {
+    return apiClient.post<ChangeEmailResponse>('/auth/change-email', data);
+  }
+
+  /**
+   * Изменить пароль пользователя
+   * Требует подтверждения текущего пароля
+   */
+  async changePassword(data: ChangePasswordRequest): Promise<ChangePasswordResponse> {
+    return apiClient.post<ChangePasswordResponse>('/auth/change-password', data);
   }
 }
 

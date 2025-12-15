@@ -61,8 +61,24 @@ const SendMessageModal = ({
       setSubmitted(true);
       toast.success(t("sendMessage.success"));
     },
-    onError: () => {
-      toast.error(t("sendMessage.error"));
+    onError: (error: any) => {
+      // Обработка различных типов ошибок
+      let errorMessage = t("sendMessage.error");
+      
+      if (error?.message) {
+        const message = error.message.toLowerCase();
+        if (message.includes("not found") || message.includes("company")) {
+          errorMessage = t("sendMessage.companyNotFound") || "Компания не найдена";
+        } else if (message.includes("limit") || message.includes("exceeded")) {
+          errorMessage = "Лимит сообщений для этой компании исчерпан на этот месяц";
+        } else if (message.includes("required")) {
+          errorMessage = "Заполните все обязательные поля";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast.error(errorMessage);
     },
   });
 
@@ -74,15 +90,28 @@ const SendMessageModal = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message || !agreed) {
-      toast.error(t("sendMessage.codeRequired"));
+    
+    // Валидация
+    if (!companyCode || companyCode.length !== 8) {
+      toast.error(t("welcome.codeLengthError") || "Код компании должен содержать 8 символов");
+      return;
+    }
+    
+    if (!message || message.trim().length === 0) {
+      toast.error(t("sendMessage.codeRequired") || "Заполните сообщение");
+      return;
+    }
+    
+    if (!agreed) {
+      toast.error(t("sendMessage.codeRequired") || "Подтвердите условия");
       return;
     }
 
+    // Отправляем сообщение
     createMessage({
-      companyCode: companyCode,
+      companyCode: companyCode.toUpperCase(),
       type: selectedType,
-      content: message,
+      content: message.trim(),
       status: "Новое",
     });
   };

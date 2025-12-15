@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
@@ -13,9 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FiUpload, FiX, FiEdit2, FiLock } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
-import { useCompany } from "@/lib/query";
+import { useCompany, useUpdateCompany } from "@/lib/query";
 import { toast } from "sonner";
-import { useFullscreen } from "@/hooks/use-fullscreen";
+import { authService } from "@/lib/api/auth";
+import { setUser } from "@/lib/redux/slices/authSlice";
 
 const CompanySettings = () => {
   const { t, i18n: i18nInstance } = useTranslation();
@@ -29,12 +30,33 @@ const CompanySettings = () => {
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [emailPassword, setEmailPassword] = useState("");
-  const { isFullscreen, toggleFullscreen } = useFullscreen(
-    user?.role === "company" || user?.role === "admin" || user?.role === "super_admin" ? user.role : null
-  );
-  const { data: company, isLoading } = useCompany(user?.companyId || 0, {
+  const [companyName, setCompanyName] = useState("");
+  const { data: company, isLoading, refetch: refetchCompany } = useCompany(user?.companyId || 0, {
     enabled: !!user?.companyId,
   });
+  const { mutate: updateCompany } = useUpdateCompany({
+    onSuccess: () => {
+      toast.success(t("company.settingsSaved"));
+      refetchCompany();
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || t("company.settingsSaveError"));
+    },
+  });
+  
+  // Инициализируем имя компании и логотип при загрузке
+  useEffect(() => {
+    if (company?.name) {
+      setCompanyName(company.name);
+    }
+    if (company?.logoUrl) {
+      setLogoPreview(company.logoUrl);
+    } else if (!company?.logoUrl && logoPreview) {
+      // Сбрасываем превью, если логотип был удален
+      setLogoPreview(null);
+      setLogoFile(null);
+    }
+  }, [company]);
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -76,11 +98,35 @@ const CompanySettings = () => {
       toast.error(t("auth.passwordMinLengthError"));
       return;
     }
-    // В реальном приложении здесь будет API вызов
-    toast.success(t("company.passwordChanged"));
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
+    
+    try {
+      await authService.changePassword({
+        currentPassword,
+        newPassword,
+      });
+      toast.success(t("company.passwordChanged"));
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      // Обработка различных типов ошибок
+      let errorMessage = t("company.passwordChangeError");
+      
+      if (error?.message) {
+        const message = error.message.toLowerCase();
+        if (message.includes("incorrect") || message.includes("invalid")) {
+          errorMessage = t("auth.passwordInvalid") || "Неверный текущий пароль";
+        } else if (message.includes("same") || message.includes("different")) {
+          errorMessage = "Новый пароль должен отличаться от текущего";
+        } else if (message.includes("required")) {
+          errorMessage = t("common.fillAllFields");
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast.error(errorMessage);
+    }
   };
 
   const handleLanguageChange = (lang: string) => {
@@ -107,20 +153,87 @@ const CompanySettings = () => {
       toast.error(t("company.emailNotChanged"));
       return;
     }
-    // В реальном приложении здесь будет API вызов для проверки пароля и изменения email
-    // await companyService.changeEmail(user?.companyId, newEmail, emailPassword);
-    toast.success(t("company.emailChanged"));
-    setIsEditingEmail(false);
-    setEmailPassword("");
+    
+    try {
+      const response = await authService.changeEmail({
+        newEmail,
+        password: emailPassword,
+      });
+      
+      // Обновляем пользователя в Redux
+      if (response.data?.user) {
+        setUser(response.data.user);
+      }
+      
+      toast.success(t("company.emailChanged"));
+      setIsEditingEmail(false);
+      setEmailPassword("");
+      // Обновляем компанию, чтобы получить новый adminEmail
+      refetchCompany();
+    } catch (error: any) {
+      // Обработка различных типов ошибок
+      let errorMessage = t("company.emailChangeError");
+      
+      if (error?.message) {
+        const message = error.message.toLowerCase();
+        if (message.includes("incorrect") || message.includes("invalid password")) {
+          errorMessage = t("auth.passwordInvalid") || "Неверный пароль";
+        } else if (message.includes("already") || message.includes("registered")) {
+          errorMessage = t("auth.userEmailAlreadyExists");
+        } else if (message.includes("format") || message.includes("invalid email")) {
+          errorMessage = t("auth.invalidEmail");
+        } else if (message.includes("same") || message.includes("different")) {
+          errorMessage = t("admin.emailChangeSameEmail");
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast.error(errorMessage);
+    }
   };
 
   const handleSave = async () => {
-    // В реальном приложении здесь будет API вызов для сохранения логотипа
-    if (logoFile) {
-      // Здесь будет загрузка файла на сервер
-      // await companyService.uploadLogo(user?.companyId, logoFile);
+    if (!user?.companyId) {
+      toast.error(t("common.error"));
+      return;
     }
-    toast.success(t("company.settingsSaved"));
+    
+    // Обновляем имя компании, если оно изменилось
+    if (companyName && companyName !== company?.name) {
+      updateCompany({
+        id: user.companyId,
+        updates: { name: companyName },
+      });
+    }
+    
+    // Загрузка логотипа
+    if (logoFile) {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        try {
+          await updateCompany({
+            id: user?.companyId || 0,
+            updates: { logoUrl: base64String },
+          });
+          toast.success(t("company.logoUploaded"));
+        } catch (error) {
+          toast.error(t("company.logoUploadError"));
+        }
+      };
+      reader.readAsDataURL(logoFile);
+    } else if (logoPreview === null && company?.logoUrl) {
+      // Удаление логотипа
+      await updateCompany({
+        id: user?.companyId || 0,
+        updates: { logoUrl: "" },
+      });
+    }
+    
+    if (!companyName || companyName === company?.name) {
+      toast.success(t("company.settingsSaved"));
+    }
   };
   if (isLoading) {
     return (
@@ -194,7 +307,12 @@ const CompanySettings = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="name">{t("auth.companyName")}</Label>
-                <Input id="name" defaultValue={company?.name} autoComplete="organization" />
+                <Input 
+                  id="name" 
+                  value={companyName} 
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  autoComplete="organization" 
+                />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -364,6 +482,7 @@ const CompanySettings = () => {
                   </SelectContent>
                 </Select>
               </div>
+              {/* Полноэкранный режим */}
               <Separator />
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
@@ -372,7 +491,17 @@ const CompanySettings = () => {
                     {t("company.fullscreenModeDescription")}
                   </p>
                 </div>
-                <Switch checked={isFullscreen} onCheckedChange={toggleFullscreen} />
+                <Switch 
+                  checked={company?.fullscreenMode ?? false} 
+                  onCheckedChange={(checked) => {
+                    if (user?.companyId) {
+                      updateCompany({
+                        id: user.companyId,
+                        updates: { fullscreenMode: checked },
+                      });
+                    }
+                  }} 
+                />
               </div>
             </div>
           </Card>

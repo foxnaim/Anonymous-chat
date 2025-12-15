@@ -110,9 +110,29 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
           onOpenChange(false);
         });
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : t("common.error");
-      toast.error(errorMessage);
+    } catch (error: any) {
+      // Получаем сообщение об ошибке с бэкенда
+      const backendMessage = error?.message || error?.response?.data?.error?.message || "";
+      
+      // Маппинг сообщений об ошибках на ключи переводов
+      let translationKey = "common.error";
+      
+      if (backendMessage.includes("User already exists") || backendMessage.toLowerCase().includes("user already")) {
+        translationKey = "auth.userAlreadyExists";
+      } else if (backendMessage.includes("Email and password are required")) {
+        translationKey = "auth.emailAndPasswordRequired";
+      } else if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
+        translationKey = "auth.companyCodeAlreadyExists";
+      } else if (backendMessage.includes("Password must be at least 6 characters")) {
+        translationKey = "auth.passwordMinLength";
+      } else if (backendMessage.includes("required")) {
+        translationKey = "auth.emailAndPasswordRequired";
+      }
+      
+      // Показываем переведенное сообщение или оригинальное, если перевода нет
+      const translatedMessage = t(translationKey);
+      const finalMessage = translatedMessage !== translationKey ? translatedMessage : backendMessage || t("common.error");
+      toast.error(finalMessage);
     } finally {
       setIsPending(false);
     }

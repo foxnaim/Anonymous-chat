@@ -60,15 +60,15 @@ const ResetPasswordContent = () => {
       await authService.resetPassword({ token, password });
       toast.success("Пароль успешно изменен!");
       
-      // Перенаправляем на страницу входа (используем requestIdleCallback для неблокирующего редиректа)
+      // Перенаправляем на главную страницу (используем requestIdleCallback для неблокирующего редиректа)
       if ('requestIdleCallback' in window) {
         requestIdleCallback(() => {
-          router.push("/login" as any);
+          router.push("/");
         }, { timeout: 1500 });
       } else {
         // Fallback для браузеров без requestIdleCallback
         setTimeout(() => {
-          router.push("/login" as any);
+          router.push("/");
         }, 1500);
       }
     } catch (error) {
@@ -120,7 +120,7 @@ const ResetPasswordContent = () => {
                 Токен восстановления не найден. Пожалуйста, используйте ссылку из email.
               </p>
               <Button asChild variant="outline">
-                <Link href={"/login" as any}>Вернуться к входу</Link>
+                <Link href="/">Вернуться к входу</Link>
               </Button>
             </div>
           ) : (
@@ -191,7 +191,7 @@ const ResetPasswordContent = () => {
               </Button>
 
               <div className="text-center text-sm">
-                <Link href={"/login" as any} className="text-primary hover:underline">
+                <Link href="/" className="text-primary hover:underline">
                   Вернуться к входу
                 </Link>
               </div>
