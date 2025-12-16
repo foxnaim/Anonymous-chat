@@ -1,0 +1,10 @@
+.next
+node_modules
+.turbo
+.env
+.env.*
+npm-debug.log*
+yarn-error.log
+*.log
+.git
+
