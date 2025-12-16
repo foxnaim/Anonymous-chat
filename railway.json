@@ -2,10 +2,11 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "yarn build"
+    "installCommand": "YARN_PRODUCTION=false yarn install --frozen-lockfile",
+    "buildCommand": "NEXT_DISABLE_ESLINT=1 NODE_ENV=production yarn build"
   },
   "deploy": {
-    "startCommand": "yarn start",
+    "startCommand": "NODE_ENV=production yarn start",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
