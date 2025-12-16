@@ -127,7 +127,7 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
         translationKey = "auth.emailAndPasswordRequired";
       } else if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
         translationKey = "auth.companyCodeAlreadyExists";
-      } else if (backendMessage.includes("Password must be at least 6 characters")) {
+      } else if (backendMessage.includes("Password must be at least 8 characters") || backendMessage.includes("Password must be at least 6 characters")) {
         translationKey = "auth.passwordMinLength";
       } else if (backendMessage.includes("required")) {
         translationKey = "auth.emailAndPasswordRequired";

@@ -179,7 +179,7 @@
     "adminEmailAlreadyExists": "An administrator with this email already exists. Please use a different email.",
     "userEmailAlreadyExists": "A user with this email already exists. Please try logging in or use a different email.",
     "companyFieldsRequired": "To create a company, you must provide a name, code, administrator email, and password. Please fill in all fields.",
-    "passwordMinLength": "Password must be at least 6 characters long. Please choose a longer password.",
+    "passwordMinLength": "Password must be at least 8 characters long. Please choose a longer password.",
     "accessDenied": "Access denied. You do not have permission to perform this action."
   },
   "company": {

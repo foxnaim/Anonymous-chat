@@ -130,7 +130,7 @@ const AdminCompanies = () => {
         translationKey = "auth.userEmailAlreadyExists";
       } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.includes("required")) {
         translationKey = "auth.companyFieldsRequired";
-      } else if (backendMessage.includes("Password must be at least 6 characters")) {
+      } else if (backendMessage.includes("Password must be at least 8 characters") || backendMessage.includes("Password must be at least 6 characters")) {
         translationKey = "auth.passwordMinLength";
       } else if (backendMessage.includes("Access denied")) {
         translationKey = "auth.accessDenied";
@@ -161,7 +161,7 @@ const AdminCompanies = () => {
         translationKey = "auth.userEmailAlreadyExists";
       } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.includes("required")) {
         translationKey = "auth.companyFieldsRequired";
-      } else if (backendMessage.includes("Password must be at least 6 characters")) {
+      } else if (backendMessage.includes("Password must be at least 8 characters") || backendMessage.includes("Password must be at least 6 characters")) {
         translationKey = "auth.passwordMinLength";
       } else if (backendMessage.includes("Access denied")) {
         translationKey = "auth.accessDenied";
@@ -193,7 +193,7 @@ const AdminCompanies = () => {
         translationKey = "auth.userEmailAlreadyExists";
       } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.includes("required")) {
         translationKey = "auth.companyFieldsRequired";
-      } else if (backendMessage.includes("Password must be at least 6 characters")) {
+      } else if (backendMessage.includes("Password must be at least 8 characters") || backendMessage.includes("Password must be at least 6 characters")) {
         translationKey = "auth.passwordMinLength";
       } else if (backendMessage.includes("Access denied")) {
         translationKey = "auth.accessDenied";
@@ -225,7 +225,7 @@ const AdminCompanies = () => {
         translationKey = "auth.userEmailAlreadyExists";
       } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.includes("required")) {
         translationKey = "auth.companyFieldsRequired";
-      } else if (backendMessage.includes("Password must be at least 6 characters")) {
+      } else if (backendMessage.includes("Password must be at least 8 characters") || backendMessage.includes("Password must be at least 6 characters")) {
         translationKey = "auth.passwordMinLength";
       } else if (backendMessage.includes("Access denied")) {
         translationKey = "auth.accessDenied";
