@@ -166,6 +166,11 @@ const CompanySettings = () => {
         setUser({
           ...response.data.user,
           role: response.data.user.role as UserRole,
+          companyId: response.data.user.companyId
+            ? (typeof response.data.user.companyId === 'string'
+                ? parseInt(response.data.user.companyId, 10)
+                : response.data.user.companyId)
+            : undefined,
         });
       }
       
