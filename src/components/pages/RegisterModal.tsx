@@ -14,6 +14,7 @@ import { useAuth } from "@/lib/redux";
 import { toast } from "sonner";
 import { FiKey, FiSettings, FiGift, FiCheck, FiEye, FiEyeOff, FiArrowLeft, FiUserPlus } from "react-icons/fi";
 import { Badge } from "@/components/ui/badge";
+import { validatePasswordStrength } from "@/lib/utils/validation";
 
 interface RegisterModalProps {
   open: boolean;
@@ -70,9 +71,12 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
       return;
     }
 
-    // Проверка длины пароля
-    if (formData.password.length < 6) {
-      toast.error(t("auth.passwordTooShort"));
+    // Проверка надежности пароля
+    const passwordValidation = validatePasswordStrength(formData.password);
+    if (!passwordValidation.isValid) {
+      // Показываем первую ошибку
+      const firstError = passwordValidation.errors[0];
+      toast.error(firstError || t("auth.passwordWeak"));
       return;
     }
 

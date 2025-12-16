@@ -31,6 +31,7 @@ import { useCompanies, useCreateCompany, useDeleteCompany, usePlans, companyServ
 import { getTranslatedValue } from "@/lib/utils/translations";
 import { toast } from "sonner";
 import type { CompanyStatus, PlanType } from "@/types";
+import { validatePasswordStrength } from "@/lib/utils/validation";
 
 // Константы статусов компании
 const COMPANY_STATUS: Record<string, CompanyStatus> = {
@@ -836,8 +837,12 @@ const AdminPanel = () => {
                           toast.error(t("common.fillAllFields") || "Заполните все поля");
                           return;
                         }
-                        if (newCompany.password.length < 6) {
-                          toast.error("Пароль должен содержать минимум 6 символов");
+                        // Проверка надежности пароля
+                        const passwordValidation = validatePasswordStrength(newCompany.password);
+                        if (!passwordValidation.isValid) {
+                          // Показываем первую ошибку
+                          const firstError = passwordValidation.errors[0];
+                          toast.error(firstError || "Пароль слишком слабый");
                           return;
                         }
                         try {

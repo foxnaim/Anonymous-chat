@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useAdminSettings, useUpdateAdminSettings } from "@/lib/query";
 import { authService } from "@/lib/api/auth";
 import { useDispatch } from "react-redux";
+import { validatePasswordStrength } from "@/lib/utils/validation";
 
 const AdminSettings = () => {
   const { t, i18n: i18nInstance } = useTranslation();
@@ -67,8 +68,12 @@ const AdminSettings = () => {
       toast.error(t("auth.passwordMismatch"));
       return;
     }
-    if (newPassword.length < 6) {
-      toast.error(t("auth.passwordTooShort"));
+    // Проверка надежности пароля
+    const passwordValidation = validatePasswordStrength(newPassword);
+    if (!passwordValidation.isValid) {
+      // Показываем первую ошибку
+      const firstError = passwordValidation.errors[0];
+      toast.error(firstError || t("auth.passwordWeak"));
       return;
     }
     // В реальном приложении здесь будет API вызов

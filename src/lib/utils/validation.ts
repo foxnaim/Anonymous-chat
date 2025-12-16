@@ -15,9 +15,67 @@ export const emailSchema = z.string().email('Некорректный email ад
 export const companyPasswordSchema = z.string().length(10, 'Пароль компании должен содержать ровно 10 символов');
 
 /**
- * Валидация пароля (минимум 6 символов)
+ * Валидация пароля (минимум 8 символов)
  */
-export const passwordSchema = z.string().min(6, 'Пароль должен содержать минимум 6 символов');
+export const passwordSchema = z.string().min(8, 'Пароль должен содержать минимум 8 символов');
+
+/**
+ * Проверка надежности пароля
+ * Требования:
+ * - Минимум 8 символов
+ * - Хотя бы одна заглавная буква
+ * - Хотя бы одна строчная буква
+ * - Хотя бы одна цифра
+ * - Хотя бы один специальный символ (!@#$%^&*()_+-=[]{}|;:,.<>?)
+ */
+export interface PasswordStrength {
+  isValid: boolean;
+  errors: string[];
+  strength: 'weak' | 'medium' | 'strong';
+}
+
+export const validatePasswordStrength = (password: string): PasswordStrength => {
+  const errors: string[] = [];
+  
+  // Минимум 8 символов
+  if (password.length < 8) {
+    errors.push('Пароль должен содержать минимум 8 символов');
+  }
+  
+  // Заглавные буквы
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Пароль должен содержать хотя бы одну заглавную букву');
+  }
+  
+  // Строчные буквы
+  if (!/[a-z]/.test(password)) {
+    errors.push('Пароль должен содержать хотя бы одну строчную букву');
+  }
+  
+  // Цифры
+  if (!/[0-9]/.test(password)) {
+    errors.push('Пароль должен содержать хотя бы одну цифру');
+  }
+  
+  // Специальные символы
+  if (!/[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password)) {
+    errors.push('Пароль должен содержать хотя бы один специальный символ (!@#$%^&*()_+-=[]{}|;:,.<>?)');
+  }
+  
+  const isValid = errors.length === 0;
+  
+  // Определяем силу пароля
+  let strength: 'weak' | 'medium' | 'strong' = 'weak';
+  if (isValid) {
+    if (password.length >= 12) {
+      strength = 'strong';
+    } else {
+      strength = 'medium';
+    }
+  }
+  
+  return { isValid, errors, strength };
+};
 
 /**
  * Валидация кода компании (точно 8 символов)
@@ -42,10 +100,17 @@ export const isValidEmail = (email: string): boolean => {
 };
 
 /**
- * Проверка валидности пароля
+ * Проверка валидности пароля (базовая проверка длины)
  */
 export const isValidPassword = (password: string): boolean => {
   return passwordSchema.safeParse(password).success;
+};
+
+/**
+ * Проверка надежности пароля (полная проверка)
+ */
+export const isStrongPassword = (password: string): boolean => {
+  return validatePasswordStrength(password).isValid;
 };
 
 /**

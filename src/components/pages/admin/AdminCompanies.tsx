@@ -318,8 +318,12 @@ const AdminCompanies = () => {
       return;
     }
 
-    if (newCompany.password.length < 6) {
-      toast.error("Пароль должен содержать минимум 6 символов");
+    // Проверка надежности пароля
+    const passwordValidation = validatePasswordStrength(newCompany.password);
+    if (!passwordValidation.isValid) {
+      // Показываем первую ошибку
+      const firstError = passwordValidation.errors[0];
+      toast.error(firstError || "Пароль слишком слабый");
       return;
     }
 

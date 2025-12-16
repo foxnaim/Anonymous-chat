@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { authService } from "@/lib/api/auth";
 import { setUser } from "@/lib/redux/slices/authSlice";
 import type { UserRole } from "@/types";
+import { validatePasswordStrength } from "@/lib/utils/validation";
 
 const CompanySettings = () => {
   const { t, i18n: i18nInstance } = useTranslation();
@@ -95,8 +96,12 @@ const CompanySettings = () => {
       toast.error(t("auth.passwordMismatch"));
       return;
     }
-    if (newPassword.length < 6) {
-      toast.error(t("auth.passwordMinLengthError"));
+    // Проверка надежности пароля
+    const passwordValidation = validatePasswordStrength(newPassword);
+    if (!passwordValidation.isValid) {
+      // Показываем первую ошибку
+      const firstError = passwordValidation.errors[0];
+      toast.error(firstError || t("auth.passwordWeak"));
       return;
     }
     
