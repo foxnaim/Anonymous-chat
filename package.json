@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "es-abstract": "^1.24.0",
     "@headlessui/react": "^2.1.8",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",
@@ -77,7 +78,6 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.20",
-    "es-abstract": "^1.24.0",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.5",
     "postcss": "^8.4.47",
