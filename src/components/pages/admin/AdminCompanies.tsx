@@ -52,6 +52,7 @@ import {
 import { getTranslatedValue } from "@/lib/utils/translations";
 import { toast } from "sonner";
 import type { Company, CompanyStatus, PlanType } from "@/types";
+import { validatePasswordStrength } from "@/lib/utils/validation";
 
 // Константы
 const COMPANY_STATUS: Record<string, CompanyStatus> = {
