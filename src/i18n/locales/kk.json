@@ -154,7 +154,7 @@
     "passwordRequirementSpecial": "Құпия сөз кемінде бір арнайы таңбадан тұруы керек (!@#$%^&*()_+-=[]{}|;:,.<>?)",
     "passwordStrengthWeak": "Әлсіз",
     "passwordStrengthMedium": "Орташа",
-    "passwordStrengthStrong": "Күшті"
+    "passwordStrengthStrong": "Күшті",
     "passwordMinLength": "Ең аз дегенде {{length}} таңба",
     "invalidEmail": "Дұрыс email мекенжайын енгізіңіз",
     "startUsingToday": "Платформаны бүгін пайдалануды бастаңыз",

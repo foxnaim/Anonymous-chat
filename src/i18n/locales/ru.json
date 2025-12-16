@@ -154,7 +154,7 @@
     "passwordRequirementSpecial": "Пароль должен содержать хотя бы один специальный символ (!@#$%^&*()_+-=[]{}|;:,.<>?)",
     "passwordStrengthWeak": "Слабый",
     "passwordStrengthMedium": "Средний",
-    "passwordStrengthStrong": "Сильный"
+    "passwordStrengthStrong": "Сильный",
     "passwordMinLength": "Минимум {{length}} символов",
     "invalidEmail": "Введите корректный email адрес",
     "startUsingToday": "Начните использовать платформу уже сегодня",

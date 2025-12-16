@@ -154,7 +154,7 @@
     "passwordRequirementSpecial": "Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)",
     "passwordStrengthWeak": "Weak",
     "passwordStrengthMedium": "Medium",
-    "passwordStrengthStrong": "Strong"
+    "passwordStrengthStrong": "Strong",
     "passwordMinLength": "Minimum {{length}} characters",
     "invalidEmail": "Please enter a valid email address",
     "startUsingToday": "Start using the platform today",
