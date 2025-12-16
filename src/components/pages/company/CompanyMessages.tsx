@@ -53,7 +53,7 @@ const CompanyMessages = () => {
   const { data: company } = useCompany(user?.companyId || 0, {
     enabled: !!user?.companyId,
   });
-  const { data: messages = [], isLoading, refetch } = useMessages(company?.code, {
+  const { data: messages = [], isLoading, refetch } = useMessages(company?.code, undefined, undefined, {
     enabled: !!company?.code,
   });
   
