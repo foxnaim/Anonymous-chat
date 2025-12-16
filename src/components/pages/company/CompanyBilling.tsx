@@ -20,7 +20,7 @@ const CompanyBilling = () => {
   const { data: plans = [], isLoading: plansLoading } = usePlans();
   const { data: freePlanSettings, isLoading: freePlanSettingsLoading } = useFreePlanSettings();
   
-  const { mutate: updatePlan, isPending: isUpdatingPlan } = useUpdateCompanyPlan({
+  const { mutate: updatePlan } = useUpdateCompanyPlan({
     onSuccess: () => {
       toast.success(t("company.switchingPlan"));
       refetchCompany();
