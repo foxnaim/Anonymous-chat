@@ -17,6 +17,7 @@ import { useCompany, useUpdateCompany } from "@/lib/query";
 import { toast } from "sonner";
 import { authService } from "@/lib/api/auth";
 import { setUser } from "@/lib/redux/slices/authSlice";
+import type { UserRole } from "@/types";
 
 const CompanySettings = () => {
   const { t, i18n: i18nInstance } = useTranslation();
@@ -162,7 +163,10 @@ const CompanySettings = () => {
       
       // Обновляем пользователя в Redux
       if (response.data?.user) {
-        setUser(response.data.user);
+        setUser({
+          ...response.data.user,
+          role: response.data.user.role as UserRole,
+        });
       }
       
       toast.success(t("company.emailChanged"));
