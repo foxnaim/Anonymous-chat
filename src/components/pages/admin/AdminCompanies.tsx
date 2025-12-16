@@ -323,7 +323,11 @@ const AdminCompanies = () => {
       return;
     }
 
-    await createCompany(newCompany);
+    // Добавляем обязательное поле status при создании компании
+    await createCompany({
+      ...newCompany,
+      status: selectedStatus,
+    });
   };
 
   const handleEdit = async () => {

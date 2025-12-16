@@ -843,6 +843,7 @@ const AdminPanel = () => {
                         try {
                           await createCompany({
                             ...newCompany,
+                            status: COMPANY_STATUS.TRIAL, // По умолчанию "Пробная" для новых компаний
                             messagesLimit: 100,
                             storageLimit: 10,
                           });

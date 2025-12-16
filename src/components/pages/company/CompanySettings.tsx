@@ -51,7 +51,7 @@ const CompanySettings = () => {
     }
     if (company?.logoUrl) {
       setLogoPreview(company.logoUrl);
-    } else if (!company?.logoUrl && logoPreview) {
+    } else {
       // Сбрасываем превью, если логотип был удален
       setLogoPreview(null);
       setLogoFile(null);
