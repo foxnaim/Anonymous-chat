@@ -300,7 +300,7 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 autoComplete="new-password"
                 required
-                minLength={6}
+                minLength={8}
                 className="pr-10"
               />
               <Button
@@ -330,7 +330,7 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 autoComplete="new-password"
                 required
-                minLength={6}
+                minLength={8}
                 className="pr-10"
               />
               <Button

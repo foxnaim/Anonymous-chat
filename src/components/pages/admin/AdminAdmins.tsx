@@ -182,9 +182,12 @@ const AdminAdmins = () => {
       return;
     }
 
-    // Проверка длины пароля
-    if (password.length < 6) {
-      toast.error(t("auth.passwordTooShort"));
+    // Проверка надежности пароля
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.isValid) {
+      // Показываем первую ошибку
+      const firstError = passwordValidation.errors[0];
+      toast.error(firstError || t("auth.passwordWeak"));
       return;
     }
 
@@ -402,7 +405,7 @@ const AdminAdmins = () => {
                           value={createAdmin.password}
                           onChange={(e) => setCreateAdmin({ ...createAdmin, password: e.target.value })}
                           className="pr-10"
-                          minLength={6}
+                          minLength={8}
                         />
                         <Button
                           type="button"
@@ -419,7 +422,7 @@ const AdminAdmins = () => {
                         </Button>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {t("auth.passwordMinLength", { length: 6 }) || "Минимум 6 символов"}
+                        {t("auth.passwordMinLength", { length: 8 }) || "Минимум 8 символов"}
                       </p>
                     </div>
                     <div>
@@ -432,7 +435,7 @@ const AdminAdmins = () => {
                           value={createAdmin.confirmPassword}
                           onChange={(e) => setCreateAdmin({ ...createAdmin, confirmPassword: e.target.value })}
                           className="pr-10"
-                          minLength={6}
+                          minLength={8}
                         />
                         <Button
                           type="button"
@@ -528,7 +531,7 @@ const AdminAdmins = () => {
                           value={editAdmin?.password || ""}
                           onChange={(e) => setEditAdmin((prev) => prev ? { ...prev, password: e.target.value } : prev)}
                           className="pr-10"
-                          minLength={6}
+                          minLength={8}
                         />
                         <Button
                           type="button"
@@ -545,7 +548,7 @@ const AdminAdmins = () => {
                         </Button>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {t("auth.passwordMinLength", { length: 6 }) || "Минимум 6 символов"}
+                        {t("auth.passwordMinLength", { length: 8 }) || "Минимум 8 символов"}
                       </p>
                     </div>
                     <div>
@@ -558,7 +561,7 @@ const AdminAdmins = () => {
                           value={editAdmin?.confirmPassword || ""}
                           onChange={(e) => setEditAdmin((prev) => prev ? { ...prev, confirmPassword: e.target.value } : prev)}
                           className="pr-10"
-                          minLength={6}
+                          minLength={8}
                         />
                         <Button
                           type="button"

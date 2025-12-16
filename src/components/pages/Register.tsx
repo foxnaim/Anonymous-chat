@@ -56,8 +56,13 @@ const Register = () => {
       return;
     }
 
-    if (formData.password.length < 6) {
-      toast.error(t("auth.passwordMismatch"));
+    // Проверка надежности пароля
+    const { validatePasswordStrength } = await import("@/lib/utils/validation");
+    const passwordValidation = validatePasswordStrength(formData.password);
+    if (!passwordValidation.isValid) {
+      // Показываем первую ошибку
+      const firstError = passwordValidation.errors[0];
+      toast.error(firstError || t("auth.passwordWeak"));
       return;
     }
 
@@ -156,7 +161,7 @@ const Register = () => {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 autoComplete="new-password"
                 required
-                minLength={6}
+                minLength={8}
               />
             </div>
 
@@ -170,7 +175,7 @@ const Register = () => {
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 autoComplete="new-password"
                 required
-                minLength={6}
+                minLength={8}
               />
             </div>
 

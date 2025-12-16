@@ -42,9 +42,13 @@ const ResetPasswordContent = () => {
       return;
     }
 
-    // Проверка длины пароля
-    if (password.length < 6) {
-      toast.error(t("auth.passwordTooShort"));
+    // Проверка надежности пароля
+    const { validatePasswordStrength } = await import("@/lib/utils/validation");
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.isValid) {
+      // Показываем первую ошибку
+      const firstError = passwordValidation.errors[0];
+      toast.error(firstError || t("auth.passwordWeak"));
       return;
     }
 

@@ -880,7 +880,7 @@ const AdminCompanies = () => {
                         setNewCompany({ ...newCompany, password: e.target.value })
                       }
                       placeholder="Минимум 6 символов"
-                      minLength={6}
+                      minLength={8}
                     />
                   </div>
                   <div>
