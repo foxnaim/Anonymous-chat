@@ -63,8 +63,9 @@ export const useCompanies = (page?: number, limit?: number, options?: Omit<UseQu
       }
       return result as Company[];
     },
-    staleTime: 1000 * 60 * 2, // 2 минуты
+    staleTime: 1000 * 60 * 2, // 2 минуты - компании не меняются часто
     gcTime: 1000 * 60 * 10, // 10 минут в кэше
+    refetchOnMount: false, // Используем кэш для быстрого старта
     ...options,
   });
 };
@@ -180,8 +181,9 @@ export const usePlans = (options?: Omit<UseQueryOptions<SubscriptionPlan[]>, 'qu
   return useQuery({
     queryKey: queryKeys.plans,
     queryFn: () => plansService.getAll(),
-    staleTime: 1000 * 60 * 10, // 10 минут - планы меняются очень редко
-    gcTime: 1000 * 60 * 30, // 30 минут в кэше
+    staleTime: 1000 * 60 * 15, // 15 минут - планы меняются очень редко
+    gcTime: 1000 * 60 * 60, // 1 час в кэше - планы статичны
+    refetchOnMount: false, // Используем кэш - планы не меняются часто
     ...options,
   });
 };
@@ -196,6 +198,7 @@ export const useFreePlanSettings = (options?: Omit<UseQueryOptions<{ messagesLim
     queryFn: () => plansService.getFreePlanSettings(),
     staleTime: 1000 * 60 * 5, // 5 минут - настройки могут меняться админом
     gcTime: 1000 * 60 * 15, // 15 минут в кэше
+    refetchOnMount: false, // Используем кэш для быстрого старта
     ...options,
   });
 };
@@ -210,6 +213,9 @@ export const useAdmins = (page?: number, limit?: number, options?: Omit<UseQuery
       const result = await adminService.getAdmins(page, limit);
       return result.data;
     },
+    staleTime: 1000 * 60 * 2, // 2 минуты - админы не меняются часто
+    gcTime: 1000 * 60 * 10, // 10 минут в кэше
+    refetchOnMount: false, // Используем кэш для быстрого старта
     ...options,
   });
 };
@@ -426,7 +432,7 @@ export const useAdminSettings = (options?: Omit<UseQueryOptions<AdminSettings>, 
     staleTime: 1000 * 60 * 5, // 5 минут - настройки меняются редко, считаем их свежими
     gcTime: 1000 * 60 * 30, // 30 минут в кэше
     enabled: true, // Всегда активен
-    refetchOnMount: true, // Рефетчим при монтировании для актуальных данных
+    refetchOnMount: false, // Используем кэш для быстрого старта
     ...options,
   });
 };
