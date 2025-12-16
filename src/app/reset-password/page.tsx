@@ -140,7 +140,7 @@ const ResetPasswordContent = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="new-password"
                     required
-                    minLength={6}
+                    minLength={8}
                     className="pr-10"
                   />
                   <Button
@@ -170,7 +170,7 @@ const ResetPasswordContent = () => {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     autoComplete="new-password"
                     required
-                    minLength={6}
+                    minLength={8}
                     className="pr-10"
                   />
                   <Button
