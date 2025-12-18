@@ -150,7 +150,7 @@ const Welcome = () => {
       />
       <WebsiteStructuredData />
       <OrganizationStructuredData />
-      <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
         {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
@@ -226,7 +226,7 @@ const Welcome = () => {
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1 flex items-center justify-center px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 overflow-y-auto overflow-x-hidden scrollbar-hide">
+      <main className="flex-1 flex items-start md:items-center justify-center px-3 sm:px-4 md:px-6 pt-2 sm:pt-4 pb-2 sm:pb-4 overflow-y-auto overflow-x-hidden scrollbar-hide">
         <div className="max-w-7xl w-full space-y-3 sm:space-y-4 md:space-y-6 min-w-0">
           <div className="text-center space-y-1.5 sm:space-y-2 md:space-y-3 min-w-0">
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-foreground leading-tight px-2 break-words">
