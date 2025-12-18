@@ -30,7 +30,10 @@ export const loginAsync = createAsyncThunk<
         id: response.data.user.id,
         email: response.data.user.email,
         role: response.data.user.role as User['role'],
-        companyId: response.data.user.companyId ? Number(response.data.user.companyId) : undefined,
+        // companyId приходит как строковый ObjectId, оставляем как есть
+        companyId: response.data.user.companyId
+          ? String(response.data.user.companyId)
+          : undefined,
         name: response.data.user.name,
       };
 
@@ -75,7 +78,9 @@ export const registerAsync = createAsyncThunk<
         id: response.data.user.id,
         email: response.data.user.email,
         role: response.data.user.role as User['role'],
-        companyId: response.data.user.companyId ? Number(response.data.user.companyId) : undefined,
+        companyId: response.data.user.companyId
+          ? String(response.data.user.companyId)
+          : undefined,
         name: response.data.user.name,
       };
 
@@ -111,7 +116,9 @@ export const checkSessionAsync = createAsyncThunk<
         id: response.data.user.id,
         email: response.data.user.email,
         role: response.data.user.role as User['role'],
-        companyId: response.data.user.companyId ? Number(response.data.user.companyId) : undefined,
+        companyId: response.data.user.companyId
+          ? String(response.data.user.companyId)
+          : undefined,
         name: response.data.user.name,
       };
 

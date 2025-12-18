@@ -42,7 +42,8 @@ export interface User {
   id: string;
   email: string;
   role: UserRole;
-  companyId?: number;
+  // Mongo ObjectId приходит строкой, поэтому храним как string
+  companyId?: string;
   name?: string;
 }
 
