@@ -28,6 +28,15 @@ const AdminPlans = () => {
 
   const { data: plans = [], isLoading, refetch } = usePlans();
   const queryClient = useQueryClient();
+  const freeDaysNum = Number(
+    freePlanSettings.freePeriodDays === "" ? 0 : freePlanSettings.freePeriodDays
+  );
+  const freeDaysLabel =
+    freeDaysNum === 1
+      ? 'день'
+      : freeDaysNum > 1 && freeDaysNum < 5
+        ? 'дня'
+        : 'дней';
 
   // Загружаем настройки бесплатного плана при монтировании
   useEffect(() => {
@@ -63,7 +72,7 @@ const AdminPlans = () => {
             <div>
               <h2 className="text-base sm:text-lg font-semibold text-foreground">{t("admin.plansAndPrices")}</h2>
               <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                Первые {freePlanSettings.freePeriodDays} {freePlanSettings.freePeriodDays === 1 ? 'день' : freePlanSettings.freePeriodDays < 5 ? 'дня' : 'дней'} после регистрации - полный доступ без ограничений
+                Первые {freeDaysNum} {freeDaysLabel} после регистрации - полный доступ без ограничений
               </p>
             </div>
             <Button variant="outline" onClick={() => setIsFreePlanSettingsOpen(true)} size="sm" className="w-full sm:w-auto">
