@@ -229,6 +229,61 @@
     "messagesLabel": "Хабарламалар",
     "storageLabel": "Қойма",
     "achievements": "Жетістіктер",
+    "noAchievements": "Әзірге жетістіктер жоқ",
+    "achievement": {
+      "level": "Деңгей {{current}} / {{max}}",
+      "category": {
+        "reviews": "Пікір саны",
+        "resolved": "Шешілген мәселелер",
+        "responseSpeed": "Жауап жылдамдығы",
+        "activity": "Белсенділік",
+        "quality": "Жұмыс сапасы",
+        "longevity": "Ұзақ мерзімділік"
+      },
+      "reviews": {
+        "level": "Деңгей {{level}}: {{target}} пікір",
+        "description": "Қызметкерлерден {{target}} пікір жинаңыз"
+      },
+      "resolved": {
+        "level": "Деңгей {{level}}: {{target}} шешілген мәселе",
+        "description": "Қызметкерлер көтерген {{target}} мәселені шешіңіз"
+      },
+      "responseSpeed": {
+        "level": "Деңгей {{level}}: {{target}} жылдам жауап",
+        "description": "{{target}} хабарламаға 1 күн ішінде жауап беріңіз"
+      },
+      "activity": {
+        "level": "Белсенділік деңгейі {{level}}",
+        "week": "Белсенділік аптасы",
+        "week.description": "Аптасына кемінде 5 хабарлама алыңыз",
+        "month": "Белсенділік айы",
+        "month.description": "Айына кемінде 10 хабарлама алыңыз",
+        "noComplaintsMonth": "Шағымсыз ай",
+        "noComplaintsMonth.description": "Айды шағымсыз өткізіңіз",
+        "consistent": "Тұрақты белсенділік",
+        "consistent.description": "3 ай қатарынан белсенділік (айына кемінде 5 хабарлама)"
+      },
+      "quality": {
+        "highResolution": "Жоғары шешім пайызы",
+        "highResolution.description": "Барлық мәселелердің {{target}}% шешіңіз",
+        "excellentResolution": "Тамаша шешім пайызы",
+        "excellentResolution.description": "Барлық мәселелердің {{target}}% шешіңіз",
+        "manyPraises": "Көп мақтаулар",
+        "manyPraises.description": "Қызметкерлерден {{target}} мақтау алыңыз",
+        "positiveRatio": "Позитивті кері байланыс",
+        "positiveRatio.description": "{{target}}% позитивті пікір (мақтаулар және ұсыныстар)"
+      },
+      "qualityLevel": {
+        "level": "Сапа деңгейі {{level}}"
+      },
+      "response_speed": {
+        "level": "Жауап жылдамдығы деңгейі {{level}}"
+      },
+      "longevity": {
+        "level": "Деңгей {{level}}: {{target}} ай",
+        "description": "Платформамен {{target}} ай жұмыс істеңіз"
+      }
+    },
     "achievement": {
       "activity": {
         "level": "Белсенділік деңгейі {{level}}"
@@ -280,6 +335,9 @@
     "almostReady": "Дерлік дайын",
     "halfway": "Жарты жолда",
     "remaining": "{{count}} қалды",
+    "trialAccessPeriod": "{{days}} {{daysLabel}} сынақ қолжетімділігі",
+    "trialAccessLabel": "Сынақ қолжетімділігі",
+    "trialAccessFeatures": "Барлық функциялар {{days}} {{daysLabel}} бойы"
     "cultureExcellent": "Сіздің компанияңызда кері байланыс мәдениеті керемет",
     "cultureDeveloping": "Сіздің компанияңызда кері байланыс мәдениеті дамып жатыр",
     "cultureNeedsAttention": "Сіздің компанияңызда кері байланыс мәдениеті назар аударуды қажет етеді",
@@ -308,6 +366,8 @@
     "newPassword": "Жаңа құпия сөз",
     "confirmNewPassword": "Жаңа құпия сөзді растау",
     "passwordChanged": "Құпия сөз сәтті өзгертілді",
+    "showPassword": "Құпия сөзді көрсету",
+    "hidePassword": "Құпия сөзді жасыру",
     "passwordChangeError": "Құпия сөзді өзгерту кезінде қате",
     "passwordRequiredForEmailChange": "Email өзгерту үшін ағымдағы құпия сөзді енгізу қажет",
     "currentPasswordForEmail": "Ағымдағы құпия сөз",

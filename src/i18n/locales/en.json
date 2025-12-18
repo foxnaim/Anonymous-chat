@@ -229,6 +229,61 @@
     "messagesLabel": "Messages",
     "storageLabel": "Storage",
     "achievements": "Achievements",
+    "noAchievements": "No achievements yet",
+    "achievement": {
+      "level": "Level {{current}} of {{max}}",
+      "category": {
+        "reviews": "Number of reviews",
+        "resolved": "Resolved issues",
+        "responseSpeed": "Response speed",
+        "activity": "Activity",
+        "quality": "Quality",
+        "longevity": "Longevity"
+      },
+      "reviews": {
+        "level": "Level {{level}}: {{target}} reviews",
+        "description": "Collect {{target}} reviews from employees"
+      },
+      "resolved": {
+        "level": "Level {{level}}: {{target}} resolved issues",
+        "description": "Resolve {{target}} issues raised by employees"
+      },
+      "responseSpeed": {
+        "level": "Level {{level}}: {{target}} fast responses",
+        "description": "Respond to {{target}} messages within 1 day"
+      },
+      "activity": {
+        "level": "Activity level {{level}}",
+        "week": "Activity week",
+        "week.description": "Get at least 5 messages in a week",
+        "month": "Activity month",
+        "month.description": "Get at least 10 messages in a month",
+        "noComplaintsMonth": "Month without complaints",
+        "noComplaintsMonth.description": "Spend a month with no complaints from employees",
+        "consistent": "Consistent activity",
+        "consistent.description": "3 months in a row with activity (minimum 5 messages per month)"
+      },
+      "quality": {
+        "highResolution": "High resolution rate",
+        "highResolution.description": "Resolve {{target}}% of all issues",
+        "excellentResolution": "Excellent resolution rate",
+        "excellentResolution.description": "Resolve {{target}}% of all issues",
+        "manyPraises": "Many praises",
+        "manyPraises.description": "Receive {{target}} praises from employees",
+        "positiveRatio": "Positive feedback",
+        "positiveRatio.description": "{{target}}% positive feedback (praises and suggestions)"
+      },
+      "qualityLevel": {
+        "level": "Quality level {{level}}"
+      },
+      "response_speed": {
+        "level": "Response speed level {{level}}"
+      },
+      "longevity": {
+        "level": "Level {{level}}: {{target}} months",
+        "description": "Work with the platform for {{target}} months"
+      }
+    },
     "achievement": {
       "activity": {
         "level": "Activity level {{level}}"
@@ -280,6 +335,9 @@
     "almostReady": "Almost ready",
     "halfway": "Halfway",
     "remaining": "{{count}} remaining",
+    "trialAccessPeriod": "{{days}} {{daysLabel}} of trial access",
+    "trialAccessLabel": "Trial access",
+    "trialAccessFeatures": "All features for {{days}} {{daysLabel}}",
     "cultureExcellent": "Feedback culture in your company is excellent",
     "cultureDeveloping": "Feedback culture in your company is developing",
     "cultureNeedsAttention": "Feedback culture in your company needs attention",
@@ -308,6 +366,8 @@
     "newPassword": "New Password",
     "confirmNewPassword": "Confirm New Password",
     "passwordChanged": "Password changed successfully",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "passwordChangeError": "Error changing password",
     "passwordRequiredForEmailChange": "Current password is required to change email",
     "currentPasswordForEmail": "Current Password",

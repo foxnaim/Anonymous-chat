@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { plansService } from "@/lib/query";
 
 const TrialCard = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [freePeriodDays, setFreePeriodDays] = useState<number>(60);
 
   useEffect(() => {
@@ -18,9 +18,17 @@ const TrialCard = () => {
   }, []);
 
   const getDaysText = (days: number) => {
-    if (days === 1) return 'день';
-    if (days < 5) return 'дня';
-    return 'дней';
+    const lang = i18n.language || "ru";
+    if (lang.startsWith("ru")) {
+      if (days === 1) return "день";
+      if (days > 1 && days < 5) return "дня";
+      return "дней";
+    }
+    if (lang.startsWith("kk")) {
+      return days === 1 ? "күн" : "күн";
+    }
+    // default en
+    return days === 1 ? "day" : "days";
   };
 
   return (
@@ -35,10 +43,13 @@ const TrialCard = () => {
         </div>
         <div className="mb-4">
           <p className="text-4xl font-bold text-foreground mb-1">
-            {freePeriodDays} {getDaysText(freePeriodDays)}
+            {t("company.trialAccessPeriod", {
+              days: freePeriodDays,
+              daysLabel: getDaysText(freePeriodDays),
+            })}
           </p>
           <p className="text-sm" style={{ color: 'hsl(var(--accent))' }}>
-            пробного доступа
+            {t("company.trialAccessLabel")}
           </p>
         </div>
         <div className="flex items-start gap-3">
@@ -46,7 +57,10 @@ const TrialCard = () => {
             <FiCheck className="h-3.5 w-3.5" style={{ color: 'hsl(var(--primary))' }} />
           </div>
           <span className="text-sm text-foreground leading-relaxed">
-            Все функции на {freePeriodDays} {getDaysText(freePeriodDays)}
+            {t("company.trialAccessFeatures", {
+              days: freePeriodDays,
+              daysLabel: getDaysText(freePeriodDays),
+            })}
           </span>
         </div>
       </div>
