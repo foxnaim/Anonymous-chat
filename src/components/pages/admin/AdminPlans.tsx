@@ -18,7 +18,10 @@ import { getTranslatedValue } from "@/lib/utils/translations";
 const AdminPlans = () => {
   const { t } = useTranslation();
   const [isFreePlanSettingsOpen, setIsFreePlanSettingsOpen] = useState(false);
-  const [freePlanSettings, setFreePlanSettings] = useState({
+  const [freePlanSettings, setFreePlanSettings] = useState<{
+    messagesLimit: number | "";
+    freePeriodDays: number | "";
+  }>({
     messagesLimit: 10,
     freePeriodDays: 60,
   });
@@ -30,8 +33,8 @@ const AdminPlans = () => {
   useEffect(() => {
     plansService.getFreePlanSettings().then((data) => {
       setFreePlanSettings({
-        messagesLimit: data.messagesLimit || 10,
-        freePeriodDays: data.freePeriodDays || 60,
+        messagesLimit: data.messagesLimit ?? 10,
+        freePeriodDays: data.freePeriodDays ?? 60,
       });
     });
   }, []);
@@ -191,12 +194,13 @@ const AdminPlans = () => {
                       <Input
                         type="number"
                         value={freePlanSettings.messagesLimit}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          const value = e.target.value;
                           setFreePlanSettings({
                             ...freePlanSettings,
-                            messagesLimit: parseInt(e.target.value) || 0,
-                          })
-                        }
+                            messagesLimit: value === "" ? "" : Number(value),
+                          });
+                        }}
                         placeholder="10"
                         min="1"
                         autoComplete="off"
@@ -210,12 +214,13 @@ const AdminPlans = () => {
                       <Input
                         type="number"
                         value={freePlanSettings.freePeriodDays}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          const value = e.target.value;
                           setFreePlanSettings({
                             ...freePlanSettings,
-                            freePeriodDays: parseInt(e.target.value) || 0,
-                          })
-                        }
+                            freePeriodDays: value === "" ? "" : Number(value),
+                          });
+                        }}
                         placeholder={t("admin.unlimitedTimePlaceholder")}
                         min="0"
                         autoComplete="off"
@@ -235,11 +240,22 @@ const AdminPlans = () => {
                     </Button>
                     <Button
                       className="flex-1"
-                      onClick={() => updateFreePlan({
-                        messagesLimit: freePlanSettings.messagesLimit,
-                        storageLimit: 1,
-                        freePeriodDays: freePlanSettings.freePeriodDays,
-                      })}
+                      onClick={() => {
+                        const messagesLimit =
+                          freePlanSettings.messagesLimit === "" || Number.isNaN(Number(freePlanSettings.messagesLimit))
+                            ? 1
+                            : Math.max(1, Number(freePlanSettings.messagesLimit));
+                        const freePeriodDays =
+                          freePlanSettings.freePeriodDays === "" || Number.isNaN(Number(freePlanSettings.freePeriodDays))
+                            ? 0
+                            : Math.max(0, Number(freePlanSettings.freePeriodDays));
+
+                        updateFreePlan({
+                          messagesLimit,
+                          storageLimit: 1,
+                          freePeriodDays,
+                        });
+                      }}
                     >
                       {t("common.save")}
                     </Button>
