@@ -255,6 +255,7 @@
         "description": "Ответьте на {{target}} сообщений в течение 1 дня"
       },
       "activity": {
+        "level": "Уровень активности {{level}}",
         "week": "Неделя активности",
         "week.description": "Получите минимум 5 сообщений за неделю",
         "month": "Месяц активности",
@@ -273,6 +274,12 @@
         "manyPraises.description": "Получите {{target}} похвал от сотрудников",
         "positiveRatio": "Позитивная обратная связь",
         "positiveRatio.description": "{{target}}% положительных отзывов (похвалы и предложения)"
+      },
+      "qualityLevel": {
+        "level": "Уровень качества {{level}}"
+      },
+      "response_speed": {
+        "level": "Уровень скорости ответа {{level}}"
       },
       "longevity": {
         "level": "Уровень {{level}}: {{target}} месяцев",

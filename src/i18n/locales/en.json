@@ -229,6 +229,17 @@
     "messagesLabel": "Messages",
     "storageLabel": "Storage",
     "achievements": "Achievements",
+    "achievement": {
+      "activity": {
+        "level": "Activity level {{level}}"
+      },
+      "quality": {
+        "level": "Quality level {{level}}"
+      },
+      "response_speed": {
+        "level": "Response speed level {{level}}"
+      }
+    },
     "achievementFirst10": "Get first 10 reviews",
     "achievement50": "Get 50 reviews",
     "achievement100": "Get 100 reviews",

@@ -229,6 +229,17 @@
     "messagesLabel": "Хабарламалар",
     "storageLabel": "Қойма",
     "achievements": "Жетістіктер",
+    "achievement": {
+      "activity": {
+        "level": "Белсенділік деңгейі {{level}}"
+      },
+      "quality": {
+        "level": "Сапа деңгейі {{level}}"
+      },
+      "response_speed": {
+        "level": "Жауап жылдамдығы деңгейі {{level}}"
+      }
+    },
     "achievementFirst10": "Алғашқы 10 пікір алу",
     "achievement50": "50 пікір алу",
     "achievement100": "100 пікір алу",
