@@ -337,7 +337,7 @@
     "remaining": "{{count}} қалды",
     "trialAccessPeriod": "{{days}} {{daysLabel}} сынақ қолжетімділігі",
     "trialAccessLabel": "Сынақ қолжетімділігі",
-    "trialAccessFeatures": "Барлық функциялар {{days}} {{daysLabel}} бойы"
+    "trialAccessFeatures": "Барлық функциялар {{days}} {{daysLabel}} бойы",
     "cultureExcellent": "Сіздің компанияңызда кері байланыс мәдениеті керемет",
     "cultureDeveloping": "Сіздің компанияңызда кері байланыс мәдениеті дамып жатыр",
     "cultureNeedsAttention": "Сіздің компанияңызда кері байланыс мәдениеті назар аударуды қажет етеді",
