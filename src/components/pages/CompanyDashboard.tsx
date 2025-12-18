@@ -38,16 +38,12 @@ const CompanyDashboard = () => {
     enabled: !!user?.companyId,
   });
 
-  // Генерация ежедневного пароля на основе даты
+  // Генерация ежедневного пароля на основе даты (UTC, чтобы совпадало с бэкендом)
   const dailyPassword = React.useMemo(() => {
     const today = new Date();
-    const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
-    // Создаем пароль из 10 символов на основе даты
-    const hash = dateStr.split('').reduce((acc, char) => {
-      return ((acc << 5) - acc) + char.charCodeAt(0);
-    }, 0);
-    const password = Math.abs(hash).toString().padStart(10, '0').slice(0, 10);
-    return password;
+    const dateStr = `${today.getUTCFullYear()}${String(today.getUTCMonth() + 1).padStart(2, '0')}${String(today.getUTCDate()).padStart(2, '0')}`;
+    const hash = dateStr.split('').reduce((acc, char) => ((acc << 5) - acc) + char.charCodeAt(0), 0);
+    return Math.abs(hash).toString().padStart(10, '0').slice(0, 10);
   }, []);
 
   // Ссылка для отправки сообщений

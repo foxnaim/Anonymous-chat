@@ -247,7 +247,13 @@ const Welcome = () => {
               className="order-1 lg:order-1 min-w-0"
             >
             <Card className="w-full p-3 sm:p-4 md:p-5 lg:p-6 min-w-0 overflow-hidden">
-            <div className="space-y-3 sm:space-y-4 min-w-0">
+            <form
+              className="space-y-3 sm:space-y-4 min-w-0"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendMessage();
+              }}
+            >
               <div className="text-center space-y-1 min-w-0">
                 <h2 className="text-xl sm:text-2xl font-bold text-foreground break-words">{t("welcome.enterCode")}</h2>
               </div>
@@ -363,9 +369,9 @@ const Welcome = () => {
 
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 min-w-0">
                 <Button
+                  type="submit"
                   size="lg"
                   className="text-sm sm:text-base px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 md:py-4 h-auto flex-1 min-h-[44px] sm:min-h-[48px] min-w-0"
-                  onClick={handleSendMessage}
                   disabled={!validatedCode || !password || isVerifyingPassword}
                 >
                   <FiSend className="mr-2 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
@@ -374,6 +380,7 @@ const Welcome = () => {
                   </span>
                 </Button>
                 <Button
+                  type="button"
                   size="lg"
                   variant="outline"
                   className="text-sm sm:text-base px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 md:py-4 h-auto min-h-[44px] sm:min-h-[48px] flex-shrink-0 whitespace-nowrap"
@@ -384,7 +391,7 @@ const Welcome = () => {
                   <span className="text-sm sm:text-base sm:hidden">Status</span>
                 </Button>
               </div>
-            </div>
+            </form>
           </Card>
             </motion.div>
 
