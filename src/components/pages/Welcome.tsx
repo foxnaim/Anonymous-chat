@@ -166,7 +166,7 @@ const Welcome = () => {
               />
             </Link>
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="hidden sm:block min-w-[140px]">
+              <div className="min-w-[140px]">
                 <LanguageSwitcher />
               </div>
               {(() => {
@@ -207,7 +207,7 @@ const Welcome = () => {
                         <FiChevronDown className="ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuContent align="end" className="w-56 sm:w-48">
                       <DropdownMenuItem onClick={() => setIsLoginModalOpen(true)}>
                         <FiLogIn className="mr-2 h-4 w-4" />
                         <span>{t("welcome.login")}</span>

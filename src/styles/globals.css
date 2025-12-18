@@ -152,15 +152,15 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 
-  /* Fullscreen mode - скрываем элементы браузера без блокировки кликов */
+  /* Fullscreen mode - расширяем рабочую область, но не блокируем скролл */
   html.fullscreen-mode {
-    overflow: hidden;
-    height: 100%;
+    overflow-y: auto;
+    min-height: 100%;
   }
 
   body.fullscreen-mode {
-    overflow: hidden;
-    height: 100vh;
+    overflow-y: auto;
+    min-height: 100vh;
     width: 100vw;
     position: relative;
   }
