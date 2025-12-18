@@ -387,8 +387,7 @@ const Welcome = () => {
                   onClick={() => setIsCheckStatusModalOpen(true)}
                 >
                   <FiCheckCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                  <span className="text-sm sm:text-base hidden sm:inline">{t("welcome.checkStatus")}</span>
-                  <span className="text-sm sm:text-base sm:hidden">Status</span>
+                  <span className="text-sm sm:text-base">{t("welcome.checkStatus")}</span>
                 </Button>
               </div>
             </form>

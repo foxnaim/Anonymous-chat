@@ -36,7 +36,7 @@ const CompanyGrowth = () => {
     }
   };
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden w-full">
+    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden w-full">
       <CompanyHeader />
       <div className="flex flex-col flex-1 overflow-hidden w-full min-h-0">
         <main className="flex-1 px-6 py-4 overflow-hidden w-full flex flex-col min-h-0">

@@ -174,7 +174,7 @@ const CompanyReports = () => {
   };
   
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
       <CompanyHeader />
       <div className="flex flex-col flex-1 overflow-hidden">
         <div className="border-b border-border bg-card flex-shrink-0">

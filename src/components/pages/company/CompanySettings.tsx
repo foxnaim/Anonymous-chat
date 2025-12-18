@@ -257,7 +257,7 @@ const CompanySettings = () => {
     );
   }
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <CompanyHeader />
       <div className="flex flex-col">
         <main className="container flex-1 p-6 space-y-6">
