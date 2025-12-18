@@ -396,7 +396,7 @@ const Welcome = () => {
             </motion.div>
 
             {/* Three-Step Guide Section - Right Side */}
-            <div className="w-full p-3 sm:p-4 md:p-5 order-2 lg:order-2 lg:sticky lg:top-8 flex flex-col h-full min-w-0 overflow-hidden">
+            <div className="w-full p-3 sm:p-4 md:p-5 order-2 lg:order-2 lg:sticky lg:top-8 flex flex-col h-full min-w-0 overflow-hidden mt-4 lg:mt-0">
               <div className="space-y-2 sm:space-y-3 flex-1 min-w-0">
                 <div className="text-center lg:text-left min-w-0">
                   <h3 className="text-base sm:text-lg md:text-xl font-bold text-foreground mb-1 break-words">
