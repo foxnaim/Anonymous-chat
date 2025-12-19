@@ -32,8 +32,17 @@ export const messageService = {
       const queryString = params.toString();
       const response = await apiClient.get<ApiResponse<Message[]>>(`/messages${queryString ? `?${queryString}` : ''}`);
       return response.data;
-    } catch (error) {
-      // При ошибке возвращаем пустой массив
+    } catch (error: any) {
+      // Игнорируем ошибки аутентификации (401/403) - пользователь будет перенаправлен на логин
+      if (error?.status === 401 || error?.status === 403) {
+        // Тихо возвращаем пустой массив, чтобы не показывать ошибку пользователю
+        // Аутентификация обрабатывается на уровне ProtectedRoute
+        return [];
+      }
+      // Для других ошибок также возвращаем пустой массив, но логируем в dev режиме
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Error fetching messages:', error?.message || error);
+      }
       return [];
     }
   },
@@ -152,11 +161,11 @@ export const companyService = {
 
   verifyPassword: async (code: string, password: string): Promise<boolean> => {
     try {
-      const response = await apiClient.post<ApiResponse<{ valid: boolean }>>('/auth/verify-password', {
+      const response = await apiClient.post<ApiResponse<{ isValid: boolean }>>('/auth/verify-password', {
         code,
         password,
       });
-      return response.data.valid;
+      return response.data.isValid;
     } catch {
       return false;
     }

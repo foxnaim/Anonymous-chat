@@ -14,6 +14,7 @@ import { messageService } from "@/lib/query/services";
 import { Message } from "@/types";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { MESSAGE_STATUSES } from "@/lib/utils/constants";
 
 const AdminMessages = () => {
   const { t } = useTranslation();
@@ -23,11 +24,26 @@ const AdminMessages = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { data: messages = [], isLoading, refetch } = useMessages();
   
+  // Функция для нормализации статуса: переводит переведенное значение в значение из БД
+  const normalizeStatus = (status: string): string => {
+    if (status === "all") return "all";
+    // Создаем маппинг переведенных значений на значения из БД
+    const statusMap: Record<string, string> = {
+      [t("checkStatus.new")]: MESSAGE_STATUSES.NEW,
+      [t("checkStatus.inProgress")]: MESSAGE_STATUSES.IN_PROGRESS,
+      [t("checkStatus.resolved")]: MESSAGE_STATUSES.RESOLVED,
+      [t("checkStatus.rejected")]: MESSAGE_STATUSES.REJECTED,
+      [t("checkStatus.spam")]: MESSAGE_STATUSES.SPAM,
+    };
+    return statusMap[status] || status;
+  };
+  
   const filteredMessages = messages.filter((msg) => {
     const matchesSearch = msg.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
       msg.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       msg.companyCode.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || msg.status === statusFilter;
+    const normalizedStatus = normalizeStatus(statusFilter);
+    const matchesStatus = normalizedStatus === "all" || msg.status === normalizedStatus;
     return matchesSearch && matchesStatus;
   });
 
@@ -82,7 +98,7 @@ const AdminMessages = () => {
                     leaveTo="opacity-0"
                   >
                     <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-card border border-border py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                      {["all", t("checkStatus.new"), t("checkStatus.inProgress"), t("checkStatus.resolved")].map((status) => (
+                      {["all", t("checkStatus.new"), t("checkStatus.inProgress"), t("checkStatus.resolved"), t("checkStatus.rejected"), t("checkStatus.spam")].map((status) => (
                         <Listbox.Option
                           key={status}
                           className={({ active }) =>
@@ -118,8 +134,17 @@ const AdminMessages = () => {
               <p className="text-muted-foreground">{t("common.loading")}</p>
             </div>
           ) : (
-            <div className="space-y-3 sm:space-y-4">
-              {filteredMessages.map((message) => (
+            <>
+              <div className="text-sm text-muted-foreground px-2">
+                {t("messages.found")}: {filteredMessages.length} {filteredMessages.length === 1 ? t("messages.message") : t("messages.messages")} {messages.length !== filteredMessages.length && `(${messages.length} ${t("messages.total")})`}
+              </div>
+              <div className="space-y-3 sm:space-y-4">
+                {filteredMessages.length === 0 ? (
+                  <Card className="p-12 text-center">
+                    <p className="text-muted-foreground">{t("messages.noMessagesFound")}</p>
+                  </Card>
+                ) : (
+                  filteredMessages.map((message) => (
                 <Card key={message.id} className="p-4 sm:p-6">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                     <div className="flex-1 space-y-2 sm:space-y-3 w-full min-w-0">
@@ -142,8 +167,10 @@ const AdminMessages = () => {
                     </Button>
                   </div>
                 </Card>
-              ))}
-            </div>
+                  ))
+                )}
+              </div>
+            </>
           )}
         </main>
       </div>

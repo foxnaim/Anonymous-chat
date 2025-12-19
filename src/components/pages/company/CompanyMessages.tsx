@@ -15,6 +15,8 @@ import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import { Message, MessageStatus } from "@/types";
 import { toast } from "sonner";
+import { MESSAGE_STATUSES } from "@/lib/utils/constants";
+
 const CompanyMessages = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -57,10 +59,26 @@ const CompanyMessages = () => {
     enabled: !!company?.code,
   });
   
+  // Функция для нормализации статуса: переводит переведенное значение в значение из БД
+  const normalizeStatus = (status: string): string => {
+    if (status === "all") return "all";
+    // Создаем маппинг переведенных значений на значения из БД
+    const statusMap: Record<string, string> = {
+      [t("checkStatus.new")]: MESSAGE_STATUSES.NEW,
+      [t("checkStatus.inProgress")]: MESSAGE_STATUSES.IN_PROGRESS,
+      [t("checkStatus.resolved")]: MESSAGE_STATUSES.RESOLVED,
+      [t("checkStatus.rejected")]: MESSAGE_STATUSES.REJECTED,
+      [t("checkStatus.spam")]: MESSAGE_STATUSES.SPAM,
+    };
+    return statusMap[status] || status;
+  };
+  
   const filteredMessages = messages.filter((msg) => {
     const matchesSearch = msg.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      msg.id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || msg.status === statusFilter;
+      msg.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      msg.companyCode.toLowerCase().includes(searchQuery.toLowerCase());
+    const normalizedStatus = normalizeStatus(statusFilter);
+    const matchesStatus = normalizedStatus === "all" || msg.status === normalizedStatus;
     const matchesType = typeFilter === "all" || msg.type === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
@@ -226,10 +244,15 @@ const CompanyMessages = () => {
             <div className="text-center py-12">
               <p className="text-muted-foreground">{t("common.loading")}</p>
             </div>
-          ) : filteredMessages.length === 0 ? (
+          ) : (
+            <>
+              <div className="text-sm text-muted-foreground px-2 mb-4">
+                {t("messages.found")}: {filteredMessages.length} {filteredMessages.length === 1 ? t("messages.message") : t("messages.messages")} {messages.length !== filteredMessages.length && `(${messages.length} ${t("messages.total")})`}
+              </div>
+              {filteredMessages.length === 0 ? (
             <Card className="p-12 text-center">
               <FiMessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">{t("messages.noMessages")}</p>
+              <p className="text-muted-foreground">{t("messages.noMessagesFound")}</p>
             </Card>
           ) : (
             <div className="space-y-3 sm:space-y-4">
@@ -270,6 +293,8 @@ const CompanyMessages = () => {
                 </Card>
               ))}
             </div>
+          )}
+            </>
           )}
           </div>
         </div>

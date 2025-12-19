@@ -19,11 +19,13 @@ import {
 } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
-import { useCompany, useCompanyStats, useMessageDistribution, useGroupedAchievements, useGrowthMetrics } from "@/lib/query";
+import { useCompany, useCompanyStats, useMessageDistribution, useGroupedAchievements, useGrowthMetrics, usePlans } from "@/lib/query";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import TrialCard from "@/components/TrialCard";
+import { Badge } from "@/components/ui/badge";
+import { getTranslatedValue } from "@/lib/utils/translations";
 
 const CompanyDashboard = () => {
   const { t } = useTranslation();
@@ -38,12 +40,46 @@ const CompanyDashboard = () => {
     enabled: !!user?.companyId,
   });
 
-  // Генерация ежедневного пароля на основе даты (UTC, чтобы совпадало с бэкендом)
+  const { data: plans = [], isLoading: plansLoading } = usePlans();
+
+  // Функция для проверки, является ли план пробным
+  const isTrialPlan = (planName?: string): boolean => {
+    if (!planName) return false;
+    const trialPlanNames = ['Пробный', 'Trial', 'Бесплатный', 'Free', 'Тегін', 'Сынақ'];
+    return trialPlanNames.includes(planName);
+  };
+
+  // Находим текущий план компании
+  const currentPlan = React.useMemo(() => {
+    if (!company?.plan || !plans.length) return null;
+    return plans.find((p) => {
+      const planName = typeof p.name === "string" ? p.name : getTranslatedValue(p.name);
+      return planName === company.plan || (typeof p.name === "object" && (p.name.ru === company.plan || p.name.en === company.plan || p.name.kk === company.plan));
+    });
+  }, [company?.plan, plans]);
+
+  // Генерация ежедневного буквенно-цифрового пароля на основе даты (UTC, чтобы совпадало с бэкендом)
+  // Пароль автоматически обновляется каждый день
   const dailyPassword = React.useMemo(() => {
     const today = new Date();
     const dateStr = `${today.getUTCFullYear()}${String(today.getUTCMonth() + 1).padStart(2, '0')}${String(today.getUTCDate()).padStart(2, '0')}`;
-    const hash = dateStr.split('').reduce((acc, char) => ((acc << 5) - acc) + char.charCodeAt(0), 0);
-    return Math.abs(hash).toString().padStart(10, '0').slice(0, 10);
+    
+    // Создаем seed на основе даты для детерминированной генерации
+    const seed = dateStr.split('').reduce((acc, char) => ((acc << 5) - acc) + char.charCodeAt(0), 0);
+    
+    // Используем seed для создания псевдослучайной последовательности
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let password = '';
+    let currentSeed = Math.abs(seed);
+    
+    // Генерируем пароль используя seed
+    for (let i = 0; i < 10; i++) {
+      currentSeed = (currentSeed * 1103515245 + 12345) & 0x7fffffff;
+      const index = currentSeed % chars.length;
+      password += chars[index];
+    }
+    
+    return password;
   }, []);
 
   // Ссылка для отправки сообщений
@@ -149,14 +185,64 @@ const CompanyDashboard = () => {
       <div className="flex flex-col flex-1 overflow-hidden w-full min-h-0">
         <main className="flex-1 px-4 sm:px-6 py-4 overflow-y-auto w-full">
           <div className="w-full space-y-4">
-            {statsLoading || distributionLoading || achievementsLoading || growthLoading || companyLoading ? (
+            {statsLoading || distributionLoading || achievementsLoading || growthLoading || companyLoading || plansLoading ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">{t("common.loading")}</p>
               </div>
             ) : (
               <>
-                {/* Trial Card */}
-                <TrialCard />
+                {/* Trial Card - показывается только для пробного периода */}
+                <TrialCard company={company} />
+                
+                {/* Plan Info Card - показывается только если не пробный период */}
+                {company && !isTrialPlan(company.plan) && currentPlan && (
+                  <Card className="p-6 border-border shadow-lg relative overflow-hidden bg-card">
+                    <div className="absolute top-0 right-0 w-20 h-20 rounded-full -mr-10 -mt-10 opacity-10 bg-primary"></div>
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h3 className="text-lg font-bold text-foreground mb-2">{t("company.currentPlan")}</h3>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-sm">
+                              {getTranslatedValue(currentPlan.name)}
+                            </Badge>
+                            {company.trialEndDate && (
+                              <Badge className="bg-primary text-white text-xs">
+                                {t("company.planEnds")} {new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
+                                  day: "numeric",
+                                  month: "long",
+                                  year: "numeric"
+                                })}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-3xl font-bold mb-1" style={{ color: 'hsl(var(--primary))' }}>
+                            {currentPlan.price === 0 ? t("common.free") : `${currentPlan.price} ₸`}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {t("admin.perMonth")}
+                          </p>
+                        </div>
+                      </div>
+                      {company.trialEndDate && (
+                        <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+                          <p className="text-sm font-medium text-foreground mb-1">
+                            {t("company.planActiveUntil")}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric"
+                            })}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                )}
                 
                 {/* Company Code, Link and Password Block */}
                 {company && (

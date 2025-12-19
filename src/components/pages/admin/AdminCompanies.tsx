@@ -325,11 +325,11 @@ const AdminCompanies = () => {
       company.adminEmail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       company.code.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const status = company.status.toLowerCase();
+    // Сравниваем напрямую с реальными значениями статусов из БД, а не с переводами
     const matchesStatus =
       statusFilter === "all" ||
-      (statusFilter === "active" && status === t("admin.active").toLowerCase()) ||
-      (statusFilter === "blocked" && status === t("admin.blocked").toLowerCase());
+      (statusFilter === "active" && company.status === COMPANY_STATUS.ACTIVE) ||
+      (statusFilter === "blocked" && company.status === COMPANY_STATUS.BLOCKED);
 
     const matchesPlan =
       planFilter === "all" || company.plan === planFilter;

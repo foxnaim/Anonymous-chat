@@ -6,8 +6,20 @@ import { FiCheck } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { plansService } from "@/lib/query";
+import { Company } from "@/types";
 
-const TrialCard = () => {
+interface TrialCardProps {
+  company?: Company | null;
+}
+
+// Функция для проверки, является ли план пробным
+const isTrialPlan = (planName?: string): boolean => {
+  if (!planName) return false;
+  const trialPlanNames = ['Пробный', 'Trial', 'Бесплатный', 'Free', 'Тегін', 'Сынақ'];
+  return trialPlanNames.includes(planName);
+};
+
+const TrialCard = ({ company }: TrialCardProps) => {
   const { t, i18n } = useTranslation();
   const [freePeriodDays, setFreePeriodDays] = useState<number>(60);
 
@@ -30,6 +42,11 @@ const TrialCard = () => {
     // default en
     return days === 1 ? "day" : "days";
   };
+
+  // Скрываем карточку, если компания не на пробном периоде
+  if (!company || !isTrialPlan(company.plan)) {
+    return null;
+  }
 
   return (
     <Card className="p-6 border-border shadow-lg relative overflow-hidden bg-card">

@@ -81,8 +81,11 @@ export default function RootLayout({
                   'failed to load resource',
                   'cannot read properties',
                   'reading \'control\'',
+                  'reading "control"',
                   'permissions-policy',
-                  'browsing-topics'
+                  'browsing-topics',
+                  'unexpected identifier',
+                  'unexpected token'
                 ];
                 
                 const isExtError = function(msg, src) {
@@ -94,7 +97,12 @@ export default function RootLayout({
                     return true;
                   }
                   // Дополнительная проверка для ошибок с 'control' в content_script.js
-                  if (text.includes('control') && (text.includes('content_script') || text.includes('undefined'))) {
+                  if (text.includes('control') && (text.includes('content_script') || text.includes('undefined') || text.includes('unexpected'))) {
+                    return true;
+                  }
+                  // Проверка на ошибки синтаксиса в расширениях
+                  if ((text.includes('unexpected identifier') || text.includes('unexpected token')) && 
+                      (text.includes('content_script') || text.includes('chrome-extension'))) {
                     return true;
                   }
                   return false;

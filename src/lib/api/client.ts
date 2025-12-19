@@ -107,6 +107,17 @@ class ApiClient {
           }
         } catch (parseError) {
           // Если не удалось распарсить JSON, используем стандартное сообщение
+          // Для 403 может быть проблема с CORS или аутентификацией
+          if (response.status === 403) {
+            errorMessage = 'Access forbidden. Please check your authentication.';
+            errorCode = 'FORBIDDEN';
+          } else if (response.status === 401) {
+            errorMessage = 'Authentication required. Please log in.';
+            errorCode = 'UNAUTHORIZED';
+          } else if (response.status === 429) {
+            errorMessage = 'Too many requests. Please try again later.';
+            errorCode = 'RATE_LIMIT';
+          }
         }
 
         const error: ApiError = {
