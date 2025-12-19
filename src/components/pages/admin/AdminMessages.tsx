@@ -11,7 +11,7 @@ import { FiSearch, FiEye, FiCheckCircle, FiX, FiChevronDown, FiCheck } from "rea
 import { AdminHeader } from "@/components/AdminHeader";
 import { useMessages } from "@/lib/query";
 import { messageService } from "@/lib/query/services";
-import { Message } from "@/types";
+import { Message, MessageStatus } from "@/types";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { MESSAGE_STATUSES } from "@/lib/utils/constants";
@@ -61,6 +61,23 @@ const AdminMessages = () => {
       refetch();
     } catch (error) {
       toast.error(t("admin.moderationError"));
+    }
+  };
+
+  const getStatusColor = (status: MessageStatus) => {
+    switch (status) {
+      case "Новое":
+        return "bg-accent text-accent-foreground";
+      case "В работе":
+        return "bg-secondary text-secondary-foreground";
+      case "Решено":
+        return "bg-success text-success-foreground";
+      case "Отклонено":
+        return "bg-muted text-muted-foreground";
+      case "Спам":
+        return "bg-destructive text-destructive-foreground";
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -208,10 +225,27 @@ const AdminMessages = () => {
                         <p className="text-xs sm:text-sm text-muted-foreground break-all">ID: {selectedMessage.id}</p>
                         <p className="text-xs sm:text-sm text-muted-foreground">{t("admin.companyName")}: {selectedMessage.companyCode}</p>
                         <p className="text-xs sm:text-sm text-muted-foreground">{t("messages.type")}: {selectedMessage.type}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs sm:text-sm text-muted-foreground">{t("checkStatus.status")}:</p>
+                          <Badge className={`${getStatusColor(selectedMessage.status)} text-xs`}>
+                            {selectedMessage.status}
+                          </Badge>
+                        </div>
                       </div>
-                      <div className="bg-muted p-3 sm:p-4 rounded-lg">
-                        <p className="text-sm sm:text-base text-foreground whitespace-pre-wrap break-words">{selectedMessage.content}</p>
+                      <div className="space-y-2">
+                        <p className="text-xs sm:text-sm font-semibold text-foreground">{t("sendMessage.message")}:</p>
+                        <div className="bg-muted p-3 sm:p-4 rounded-lg">
+                          <p className="text-sm sm:text-base text-foreground whitespace-pre-wrap break-words">{selectedMessage.content}</p>
+                        </div>
                       </div>
+                      {selectedMessage.companyResponse && (
+                        <div className="space-y-2">
+                          <p className="text-xs sm:text-sm font-semibold text-foreground">{t("checkStatus.companyResponse")}:</p>
+                          <div className="bg-muted p-3 sm:p-4 rounded-lg border border-border">
+                            <p className="text-sm sm:text-base text-foreground whitespace-pre-wrap break-words">{selectedMessage.companyResponse}</p>
+                          </div>
+                        </div>
+                      )}
                       <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                         <Button
                           variant="outline"

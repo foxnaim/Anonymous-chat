@@ -60,6 +60,28 @@ const CompanyDashboard = () => {
 
   // Генерация ежедневного буквенно-цифрового пароля на основе даты (UTC, чтобы совпадало с бэкендом)
   // Пароль автоматически обновляется каждый день
+  // Используем текущую дату как зависимость, чтобы пароль пересчитывался при смене дня
+  const currentDate = React.useMemo(() => {
+    const today = new Date();
+    return `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, '0')}-${String(today.getUTCDate()).padStart(2, '0')}`;
+  }, []);
+
+  // Обновляем дату каждый день через интервал
+  const [dateKey, setDateKey] = React.useState(currentDate);
+  
+  React.useEffect(() => {
+    // Проверяем изменение даты каждую минуту (для надежности)
+    const interval = setInterval(() => {
+      const today = new Date();
+      const newDate = `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, '0')}-${String(today.getUTCDate()).padStart(2, '0')}`;
+      if (newDate !== dateKey) {
+        setDateKey(newDate);
+      }
+    }, 60000); // Проверяем каждую минуту
+
+    return () => clearInterval(interval);
+  }, [dateKey]);
+
   const dailyPassword = React.useMemo(() => {
     const today = new Date();
     const dateStr = `${today.getUTCFullYear()}${String(today.getUTCMonth() + 1).padStart(2, '0')}${String(today.getUTCDate()).padStart(2, '0')}`;
@@ -80,7 +102,7 @@ const CompanyDashboard = () => {
     }
     
     return password;
-  }, []);
+  }, [dateKey]); // Зависимость от даты - пароль пересчитывается при смене дня
 
   // Ссылка для отправки сообщений
   const shareLink = React.useMemo(() => {
