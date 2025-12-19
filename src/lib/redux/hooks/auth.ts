@@ -29,6 +29,11 @@ export const useAuth = () => {
     try {
       const result = await dispatch(loginAsync({ email, password }));
       if (loginAsync.fulfilled.match(result)) {
+        // Переподключаем WebSocket с новым токеном после успешного логина
+        if (typeof window !== 'undefined') {
+          const { reconnectSocket } = require('../websocket/socket');
+          reconnectSocket();
+        }
         return { success: true, user: result.payload };
       }
       return { success: false };
@@ -49,7 +54,15 @@ export const useAuth = () => {
       const result = await dispatch(
         registerAsync({ email, password, name, role, companyName, companyCode })
       );
-      return registerAsync.fulfilled.match(result);
+      if (registerAsync.fulfilled.match(result)) {
+        // Переподключаем WebSocket с новым токеном после успешной регистрации
+        if (typeof window !== 'undefined') {
+          const { reconnectSocket } = require('../websocket/socket');
+          reconnectSocket();
+        }
+        return true;
+      }
+      return false;
     } catch {
       return false;
     }
@@ -58,6 +71,12 @@ export const useAuth = () => {
   const handleLogout = () => {
     // Очищаем Redux state немедленно (синхронно)
     dispatch(logout());
+    
+    // Отключаем WebSocket при выходе
+    if (typeof window !== 'undefined') {
+      const { disconnectSocket } = require('../websocket/socket');
+      disconnectSocket();
+    }
     
     // Все остальное делаем асинхронно, чтобы не блокировать UI
     if (typeof window !== 'undefined') {

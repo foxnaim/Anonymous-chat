@@ -9,26 +9,44 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 let socket: Socket | null = null;
 
-export const getSocket = (): Socket | null => {
+export const getSocket = (forceReconnect = false): Socket | null => {
   if (typeof window === 'undefined') {
     return null;
   }
 
-  if (socket?.connected) {
-    return socket;
+  // Если нужно принудительно переподключиться (например, после логина)
+  if (forceReconnect && socket) {
+    disconnectSocket();
+  }
+
+  // Если уже подключен и не требуется переподключение, проверяем токен
+  if (socket?.connected && !forceReconnect) {
+    const currentToken = getToken();
+    // Если токен изменился, переподключаемся
+    if (!currentToken || (socket.auth as { token?: string })?.token !== currentToken) {
+      disconnectSocket();
+    } else {
+      return socket;
+    }
   }
 
   const token = getToken();
 
+  // Если нет токена, не создаем подключение
+  if (!token) {
+    return null;
+  }
+
   socket = io(API_URL, {
     auth: {
-      token: token || undefined,
+      token: token,
     },
     transports: ['websocket', 'polling'],
     reconnection: true,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
     reconnectionAttempts: 5,
+    autoConnect: true,
   });
 
   socket.on('connect', () => {
@@ -55,6 +73,9 @@ export const disconnectSocket = (): void => {
 
 export const reconnectSocket = (): void => {
   disconnectSocket();
-  getSocket();
+  // Небольшая задержка перед переподключением, чтобы токен успел сохраниться
+  setTimeout(() => {
+    getSocket(true);
+  }, 100);
 };
 

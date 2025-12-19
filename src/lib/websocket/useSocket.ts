@@ -64,14 +64,18 @@ export const useSocketMessages = (companyCode?: string | null) => {
   }, []);
 
   useEffect(() => {
-    const socket = getSocket();
+    // Переподключаемся при изменении companyCode или при монтировании
+    const socket = getSocket(false);
     if (!socket) return;
 
     // Обработчик нового сообщения
     const handleNewMessage = (message: Message) => {
-      // Обновляем кэш React Query
+      console.log('Received new message via WebSocket:', message);
+      
+      // Обновляем кэш React Query для текущего фильтра (companyCode или все для админа)
+      const queryKey = [...queryKeys.messages(companyCode || undefined)];
       queryClient.setQueryData<Message[]>(
-        [...queryKeys.messages(companyCode || undefined)],
+        queryKey,
         (old = []) => {
           // Проверяем, нет ли уже такого сообщения
           const exists = old.some((m) => m.id === message.id);
@@ -82,13 +86,27 @@ export const useSocketMessages = (companyCode?: string | null) => {
           return [message, ...old];
         }
       );
+      
+      // Также обновляем кэш для всех сообщений (для админов)
+      if (!companyCode) {
+        queryClient.setQueryData<Message[]>(
+          queryKeys.messages(undefined),
+          (old = []) => {
+            const exists = old.some((m) => m.id === message.id);
+            if (exists) {
+              return old.map((m) => (m.id === message.id ? message : m));
+            }
+            return [message, ...old];
+          }
+        );
+      }
 
       // Инвалидируем другие связанные запросы
       queryClient.invalidateQueries({ queryKey: ['stats'] });
       queryClient.invalidateQueries({ queryKey: ['growth-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['achievements'] });
 
-      // Показываем уведомление, если разрешено
+      // Показываем уведомление браузера, если разрешено и вкладка неактивна
       if (notificationPermissionRef.current && document.hidden) {
         const messageType = message.type === 'complaint' 
           ? t('sendMessage.complaint') 
@@ -101,23 +119,39 @@ export const useSocketMessages = (companyCode?: string | null) => {
           {
             body: `${messageType}: ${message.content.substring(0, 100)}${message.content.length > 100 ? '...' : ''}`,
             tag: `message-${message.id}`,
+            requireInteraction: false,
           }
         );
       }
 
-      // Показываем toast уведомление
-      toast.success(t('notifications.newMessageReceived') || 'Получено новое сообщение');
+      // Показываем toast уведомление всегда (даже если вкладка активна)
+      toast.success(t('notifications.newMessageReceived') || 'Получено новое сообщение', {
+        duration: 3000,
+      });
     };
 
     // Обработчик обновления сообщения
     const handleMessageUpdate = (message: Message) => {
-      // Обновляем кэш React Query
+      console.log('Received message update via WebSocket:', message);
+      
+      // Обновляем кэш React Query для текущего фильтра
+      const queryKey = [...queryKeys.messages(companyCode || undefined)];
       queryClient.setQueryData<Message[]>(
-        [...queryKeys.messages(companyCode || undefined)],
+        queryKey,
         (old = []) => {
           return old.map((m) => (m.id === message.id ? message : m));
         }
       );
+      
+      // Также обновляем кэш для всех сообщений (для админов)
+      if (!companyCode) {
+        queryClient.setQueryData<Message[]>(
+          queryKeys.messages(undefined),
+          (old = []) => {
+            return old.map((m) => (m.id === message.id ? message : m));
+          }
+        );
+      }
 
       // Обновляем отдельное сообщение в кэше
       queryClient.setQueryData(queryKeys.message(message.id), message);
