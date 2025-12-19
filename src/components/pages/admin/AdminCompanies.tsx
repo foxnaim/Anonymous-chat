@@ -131,23 +131,15 @@ const AdminCompanies = () => {
       toast.success(t("admin.companyCreated") || "Компания создана");
     },
     onError: (error: any) => {
-      // Получаем сообщение об ошибке с бэкенда (проверяем разные возможные пути)
-      // API возвращает ошибку в формате: { message: string, status: number, code?: string }
-      let backendMessage = "";
+      // Получаем сообщение об ошибке с бэкенда
+      // apiClient выбрасывает ApiError с полями: { message, status, code }
+      let backendMessage = error?.message || "";
       
-      // Проверяем все возможные пути к сообщению об ошибке
-      if (error?.message) {
-        backendMessage = error.message;
-      } else if (error?.response?.data?.error?.message) {
-        backendMessage = error.response.data.error.message;
-      } else if (error?.response?.data?.message) {
-        backendMessage = error.response.data.message;
-      } else if (typeof error === 'string') {
-        backendMessage = error;
-      }
-      
-      console.log("Company creation error full:", error);
-      console.log("Backend message extracted:", backendMessage);
+      // Логируем для отладки
+      console.error("Company creation error:", error);
+      console.error("Error message:", backendMessage);
+      console.error("Error status:", error?.status);
+      console.error("Full error object:", JSON.stringify(error, null, 2));
       
       // Маппинг сообщений об ошибках на ключи переводов
       let errorMessage = "";
@@ -170,18 +162,19 @@ const AdminCompanies = () => {
         errorMessage = t("auth.passwordMinLength", { length: 8 });
       } else if (backendMessage.includes("Access denied")) {
         errorMessage = t("auth.accessDenied");
-      } else if (backendMessage) {
+      } else if (backendMessage && backendMessage !== "HTTP error! status: 409") {
         // Если есть сообщение, но нет перевода, показываем оригинальное
         errorMessage = backendMessage;
       } else {
         // Если сообщение не найдено, но есть ошибка 409, показываем общее сообщение о конфликте
-        if (error?.status === 409 || error?.response?.status === 409) {
-          errorMessage = t("auth.userEmailAlreadyExists") || "Данные уже существуют. Проверьте уникальность имени, email и кода компании.";
+        if (error?.status === 409) {
+          errorMessage = "Данные уже существуют. Проверьте уникальность имени, email и кода компании.";
         } else {
           errorMessage = t("common.error");
         }
       }
       
+      // Всегда показываем toast с ошибкой
       toast.error(errorMessage);
     },
   });
@@ -376,10 +369,15 @@ const AdminCompanies = () => {
     }
 
     // Добавляем обязательное поле status при создании компании
-    await createCompany({
-      ...newCompany,
-      status: selectedStatus,
-    });
+    try {
+      await createCompany({
+        ...newCompany,
+        status: selectedStatus,
+      });
+    } catch (error) {
+      // Ошибка уже обработана в onError, но на всякий случай логируем
+      console.error("Error creating company:", error);
+    }
   };
 
   const handleEdit = async () => {
