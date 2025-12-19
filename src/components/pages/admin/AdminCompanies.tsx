@@ -132,30 +132,39 @@ const AdminCompanies = () => {
     },
     onError: (error: any) => {
       // Получаем сообщение об ошибке с бэкенда (проверяем разные возможные пути)
-      const backendMessage = 
-        error?.message || 
-        error?.response?.data?.error?.message || 
-        error?.response?.data?.message || 
-        "";
+      // API возвращает ошибку в формате: { message: string, status: number, code?: string }
+      let backendMessage = "";
       
-      console.log("Company creation error:", error);
-      console.log("Backend message:", backendMessage);
+      // Проверяем все возможные пути к сообщению об ошибке
+      if (error?.message) {
+        backendMessage = error.message;
+      } else if (error?.response?.data?.error?.message) {
+        backendMessage = error.response.data.error.message;
+      } else if (error?.response?.data?.message) {
+        backendMessage = error.response.data.message;
+      } else if (typeof error === 'string') {
+        backendMessage = error;
+      }
+      
+      console.log("Company creation error full:", error);
+      console.log("Backend message extracted:", backendMessage);
       
       // Маппинг сообщений об ошибках на ключи переводов
       let errorMessage = "";
+      const messageLower = backendMessage.toLowerCase();
       
       // Проверяем конкретные типы ошибок уникальности в порядке приоритета
-      if (backendMessage.includes("Company with this code already exists") || backendMessage.toLowerCase().includes("code already exists")) {
+      if (backendMessage.includes("Company with this code already exists") || messageLower.includes("code already exists")) {
         errorMessage = t("auth.companyCodeAlreadyExists");
-      } else if (backendMessage.includes("Company with this name already exists") || backendMessage.toLowerCase().includes("name already exists") && backendMessage.toLowerCase().includes("company")) {
+      } else if (backendMessage.includes("Company with this name already exists") || (messageLower.includes("name already exists") && messageLower.includes("company"))) {
         errorMessage = t("auth.companyNameAlreadyExists");
-      } else if (backendMessage.includes("Company with this email already exists") || (backendMessage.toLowerCase().includes("email already exists") && backendMessage.toLowerCase().includes("company"))) {
+      } else if (backendMessage.includes("Company with this email already exists") || (messageLower.includes("email already exists") && messageLower.includes("company"))) {
         errorMessage = t("auth.companyEmailAlreadyExists");
-      } else if (backendMessage.includes("Admin with this email already exists") || (backendMessage.toLowerCase().includes("email already exists") && backendMessage.toLowerCase().includes("admin"))) {
+      } else if (backendMessage.includes("Admin with this email already exists") || (messageLower.includes("email already exists") && messageLower.includes("admin"))) {
         errorMessage = t("auth.adminEmailAlreadyExists");
-      } else if (backendMessage.includes("User with this email already exists") || (backendMessage.toLowerCase().includes("user already exists") || backendMessage.toLowerCase().includes("email already exists"))) {
+      } else if (backendMessage.includes("User with this email already exists") || messageLower.includes("user already exists") || (messageLower.includes("email already exists") && !messageLower.includes("company") && !messageLower.includes("admin"))) {
         errorMessage = t("auth.userEmailAlreadyExists");
-      } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.toLowerCase().includes("required")) {
+      } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || messageLower.includes("required")) {
         errorMessage = t("auth.companyFieldsRequired");
       } else if (backendMessage.includes("Password must be at least 8 characters") || backendMessage.includes("Password must be at least 6 characters")) {
         errorMessage = t("auth.passwordMinLength", { length: 8 });
@@ -165,7 +174,12 @@ const AdminCompanies = () => {
         // Если есть сообщение, но нет перевода, показываем оригинальное
         errorMessage = backendMessage;
       } else {
-        errorMessage = t("common.error");
+        // Если сообщение не найдено, но есть ошибка 409, показываем общее сообщение о конфликте
+        if (error?.status === 409 || error?.response?.status === 409) {
+          errorMessage = t("auth.userEmailAlreadyExists") || "Данные уже существуют. Проверьте уникальность имени, email и кода компании.";
+        } else {
+          errorMessage = t("common.error");
+        }
       }
       
       toast.error(errorMessage);
