@@ -164,7 +164,7 @@ const AdminCompanies = () => {
       if (isViewOpen) {
         setIsViewOpen(false);
       }
-      toast.success(t("admin.deleteCompany") || "Компания удалена");
+      toast.success(t("admin.companyDeleted") || "Компания удалена");
     },
     onError: (error: any) => {
       // Получаем сообщение об ошибке с бэкенда

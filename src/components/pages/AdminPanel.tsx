@@ -95,7 +95,7 @@ const AdminPanel = () => {
       setIsViewOpen(false);
       setIsDeleteDialogOpen(false);
       setSelectedCompanyId(null);
-      toast.success(t("admin.deleteCompany") || "Компания удалена");
+      toast.success(t("admin.companyDeleted") || "Компания удалена");
     },
     onError: (error: Error) => {
       toast.error(error.message || t("common.error"));
