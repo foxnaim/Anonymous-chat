@@ -97,7 +97,6 @@ const AdminCompanies = () => {
     code: "",
     password: "",
     plan: "Пробный" as PlanType,
-    employees: 0,
     messagesLimit: 10,
     storageLimit: 1,
   });
@@ -108,7 +107,6 @@ const AdminCompanies = () => {
     code: "",
     status: COMPANY_STATUS.ACTIVE as CompanyStatus,
     plan: "Пробный" as PlanType,
-    employees: 0,
     messagesLimit: 10,
     storageLimit: 1,
   });
@@ -316,7 +314,6 @@ const AdminCompanies = () => {
       code: generateCode(),
       password: "",
       plan: "Пробный",
-      employees: 0,
       messagesLimit: 10,
       storageLimit: 1,
     });
@@ -387,7 +384,7 @@ const AdminCompanies = () => {
     // Используем mutateAsync - ошибка будет обработана в onError
     await createCompany({
       ...newCompany,
-      status: selectedStatus,
+      status: COMPANY_STATUS.ACTIVE,
     }).catch((error) => {
       // Дополнительная обработка, если onError не сработал
       // onError должен обработать, но на всякий случай показываем общую ошибку
@@ -439,7 +436,6 @@ const AdminCompanies = () => {
       code: company.code,
       status: company.status,
       plan: company.plan as PlanType,
-      employees: company.employees || 0,
       messagesLimit: company.messagesLimit || 10,
       storageLimit: company.storageLimit || 1,
     });
@@ -482,14 +478,13 @@ const AdminCompanies = () => {
   }, [t]);
 
   const exportToCSV = useCallback(() => {
-    const headers = ["Название", "Код", "Email", "Статус", "План", "Сотрудники", "Сообщений", "Регистрация"];
+    const headers = ["Название", "Код", "Email", "Статус", "План", "Сообщений", "Регистрация"];
     const rows = filteredCompanies.map((c) => [
       c.name,
       c.code,
       c.adminEmail || "",
       c.status,
       c.plan,
-      c.employees || 0,
       c.messages || 0,
       c.registered,
     ]);
@@ -647,9 +642,6 @@ const AdminCompanies = () => {
                       {t("admin.plan")}
                     </th>
                     <th className="p-4 text-left text-sm font-medium text-muted-foreground">
-                      {t("admin.employees")}
-                    </th>
-                    <th className="p-4 text-left text-sm font-medium text-muted-foreground">
                       {t("admin.totalMessages")}
                     </th>
                     <th className="p-4 text-left text-sm font-medium text-muted-foreground">
@@ -663,13 +655,13 @@ const AdminCompanies = () => {
                 <tbody>
                   {isLoading ? (
                     <tr>
-                      <td colSpan={9} className="p-8 text-center text-muted-foreground">
+                      <td colSpan={8} className="p-8 text-center text-muted-foreground">
                         {t("admin.loadingCompanies")}
                       </td>
                     </tr>
                   ) : paginatedCompanies.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="p-8 text-center text-muted-foreground">
+                      <td colSpan={8} className="p-8 text-center text-muted-foreground">
                         {t("admin.companiesNotFound")}
                       </td>
                     </tr>
@@ -713,7 +705,6 @@ const AdminCompanies = () => {
                         <td className="p-4">
                           <Badge variant="outline">{company.plan}</Badge>
                         </td>
-                        <td className="p-4 text-sm">{company.employees || 0}</td>
                         <td className="p-4 text-sm">{company.messages || 0}</td>
                         <td className="p-4 text-sm text-muted-foreground">
                           {company.registered}
@@ -945,20 +936,6 @@ const AdminCompanies = () => {
                       minLength={8}
                     />
                   </div>
-                  <div>
-                    <Label>{t("admin.employees")}</Label>
-                    <Input
-                      type="number"
-                      value={newCompany.employees}
-                      onChange={(e) =>
-                        setNewCompany({
-                          ...newCompany,
-                          employees: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      min={0}
-                    />
-                  </div>
                   {newCompany.plan !== "Пробный" && (
                     <>
                       <div>
@@ -1125,20 +1102,6 @@ const AdminCompanies = () => {
                     </div>
                   </div>
                   <div>
-                    <Label>{t("admin.employees")}</Label>
-                    <Input
-                      type="number"
-                      value={editCompany.employees}
-                      onChange={(e) =>
-                        setEditCompany({
-                          ...editCompany,
-                          employees: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      min={0}
-                    />
-                  </div>
-                  <div>
                     <Label>{t("admin.messagesLimit")}</Label>
                     <Input
                       type="number"
@@ -1268,13 +1231,7 @@ const AdminCompanies = () => {
                         <div className="text-lg">{selectedCompany.registered}</div>
                       </Card>
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <Card className="p-4">
-                        <div className="text-sm text-muted-foreground mb-1">
-                          {t("admin.employees")}
-                        </div>
-                        <div className="text-2xl font-bold">{selectedCompany.employees || 0}</div>
-                      </Card>
+                    <div className="grid grid-cols-2 gap-4">
                       <Card className="p-4">
                         <div className="text-sm text-muted-foreground mb-1">
                           {t("admin.totalMessages")}

@@ -75,7 +75,6 @@ const AdminPanel = () => {
     code: "",
     password: "",
     plan: "Пробный" as (typeof PLAN_OPTIONS)[number],
-    employees: 0,
   });
 
   const { data: companies = [], isLoading, refetch } = useCompanies();
@@ -502,10 +501,6 @@ const AdminPanel = () => {
 
                 <div className="pt-4 border-t border-border space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">{t("admin.employees")}</span>
-                    <span className="text-sm font-semibold">{selectedCompanyData.employees}</span>
-                  </div>
-                  <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">{t("admin.totalMessages")}</span>
                     <span className="text-sm font-semibold">{selectedCompanyData.messages}</span>
                   </div>
@@ -541,7 +536,7 @@ const AdminPanel = () => {
                     >
                       {t("admin.blockCompany")}
                     </Button>
-                  ) : (
+                  ) : selectedCompanyData.status === t("admin.blocked") ? (
                     <Button
                       className="w-full"
                       onClick={async () => {
@@ -556,7 +551,7 @@ const AdminPanel = () => {
                     >
                       {t("admin.activateCompany")}
                     </Button>
-                  )}
+                  ) : null}
                   <Button
                     className="w-full"
                     variant="destructive"
@@ -591,24 +586,6 @@ const AdminPanel = () => {
                       style={{ 
                         width: selectedCompanyData?.messagesLimit 
                           ? `${Math.min(100, Math.round(((selectedCompanyData.messagesThisMonth || 0) / selectedCompanyData.messagesLimit) * 100))}%` 
-                          : "0%" 
-                      }}
-                    ></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-muted-foreground">{t("admin.storageUsed")}</span>
-                    <span className="font-semibold">
-                      {selectedCompanyData?.storageUsed ?? "—"} / {selectedCompanyData?.storageLimit ?? "—"} GB
-                    </span>
-                  </div>
-                  <div className="h-2 bg-background rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-secondary" 
-                      style={{ 
-                        width: selectedCompanyData?.storageLimit 
-                          ? `${Math.min(100, Math.round(((selectedCompanyData.storageUsed || 0) / selectedCompanyData.storageLimit) * 100))}%` 
                           : "0%" 
                       }}
                     ></div>
@@ -726,10 +703,6 @@ const AdminPanel = () => {
 
                             <div className="pt-4 border-t border-border space-y-3">
                               <div className="flex justify-between">
-                                <span className="text-sm text-muted-foreground">{t("admin.employees")}</span>
-                                <span className="text-sm font-semibold">{selectedCompanyData.employees}</span>
-                              </div>
-                              <div className="flex justify-between">
                                 <span className="text-sm text-muted-foreground">{t("admin.totalMessages")}</span>
                                 <span className="text-sm font-semibold">{selectedCompanyData.messages}</span>
                               </div>
@@ -742,10 +715,6 @@ const AdminPanel = () => {
 
                           <div className="space-y-3">
                             <h5 className="text-sm font-semibold text-foreground">{t("admin.actions")}</h5>
-                            <Button className="w-full" variant="outline">
-                              <FiEye className="h-4 w-4 mr-2" />
-                              {t("admin.openPanel")}
-                            </Button>
                             
                             {selectedCompanyData.status === t("admin.active") ? (
                               <Button
@@ -810,24 +779,6 @@ const AdminPanel = () => {
                                     style={{ 
                                       width: selectedCompanyData?.messagesLimit 
                                         ? `${Math.min(100, Math.round(((selectedCompanyData.messagesThisMonth || 0) / selectedCompanyData.messagesLimit) * 100))}%` 
-                                        : "0%" 
-                                    }}
-                                  ></div>
-                                </div>
-                              </div>
-                              <div>
-                                <div className="flex justify-between text-sm mb-1">
-                                  <span className="text-muted-foreground">{t("admin.storageUsed")}</span>
-                                  <span className="font-semibold">
-                                    {selectedCompanyData?.storageUsed ?? "—"} / {selectedCompanyData?.storageLimit ?? "—"} GB
-                                  </span>
-                                </div>
-                                <div className="h-2 bg-background rounded-full overflow-hidden">
-                                  <div 
-                                    className="h-full bg-secondary" 
-                                    style={{ 
-                                      width: selectedCompanyData?.storageLimit 
-                                        ? `${Math.min(100, Math.round(((selectedCompanyData.storageUsed || 0) / selectedCompanyData.storageLimit) * 100))}%` 
                                         : "0%" 
                                     }}
                                   ></div>
@@ -966,7 +917,7 @@ const AdminPanel = () => {
                         }
                         await createCompany({
                           ...newCompany,
-                          status: COMPANY_STATUS.TRIAL, // По умолчанию "Пробная" для новых компаний
+                          status: COMPANY_STATUS.ACTIVE, // По умолчанию "Активна" для новых компаний
                           messagesLimit: 100,
                           storageLimit: 10,
                         });
@@ -976,7 +927,6 @@ const AdminPanel = () => {
                           code: generateCode(),
                           password: "",
                           plan: "Пробный",
-                          employees: 0,
                         });
                       }}
                       disabled={isCreating}
@@ -1087,12 +1037,6 @@ const AdminPanel = () => {
                               {selectedCompanyData.messagesThisMonth ?? "—"} / {selectedCompanyData.messagesLimit ?? "—"}
                             </p>
                           </div>
-                          <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground">{t("admin.storageUsed")}</p>
-                            <p className="text-base font-semibold">
-                              {selectedCompanyData.storageUsed ?? "—"} / {selectedCompanyData.storageLimit ?? "—"} GB
-                            </p>
-                          </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
@@ -1107,26 +1051,6 @@ const AdminPanel = () => {
                                         Math.round(
                                           ((selectedCompanyData.messagesThisMonth || 0) /
                                             selectedCompanyData.messagesLimit) *
-                                            100
-                                        )
-                                      )}%`
-                                    : "0%",
-                                }}
-                              />
-                            </div>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1">{t("admin.storageUsed")}</p>
-                            <div className="h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-secondary"
-                                style={{
-                                  width: selectedCompanyData.storageLimit
-                                    ? `${Math.min(
-                                        100,
-                                        Math.round(
-                                          ((selectedCompanyData.storageUsed || 0) /
-                                            selectedCompanyData.storageLimit) *
                                             100
                                         )
                                       )}%`
@@ -1201,7 +1125,7 @@ const AdminPanel = () => {
                             >
                               {t("admin.blockCompany")}
                             </Button>
-                          ) : (
+                          ) : selectedCompanyData.status === t("admin.blocked") ? (
                             <Button
                               className="w-full"
                               onClick={async () => {
@@ -1217,7 +1141,7 @@ const AdminPanel = () => {
                             >
                               {t("admin.activateCompany")}
                             </Button>
-                          )}
+                          ) : null}
                         </div>
                       </Card>
                     </div>

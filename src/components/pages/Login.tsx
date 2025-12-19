@@ -58,18 +58,24 @@ const Login = () => {
           msgLower.includes("required")) {
         errorMessage = t("auth.emailAndPasswordRequired");
       }
-      // 2. Проверка неверных учетных данных
+      // 2. Проверка заблокированной компании
+      else if (backendMessage.includes("COMPANY_BLOCKED") || 
+               backendMessage.includes("company blocked") ||
+               errorStatus === 403) {
+        errorMessage = "Компания заблокирована администратором. Подробности будут отправлены по почте.";
+      }
+      // 3. Проверка неверных учетных данных
       else if (backendMessage.includes("Invalid email or password") || 
                backendMessage.includes("invalid") || 
                backendMessage.includes("incorrect") ||
                errorStatus === 401) {
         errorMessage = t("auth.loginError");
       }
-      // 3. Если есть сообщение, показываем его
+      // 4. Если есть сообщение, показываем его
       else if (backendMessage && !backendMessage.includes("HTTP error")) {
         errorMessage = backendMessage;
       }
-      // 4. Общая ошибка
+      // 5. Общая ошибка
       else {
         errorMessage = t("auth.loginError");
       }

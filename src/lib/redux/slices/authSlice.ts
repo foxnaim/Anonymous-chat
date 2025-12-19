@@ -189,17 +189,22 @@ const authSlice = createSlice({
             msgLower.includes("required")) {
           errorMessage = "Email и пароль обязательны. Пожалуйста, заполните все поля.";
         }
-        // 2. Проверка неверных учетных данных
+        // 2. Проверка заблокированной компании
+        else if (backendMessage.includes("COMPANY_BLOCKED") || 
+                 backendMessage.includes("company blocked")) {
+          errorMessage = "Компания заблокирована администратором. Подробности будут отправлены по почте.";
+        }
+        // 3. Проверка неверных учетных данных
         else if (backendMessage.includes("Invalid email or password") || 
                  backendMessage.includes("invalid") || 
                  backendMessage.includes("incorrect")) {
           errorMessage = "Неверный email или пароль";
         }
-        // 3. Если есть сообщение, показываем его
+        // 4. Если есть сообщение, показываем его
         else if (backendMessage && !backendMessage.includes("HTTP error")) {
           errorMessage = backendMessage;
         }
-        // 4. Общая ошибка
+        // 5. Общая ошибка
         else {
           errorMessage = "Ошибка входа";
         }
