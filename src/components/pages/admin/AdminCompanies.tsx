@@ -1288,6 +1288,47 @@ const AdminCompanies = () => {
                   </Button>
                   {selectedCompany && (
                     <>
+                      {selectedCompany.status === COMPANY_STATUS.ACTIVE ? (
+                        <Button
+                          variant="destructive"
+                          onClick={async () => {
+                            await updateStatus({
+                              id: selectedCompany.id,
+                              status: COMPANY_STATUS.BLOCKED,
+                            });
+                            setIsViewOpen(false);
+                          }}
+                          disabled={isUpdatingStatus}
+                        >
+                          {t("admin.blockCompany")}
+                        </Button>
+                      ) : selectedCompany.status === COMPANY_STATUS.BLOCKED ? (
+                        <Button
+                          onClick={async () => {
+                            await updateStatus({
+                              id: selectedCompany.id,
+                              status: COMPANY_STATUS.ACTIVE,
+                            });
+                            setIsViewOpen(false);
+                          }}
+                          disabled={isUpdatingStatus}
+                        >
+                          {t("admin.activateCompany")}
+                        </Button>
+                      ) : selectedCompany.status === COMPANY_STATUS.TRIAL ? (
+                        <Button
+                          onClick={async () => {
+                            await updateStatus({
+                              id: selectedCompany.id,
+                              status: COMPANY_STATUS.ACTIVE,
+                            });
+                            setIsViewOpen(false);
+                          }}
+                          disabled={isUpdatingStatus}
+                        >
+                          {t("admin.activateCompany")}
+                        </Button>
+                      ) : null}
                       <Button
                         variant="destructive"
                         onClick={() => {

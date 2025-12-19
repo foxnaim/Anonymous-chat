@@ -1138,7 +1138,7 @@ const AdminPanel = () => {
                             <FiTrash2 className="h-4 w-4 mr-2" />
                             {t("admin.deleteCompany") || "Удалить компанию"}
                           </Button>
-                          {selectedCompanyData.status === t("admin.active") ? (
+                          {selectedCompanyData.status === COMPANY_STATUS.ACTIVE ? (
                             <Button
                               className="w-full"
                               variant="destructive"
@@ -1155,7 +1155,23 @@ const AdminPanel = () => {
                             >
                               {t("admin.blockCompany")}
                             </Button>
-                          ) : selectedCompanyData.status === t("admin.blocked") ? (
+                          ) : selectedCompanyData.status === COMPANY_STATUS.BLOCKED ? (
+                            <Button
+                              className="w-full"
+                              onClick={async () => {
+                                try {
+                                  await companyService.updateStatus(selectedCompanyData.id, COMPANY_STATUS.ACTIVE);
+                                  toast.success(t("admin.companyActivated"));
+                                  setIsViewOpen(false);
+                                  refetch();
+                                } catch (error) {
+                                  toast.error(t("admin.activateError"));
+                                }
+                              }}
+                            >
+                              {t("admin.activateCompany")}
+                            </Button>
+                          ) : selectedCompanyData.status === COMPANY_STATUS.TRIAL ? (
                             <Button
                               className="w-full"
                               onClick={async () => {
