@@ -87,7 +87,68 @@ const AdminPanel = () => {
       setIsCreateOpen(false);
       toast.success(t("admin.createCompany"));
     },
-    onError: () => toast.error(t("common.error")),
+    onError: (error: any) => {
+      // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
+      const backendMessage = String(error?.message || "").trim();
+      const errorStatus = error?.status || 0;
+      
+      // Маппинг сообщений об ошибках - проверяем в строгом порядке приоритета
+      let errorMessage = "";
+      const msgLower = backendMessage.toLowerCase();
+      
+      // 1. Проверка кода компании (самая специфичная)
+      if (backendMessage.includes("Company with this code already exists") || 
+          (msgLower.includes("code") && msgLower.includes("already exists"))) {
+        errorMessage = t("auth.companyCodeAlreadyExists");
+      }
+      // 2. Проверка имени компании
+      else if (backendMessage.includes("Company with this name already exists") || 
+               (msgLower.includes("name") && msgLower.includes("already exists") && msgLower.includes("company"))) {
+        errorMessage = t("auth.companyNameAlreadyExists");
+      }
+      // 3. Проверка email компании
+      else if (backendMessage.includes("Company with this email already exists") || 
+               (msgLower.includes("email") && msgLower.includes("already exists") && msgLower.includes("company"))) {
+        errorMessage = t("auth.companyEmailAlreadyExists");
+      }
+      // 4. Проверка email админа
+      else if (backendMessage.includes("Admin with this email already exists") || 
+               (msgLower.includes("email") && msgLower.includes("already exists") && msgLower.includes("admin"))) {
+        errorMessage = t("auth.adminEmailAlreadyExists");
+      }
+      // 5. Проверка email пользователя
+      else if (backendMessage.includes("User with this email already exists") || 
+               (msgLower.includes("user") && msgLower.includes("already exists")) ||
+               (msgLower.includes("email") && msgLower.includes("already exists") && !msgLower.includes("company") && !msgLower.includes("admin"))) {
+        errorMessage = t("auth.userEmailAlreadyExists");
+      }
+      // 6. Остальные ошибки
+      else if (backendMessage.includes("Name, code, adminEmail, and password are required") || 
+               msgLower.includes("required")) {
+        errorMessage = t("auth.companyFieldsRequired");
+      }
+      else if (backendMessage.includes("Password must be at least")) {
+        errorMessage = t("auth.passwordMinLength", { length: 8 });
+      }
+      else if (backendMessage.includes("Access denied")) {
+        errorMessage = t("auth.accessDenied");
+      }
+      // 7. Если статус 409, но сообщение не распознано
+      else if (errorStatus === 409) {
+        errorMessage = t("auth.companyConflictError") || "Данные уже существуют. Проверьте уникальность имени, email и кода компании.";
+      }
+      // 8. Если есть сообщение, показываем его
+      else if (backendMessage && !backendMessage.includes("HTTP error")) {
+        errorMessage = backendMessage;
+      }
+      // 9. Общая ошибка
+      else {
+        errorMessage = t("common.error") || "Произошла ошибка при создании компании";
+      }
+      
+      // Всегда показываем toast с ошибкой
+      toast.error(errorMessage);
+    },
   });
 
   const { mutateAsync: deleteCompany, isPending: isDeleting } = useDeleteCompany({
@@ -903,24 +964,20 @@ const AdminPanel = () => {
                           toast.error(firstError || t("auth.passwordTooWeak"));
                           return;
                         }
-                        try {
-                          await createCompany({
-                            ...newCompany,
-                            status: COMPANY_STATUS.TRIAL, // По умолчанию "Пробная" для новых компаний
-                            messagesLimit: 100,
-                            storageLimit: 10,
-                          });
-                          setNewCompany({
-                            name: "",
-                            adminEmail: "",
-                            code: generateCode(),
-                            password: "",
-                            plan: "Пробный",
-                            employees: 0,
-                          });
-                        } catch (e) {
-                          toast.error(t("common.error"));
-                        }
+                        await createCompany({
+                          ...newCompany,
+                          status: COMPANY_STATUS.TRIAL, // По умолчанию "Пробная" для новых компаний
+                          messagesLimit: 100,
+                          storageLimit: 10,
+                        });
+                        setNewCompany({
+                          name: "",
+                          adminEmail: "",
+                          code: generateCode(),
+                          password: "",
+                          plan: "Пробный",
+                          employees: 0,
+                        });
                       }}
                       disabled={isCreating}
                     >

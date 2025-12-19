@@ -180,6 +180,7 @@
     "companyCodeAlreadyExists": "A company with this code already exists. Please choose a different code.",
     "companyNameAlreadyExists": "A company with this name already exists. Please choose a different name.",
     "companyEmailAlreadyExists": "A company with this email already exists. Please use a different email.",
+    "companyConflictError": "Data already exists. Please check the uniqueness of the company name, email, and code.",
     "adminNameAlreadyExists": "An administrator with this name already exists. Please use a different name.",
     "adminEmailAlreadyExists": "An administrator with this email already exists. Please use a different email.",
     "userEmailAlreadyExists": "A user with this email already exists. Please try logging in or use a different email.",

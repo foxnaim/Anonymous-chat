@@ -44,8 +44,59 @@ const Register = () => {
         router.replace("/company");
       }
     },
-    onError: (error: Error | unknown) => {
-      const errorMessage = error instanceof Error ? error.message : t("common.error");
+    onError: (error: any) => {
+      // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
+      const backendMessage = String(error?.message || "").trim();
+      const errorStatus = error?.status || 0;
+      
+      // Маппинг сообщений об ошибках - проверяем в строгом порядке приоритета
+      let errorMessage = "";
+      const msgLower = backendMessage.toLowerCase();
+      
+      // 1. Проверка кода компании
+      if (backendMessage.includes("Company with this code already exists") || 
+          (msgLower.includes("code") && msgLower.includes("already exists"))) {
+        errorMessage = t("auth.companyCodeAlreadyExists");
+      }
+      // 2. Проверка имени компании
+      else if (backendMessage.includes("Company with this name already exists") || 
+               (msgLower.includes("name") && msgLower.includes("already exists") && msgLower.includes("company"))) {
+        errorMessage = t("auth.companyNameAlreadyExists");
+      }
+      // 3. Проверка email компании
+      else if (backendMessage.includes("Company with this email already exists") || 
+               (msgLower.includes("email") && msgLower.includes("already exists") && msgLower.includes("company"))) {
+        errorMessage = t("auth.companyEmailAlreadyExists");
+      }
+      // 4. Проверка email админа
+      else if (backendMessage.includes("Admin with this email already exists") || 
+               (msgLower.includes("email") && msgLower.includes("already exists") && msgLower.includes("admin"))) {
+        errorMessage = t("auth.adminEmailAlreadyExists");
+      }
+      // 5. Проверка email пользователя
+      else if (backendMessage.includes("User already exists") || 
+               backendMessage.includes("User with this email already exists") ||
+               (msgLower.includes("user") && msgLower.includes("already exists")) ||
+               (msgLower.includes("email") && msgLower.includes("already exists") && !msgLower.includes("company") && !msgLower.includes("admin"))) {
+        errorMessage = t("auth.userAlreadyExists");
+      }
+      // 6. Остальные ошибки
+      else if (backendMessage.includes("Email and password are required") || msgLower.includes("required")) {
+        errorMessage = t("auth.emailAndPasswordRequired");
+      }
+      else if (backendMessage.includes("Password must be at least")) {
+        errorMessage = t("auth.passwordMinLength", { length: 8 });
+      }
+      else if (errorStatus === 409) {
+        errorMessage = t("auth.companyConflictError") || "Данные уже существуют. Проверьте уникальность имени, email и кода компании.";
+      }
+      else if (backendMessage && !backendMessage.includes("HTTP error")) {
+        errorMessage = backendMessage;
+      }
+      else {
+        errorMessage = t("common.error");
+      }
+      
       toast.error(errorMessage);
     },
   });
