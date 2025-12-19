@@ -102,7 +102,9 @@
     "checkStatusDescription": "Use the 'Check Status' button on the main page and enter this ID",
     "trackResponse": "Track response",
     "trackResponseDescription": "The company may leave a response to your message. Check the status regularly",
-    "idSecurityNote": "Your ID is secure. It does not contain personal information and is only used to track the status of your message."
+    "idSecurityNote": "Your ID is secure. It does not contain personal information and is only used to track the status of your message.",
+    "messageLimitExceeded": "Message limit for this company has been exceeded this month",
+    "fillRequiredFields": "Please fill in all required fields"
   },
   "checkStatus": {
     "title": "Check Message Status",
@@ -183,7 +185,15 @@
     "userEmailAlreadyExists": "A user with this email already exists. Please try logging in or use a different email.",
     "companyFieldsRequired": "To create a company, you must provide a name, code, administrator email, and password. Please fill in all fields.",
     "passwordMinLength": "Password must be at least 8 characters long. Please choose a longer password.",
-    "accessDenied": "Access denied. You do not have permission to perform this action."
+    "accessDenied": "Access denied. You do not have permission to perform this action.",
+    "companyCodeLength": "Company code must contain exactly 8 characters",
+    "passwordTooWeak": "Password is too weak",
+    "registrationSuccess": "Registration completed successfully",
+    "registrationError": "Registration error",
+    "loginError": "Login error",
+    "resetTokenNotFound": "Reset token not found. Please use the link from the email.",
+    "passwordResetSuccess": "Password has been successfully changed!",
+    "passwordResetError": "Error resetting password"
   },
   "company": {
     "dashboard": "Dashboard",
@@ -500,6 +510,7 @@
     "support247Desc": "24/7 technical support",
     "apiAccessDesc": "API access for integrations",
     "export": "Export",
+    "dataExported": "Data exported",
     "deleteCompany": "Delete Company",
     "deleteCompanyWarning": "Are you sure you want to delete this company? This action cannot be undone. All company data will be permanently deleted.",
     "companyDeleted": "Company deleted successfully",

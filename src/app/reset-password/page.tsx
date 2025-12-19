@@ -38,7 +38,7 @@ const ResetPasswordContent = () => {
     e.preventDefault();
 
     if (!token) {
-      toast.error("Токен восстановления не найден. Пожалуйста, используйте ссылку из email.");
+      toast.error(t("auth.resetTokenNotFound"));
       return;
     }
 
@@ -62,7 +62,7 @@ const ResetPasswordContent = () => {
 
     try {
       await authService.resetPassword({ token, password });
-      toast.success("Пароль успешно изменен!");
+      toast.success(t("auth.passwordResetSuccess"));
       
       // Перенаправляем на главную страницу (используем requestIdleCallback для неблокирующего редиректа)
       if ('requestIdleCallback' in window) {
@@ -78,7 +78,7 @@ const ResetPasswordContent = () => {
     } catch (error) {
       setIsLoading(false);
       const apiError = error as ApiError;
-      toast.error(apiError.message || "Ошибка при сбросе пароля");
+      toast.error(apiError.message || t("auth.passwordResetError"));
     }
   };
 

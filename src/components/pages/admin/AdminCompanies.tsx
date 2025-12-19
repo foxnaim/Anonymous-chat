@@ -346,7 +346,7 @@ const AdminCompanies = () => {
     }
 
     if (newCompany.code.length !== 8) {
-      toast.error("Код компании должен содержать ровно 8 символов");
+      toast.error(t("auth.companyCodeLength"));
       return;
     }
 
@@ -355,7 +355,7 @@ const AdminCompanies = () => {
     if (!passwordValidation.isValid) {
       // Показываем первую ошибку
       const firstError = passwordValidation.errors[0];
-      toast.error(firstError || "Пароль слишком слабый");
+      toast.error(firstError || t("auth.passwordTooWeak"));
       return;
     }
 
@@ -373,7 +373,7 @@ const AdminCompanies = () => {
     }
 
     if (editCompany.code.length !== 8) {
-      toast.error("Код компании должен содержать ровно 8 символов");
+      toast.error(t("auth.companyCodeLength"));
       return;
     }
 
@@ -480,11 +480,11 @@ const AdminCompanies = () => {
     // Используем requestIdleCallback для неблокирующего показа toast
     if ('requestIdleCallback' in window) {
       requestIdleCallback(() => {
-        toast.success("Данные экспортированы");
+        toast.success(t("admin.dataExported"));
       });
     } else {
       setTimeout(() => {
-        toast.success("Данные экспортированы");
+        toast.success(t("admin.dataExported"));
       }, 0);
     }
   }, [filteredCompanies]);

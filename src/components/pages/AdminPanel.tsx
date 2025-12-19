@@ -900,7 +900,7 @@ const AdminPanel = () => {
                         if (!passwordValidation.isValid) {
                           // Показываем первую ошибку
                           const firstError = passwordValidation.errors[0];
-                          toast.error(firstError || "Пароль слишком слабый");
+                          toast.error(firstError || t("auth.passwordTooWeak"));
                           return;
                         }
                         try {

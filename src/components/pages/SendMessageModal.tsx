@@ -70,9 +70,9 @@ const SendMessageModal = ({
         if (message.includes("not found") || message.includes("company")) {
           errorMessage = t("sendMessage.companyNotFound") || "Компания не найдена";
         } else if (message.includes("limit") || message.includes("exceeded")) {
-          errorMessage = "Лимит сообщений для этой компании исчерпан на этот месяц";
+          errorMessage = t("sendMessage.messageLimitExceeded");
         } else if (message.includes("required")) {
-          errorMessage = "Заполните все обязательные поля";
+          errorMessage = t("sendMessage.fillRequiredFields");
         } else {
           errorMessage = error.message;
         }
