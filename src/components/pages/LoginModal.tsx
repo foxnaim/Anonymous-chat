@@ -44,28 +44,41 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
           router.replace("/");
         }
         onOpenChange(false);
-      } else {
-        // Показываем переведенное сообщение об ошибке
-        toast.error(t("auth.loginError"));
       }
+      // Ошибки уже обрабатываются в authSlice.ts через toast
     } catch (error: any) {
       setIsLoading(false);
-      // Получаем сообщение об ошибке с бэкенда
-      const backendMessage = error?.message || error?.response?.data?.error?.message || "";
+      // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
+      const backendMessage = String(error?.message || "").trim();
+      const errorStatus = error?.status || 0;
       
-      // Маппинг сообщений об ошибках на ключи переводов
-      let translationKey = "auth.loginError";
+      // Маппинг сообщений об ошибках - проверяем в строгом порядке приоритета
+      let errorMessage = "";
+      const msgLower = backendMessage.toLowerCase();
       
-      if (backendMessage.includes("Email and password are required")) {
-        translationKey = "auth.emailAndPasswordRequired";
-      } else if (backendMessage.includes("Invalid email or password") || backendMessage.includes("invalid") || backendMessage.includes("incorrect")) {
-        translationKey = "auth.loginError";
+      // 1. Проверка обязательных полей
+      if (backendMessage.includes("Email and password are required") || 
+          msgLower.includes("required")) {
+        errorMessage = t("auth.emailAndPasswordRequired");
+      }
+      // 2. Проверка неверных учетных данных
+      else if (backendMessage.includes("Invalid email or password") || 
+               backendMessage.includes("invalid") || 
+               backendMessage.includes("incorrect") ||
+               errorStatus === 401) {
+        errorMessage = t("auth.loginError");
+      }
+      // 3. Если есть сообщение, показываем его
+      else if (backendMessage && !backendMessage.includes("HTTP error")) {
+        errorMessage = backendMessage;
+      }
+      // 4. Общая ошибка
+      else {
+        errorMessage = t("auth.loginError");
       }
       
-      // Показываем переведенное сообщение или оригинальное, если перевода нет
-      const translatedMessage = t(translationKey);
-      const finalMessage = translatedMessage !== translationKey ? translatedMessage : backendMessage || t("auth.loginError");
-      toast.error(finalMessage);
+      // Показываем toast с ошибкой
+      toast.error(errorMessage);
     }
   };
 

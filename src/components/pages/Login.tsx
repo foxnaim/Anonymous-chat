@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/redux";
 import { FiArrowLeft, FiEye, FiEyeOff } from "react-icons/fi";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 const Login = () => {
   const { t } = useTranslation();
   const router = useRouter();
@@ -24,22 +25,57 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    const result = await login(email, password);
-    setIsLoading(false);
-    if (result.success && result.user) {
-      // Используем пользователя из результата логина для определения роли
-      const from = searchParams?.get('from');
-      if (from) {
-        router.replace(from as any);
-      } else {
-        if (result.user.role === "admin" || result.user.role === "super_admin") {
-          router.replace("/admin");
-        } else if (result.user.role === "company") {
-          router.replace("/company");
+    try {
+      const result = await login(email, password);
+      setIsLoading(false);
+      if (result.success && result.user) {
+        // Используем пользователя из результата логина для определения роли
+        const from = searchParams?.get('from');
+        if (from) {
+          router.replace(from as any);
         } else {
-          router.replace("/");
+          if (result.user.role === "admin" || result.user.role === "super_admin") {
+            router.replace("/admin");
+          } else if (result.user.role === "company") {
+            router.replace("/company");
+          } else {
+            router.replace("/");
+          }
         }
       }
+    } catch (error: any) {
+      setIsLoading(false);
+      // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
+      const backendMessage = String(error?.message || "").trim();
+      const errorStatus = error?.status || 0;
+      
+      // Маппинг сообщений об ошибках - проверяем в строгом порядке приоритета
+      let errorMessage = "";
+      const msgLower = backendMessage.toLowerCase();
+      
+      // 1. Проверка обязательных полей
+      if (backendMessage.includes("Email and password are required") || 
+          msgLower.includes("required")) {
+        errorMessage = t("auth.emailAndPasswordRequired");
+      }
+      // 2. Проверка неверных учетных данных
+      else if (backendMessage.includes("Invalid email or password") || 
+               backendMessage.includes("invalid") || 
+               backendMessage.includes("incorrect") ||
+               errorStatus === 401) {
+        errorMessage = t("auth.loginError");
+      }
+      // 3. Если есть сообщение, показываем его
+      else if (backendMessage && !backendMessage.includes("HTTP error")) {
+        errorMessage = backendMessage;
+      }
+      // 4. Общая ошибка
+      else {
+        errorMessage = t("auth.loginError");
+      }
+      
+      // Показываем toast с ошибкой
+      toast.error(errorMessage);
     }
   };
   return (

@@ -176,7 +176,7 @@
     "resetPasswordTokenLabel": "Тестілеу токені",
     "resetPasswordError": "Жіберу кезінде қате. Email мекенжайыңызды тексеріңіз",
     "userAlreadyExists": "Осы email-мен пайдаланушы қазірдің өзінде бар. Кіруге немесе құпия сөзді қалпына келтіруге тырысыңыз.",
-    "emailAndPasswordRequired": "Тіркелу үшін email және құпия сөз міндетті. Барлық өрістерді толтырыңыз.",
+    "emailAndPasswordRequired": "Email және құпия сөз міндетті. Барлық өрістерді толтырыңыз.",
     "companyCodeAlreadyExists": "Осы кодпен компания қазірдің өзінде бар. Басқа код таңдаңыз.",
     "companyNameAlreadyExists": "Осы атаумен компания қазірдің өзінде бар. Басқа атау таңдаңыз.",
     "companyEmailAlreadyExists": "Осы email-мен компания қазірдің өзінде бар. Басқа email пайдаланыңыз.",

@@ -176,7 +176,35 @@ const authSlice = createSlice({
       })
       .addCase(loginAsync.rejected, (state, action) => {
         state.isLoading = false;
-        toast.error(action.payload as string || "Ошибка входа");
+        
+        // Получаем сообщение об ошибке
+        const backendMessage = String(action.payload || "").trim();
+        const msgLower = backendMessage.toLowerCase();
+        
+        // Маппинг сообщений об ошибках - проверяем в строгом порядке приоритета
+        let errorMessage = "";
+        
+        // 1. Проверка обязательных полей
+        if (backendMessage.includes("Email and password are required") || 
+            msgLower.includes("required")) {
+          errorMessage = "Email и пароль обязательны. Пожалуйста, заполните все поля.";
+        }
+        // 2. Проверка неверных учетных данных
+        else if (backendMessage.includes("Invalid email or password") || 
+                 backendMessage.includes("invalid") || 
+                 backendMessage.includes("incorrect")) {
+          errorMessage = "Неверный email или пароль";
+        }
+        // 3. Если есть сообщение, показываем его
+        else if (backendMessage && !backendMessage.includes("HTTP error")) {
+          errorMessage = backendMessage;
+        }
+        // 4. Общая ошибка
+        else {
+          errorMessage = "Ошибка входа";
+        }
+        
+        toast.error(errorMessage);
       })
       // Check Session
       .addCase(checkSessionAsync.pending, (state) => {

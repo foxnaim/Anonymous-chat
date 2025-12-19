@@ -176,7 +176,7 @@
     "resetPasswordTokenLabel": "Test token",
     "resetPasswordError": "Error sending email. Please check your email address",
     "userAlreadyExists": "A user with this email already exists. Please try logging in or resetting your password.",
-    "emailAndPasswordRequired": "Email and password are required for registration. Please fill in all fields.",
+    "emailAndPasswordRequired": "Email and password are required. Please fill in all fields.",
     "companyCodeAlreadyExists": "A company with this code already exists. Please choose a different code.",
     "companyNameAlreadyExists": "A company with this name already exists. Please choose a different name.",
     "companyEmailAlreadyExists": "A company with this email already exists. Please use a different email.",
