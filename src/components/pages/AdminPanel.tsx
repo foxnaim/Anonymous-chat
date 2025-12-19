@@ -25,6 +25,7 @@ import {
   FiEdit,
   FiCheck,
   FiTrash2,
+  FiRefreshCw,
 } from "react-icons/fi";
 import {
   AlertDialog,
@@ -850,7 +851,7 @@ const AdminPanel = () => {
                           variant="outline"
                           onClick={() => setNewCompany((prev) => ({ ...prev, code: generateCode() }))}
                         >
-                          {t("common.add")}
+                          <FiRefreshCw className="h-4 w-4" />
                         </Button>
                       </div>
                       <p className="text-xs text-muted-foreground">8 символов, используйте буквы/цифры</p>
