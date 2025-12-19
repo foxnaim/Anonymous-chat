@@ -33,8 +33,9 @@ const CompanyMessages = () => {
       setIsDialogOpen(false);
       refetch();
     },
-    onError: () => {
-      toast.error(t("messages.statusUpdateError"));
+    onError: (error: any) => {
+      const errorMessage = error?.response?.data?.message || error?.message || t("messages.statusUpdateError");
+      toast.error(errorMessage);
     },
   });
   const statusOptions = [
@@ -97,6 +98,11 @@ const CompanyMessages = () => {
     });
   };
   
+  // Проверка, было ли сообщение отклонено админом
+  const isRejectedByAdmin = (message: Message): boolean => {
+    return message.status === "Спам" && !!message.previousStatus;
+  };
+
   const getStatusColor = (status: MessageStatus) => {
     switch (status) {
       case t("checkStatus.new"):
@@ -256,42 +262,52 @@ const CompanyMessages = () => {
             </Card>
           ) : (
             <div className="space-y-3 sm:space-y-4">
-              {filteredMessages.map((message) => (
-                <Card key={message.id} className="p-4 sm:p-6 border-border shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-                    <div className="flex-1 space-y-2 sm:space-y-3 w-full">
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                        <code className="text-xs sm:text-sm font-mono text-primary break-all">{message.id}</code>
-                        <Badge variant="outline" className="text-accent border-accent text-xs">
-                          {getTypeLabel(message.type)}
-                        </Badge>
-                        <Badge className={`${getStatusColor(message.status)} text-xs`}>
-                          {message.status}
-                        </Badge>
-                        <span className="text-xs sm:text-sm text-muted-foreground">
-                          {new Date(message.createdAt).toLocaleDateString("ru-RU")}
-                        </span>
-                      </div>
-                      <p className="text-sm sm:text-base text-foreground line-clamp-2">{message.content}</p>
-                      {message.companyResponse && (
-                        <div className="bg-muted p-2 sm:p-3 rounded-lg">
-                          <p className="text-xs sm:text-sm font-semibold mb-1">{t("messages.yourResponse")}:</p>
-                          <p className="text-xs sm:text-sm text-foreground">{message.companyResponse}</p>
+              {filteredMessages.map((message) => {
+                const rejected = isRejectedByAdmin(message);
+                return (
+                  <Card key={message.id} className="p-4 sm:p-6 border-border shadow-lg hover:shadow-xl transition-shadow">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                      <div className="flex-1 space-y-2 sm:space-y-3 w-full">
+                        {rejected && (
+                          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-2 sm:p-3">
+                            <p className="text-xs sm:text-sm font-semibold text-destructive">
+                              {t("checkStatus.rejectedByAdmin")}
+                            </p>
+                          </div>
+                        )}
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                          <code className="text-xs sm:text-sm font-mono text-primary break-all">{message.id}</code>
+                          <Badge variant="outline" className="text-accent border-accent text-xs">
+                            {getTypeLabel(message.type)}
+                          </Badge>
+                          <Badge className={`${getStatusColor(message.status)} text-xs`}>
+                            {message.status}
+                          </Badge>
+                          <span className="text-xs sm:text-sm text-muted-foreground">
+                            {new Date(message.createdAt).toLocaleDateString("ru-RU")}
+                          </span>
                         </div>
-                      )}
+                        <p className="text-sm sm:text-base text-foreground line-clamp-2">{message.content}</p>
+                        {message.companyResponse && (
+                          <div className="bg-muted p-2 sm:p-3 rounded-lg">
+                            <p className="text-xs sm:text-sm font-semibold mb-1">{t("messages.yourResponse")}:</p>
+                            <p className="text-xs sm:text-sm text-foreground">{message.companyResponse}</p>
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewMessage(message)}
+                        className="w-full sm:w-auto ml-0 sm:ml-4"
+                      >
+                        <FiEye className="h-4 w-4 mr-2" />
+                        {t("messages.open")}
+                      </Button>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleViewMessage(message)}
-                      className="w-full sm:w-auto ml-0 sm:ml-4"
-                    >
-                      <FiEye className="h-4 w-4 mr-2" />
-                      {t("messages.open")}
-                    </Button>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                );
+              })}
             </div>
           )}
             </>
@@ -333,6 +349,16 @@ const CompanyMessages = () => {
                     <p className="text-sm text-muted-foreground mb-6">ID: {selectedMessage?.id}</p>
                     {selectedMessage && (
                       <div className="space-y-6">
+                        {isRejectedByAdmin(selectedMessage) && (
+                          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                            <p className="text-sm font-semibold text-destructive mb-1">
+                              {t("checkStatus.rejectedByAdmin")}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {t("messages.cannotModifyRejected")}
+                            </p>
+                          </div>
+                        )}
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
                             <Badge variant="outline">{getTypeLabel(selectedMessage.type)}</Badge>
@@ -360,20 +386,21 @@ const CompanyMessages = () => {
                             onChange={(e) => setResponseText(e.target.value)}
                             placeholder={t("messages.enterResponse")}
                             className="min-h-[120px]"
+                            disabled={isRejectedByAdmin(selectedMessage)}
                           />
                         </div>
                         <div className="flex gap-3">
                           <Button
                             variant="outline"
                             onClick={() => handleUpdateStatus(t("checkStatus.inProgress") as MessageStatus)}
-                            disabled={selectedMessage.status === t("checkStatus.inProgress")}
+                            disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === t("checkStatus.inProgress")}
                           >
                             <FiClock className="h-4 w-4 mr-2" />
                             {t("checkStatus.inProgress")}
                           </Button>
                           <Button
                             onClick={() => handleUpdateStatus(t("checkStatus.resolved") as MessageStatus)}
-                            disabled={selectedMessage.status === t("checkStatus.resolved")}
+                            disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === t("checkStatus.resolved")}
                           >
                             <FiCheckCircle className="h-4 w-4 mr-2" />
                             {t("checkStatus.resolved")}
@@ -381,7 +408,7 @@ const CompanyMessages = () => {
                           <Button
                             variant="outline"
                             onClick={() => handleUpdateStatus(t("checkStatus.rejected") as MessageStatus)}
-                            disabled={selectedMessage.status === t("checkStatus.rejected") || selectedMessage.status === "Отклонено"}
+                            disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === t("checkStatus.rejected") || selectedMessage.status === "Отклонено"}
                           >
                             <FiX className="h-4 w-4 mr-2" />
                             {t("messages.reject")}
@@ -389,7 +416,7 @@ const CompanyMessages = () => {
                           <Button
                             variant="outline"
                             onClick={() => handleUpdateStatus(t("checkStatus.spam") as MessageStatus)}
-                            disabled={selectedMessage.status === t("checkStatus.spam") || selectedMessage.status === "Спам"}
+                            disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === t("checkStatus.spam") || selectedMessage.status === "Спам"}
                           >
                             <FiAlertCircle className="h-4 w-4 mr-2" />
                             {t("checkStatus.spam")}

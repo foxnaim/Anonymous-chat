@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, Fragment } from "react";
 import { useTranslation } from "react-i18next";
+import Image from "next/image";
 import { Dialog, Transition } from "@headlessui/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -347,10 +348,21 @@ const AdminPanel = () => {
                             {selectedCompanyId === company.id && (
                               <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r"></div>
                             )}
-                            <div className="w-10 h-10 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold relative">
-                              {company.name.charAt(0)}
+                            <div className="w-10 h-10 rounded-full bg-[#553D67] flex items-center justify-center text-white font-semibold relative overflow-hidden flex-shrink-0">
+                              {company.logoUrl ? (
+                                <Image
+                                  src={company.logoUrl}
+                                  alt={company.name}
+                                  width={40}
+                                  height={40}
+                                  className="w-full h-full object-cover"
+                                  unoptimized
+                                />
+                              ) : (
+                                company.name.charAt(0)
+                              )}
                               {selectedCompanyId === company.id && (
-                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center border-2 border-background">
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center border-2 border-background z-10">
                                   <FiCheck className="h-2.5 w-2.5 text-white" />
                                 </div>
                               )}

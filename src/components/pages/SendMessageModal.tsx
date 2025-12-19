@@ -44,6 +44,7 @@ const SendMessageModal = ({
   const [agreed, setAgreed] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [messageId, setMessageId] = useState("");
+  const [isSubmittingLocal, setIsSubmittingLocal] = useState(false);
 
   // Сбрасываем форму при закрытии модального окна
   useEffect(() => {
@@ -52,6 +53,7 @@ const SendMessageModal = ({
       setAgreed(false);
       setSubmitted(false);
       setMessageId("");
+      setIsSubmittingLocal(false);
     }
   }, [open]);
 
@@ -59,13 +61,15 @@ const SendMessageModal = ({
     onSuccess: (newMessage) => {
       setMessageId(newMessage.id);
       setSubmitted(true);
+      setIsSubmittingLocal(false);
       toast.success(t("sendMessage.success"));
     },
     onError: (error: any) => {
+      setIsSubmittingLocal(false);
       // Обработка различных типов ошибок
       let errorMessage = t("sendMessage.error");
       
-      if (error?.message) {
+      if (error?.message && typeof error.message === 'string') {
         const message = error.message.toLowerCase();
         if (message.includes("not found") || message.includes("company")) {
           errorMessage = t("sendMessage.companyNotFound") || "Компания не найдена";
@@ -91,6 +95,11 @@ const SendMessageModal = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Защита от повторной отправки
+    if (isSubmittingLocal || isSubmitting) {
+      return;
+    }
+    
     // Валидация
     if (!companyCode || companyCode.length !== 8) {
       toast.error(t("welcome.codeLengthError") || "Код компании должен содержать 8 символов");
@@ -106,6 +115,9 @@ const SendMessageModal = ({
       toast.error(t("sendMessage.codeRequired") || "Подтвердите условия");
       return;
     }
+
+    // Блокируем повторные нажатия
+    setIsSubmittingLocal(true);
 
     // Отправляем сообщение
     createMessage({
@@ -125,6 +137,13 @@ const SendMessageModal = ({
     onOpenChange(false);
     if (onSuccess && submitted) {
       onSuccess();
+    }
+    // Reset state when closing after submission to prevent issues with browser back button
+    if (submitted) {
+      setTimeout(() => {
+        setSubmitted(false);
+        setMessageId("");
+      }, 100);
     }
   };
 
@@ -304,10 +323,10 @@ const SendMessageModal = ({
               type="submit"
               size="lg"
               className="flex-1 text-sm sm:text-base md:text-lg h-10 sm:h-12"
-              disabled={!message || !agreed || isSubmitting}
+              disabled={!message || !agreed || isSubmitting || isSubmittingLocal}
             >
               <FiSend className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-              {isSubmitting ? t("sendMessage.sending") : t("sendMessage.anonymousMessage")}
+              {(isSubmitting || isSubmittingLocal) ? t("sendMessage.sending") : t("sendMessage.anonymousMessage")}
             </Button>
           </div>
         </form>

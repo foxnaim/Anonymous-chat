@@ -121,6 +121,7 @@
     "resolved": "Resolved",
     "rejected": "Rejected",
     "spam": "Spam",
+    "rejectedByAdmin": "Rejected by admin",
     "enterIdDescription": "Enter the message ID you received after sending feedback",
     "search": "Search",
     "sentOn": "Sent on",
@@ -281,6 +282,7 @@
         "consistent.description": "3 months in a row with activity (minimum 5 messages per month)"
       },
       "quality": {
+        "level": "Quality level {{level}}",
         "highResolution": "High resolution rate",
         "highResolution.description": "Resolve {{target}}% of all issues",
         "excellentResolution": "Excellent resolution rate",
@@ -603,6 +605,7 @@
     "noMessagesFound": "No messages found",
     "statusUpdated": "Status updated",
     "statusUpdateError": "Error updating status",
+    "cannotModifyRejected": "This message was rejected by admin. Status and response modification is not available.",
     "searchPlaceholder": "Search by content, ID or company code...",
     "found": "Found",
     "message": "message",

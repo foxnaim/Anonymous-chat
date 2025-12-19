@@ -77,7 +77,7 @@ const Welcome = () => {
 
     // Проверяем только когда код равен 8 символам
     if (debouncedCode.length === 8 && company) {
-      if (company.status === t("admin.blocked")) {
+      if (company?.status === t("admin.blocked")) {
         toast.error(t("admin.blockCompany"));
         setValidatedCode(null);
         return;
@@ -295,7 +295,7 @@ const Welcome = () => {
                           <FiHome className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-foreground text-sm sm:text-base truncate">{company.name}</p>
+                          <p className="font-semibold text-foreground text-sm sm:text-base truncate">{company?.name || ""}</p>
                           <p className="text-xs sm:text-sm text-muted-foreground">{t("welcome.codeValid")}</p>
                         </div>
                         <Button

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Fragment, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import Image from "next/image";
 import { Dialog, Transition } from "@headlessui/react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -673,8 +674,19 @@ const AdminCompanies = () => {
                       >
                         <td className="p-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold">
-                              {company.name.charAt(0)}
+                            <div className="w-10 h-10 rounded-full bg-[#553D67] flex items-center justify-center text-white font-semibold overflow-hidden flex-shrink-0">
+                              {company.logoUrl ? (
+                                <Image
+                                  src={company.logoUrl}
+                                  alt={company.name}
+                                  width={40}
+                                  height={40}
+                                  className="w-full h-full object-cover"
+                                  unoptimized
+                                />
+                              ) : (
+                                company.name.charAt(0)
+                              )}
                             </div>
                             <span className="font-medium text-foreground">{company.name}</span>
                           </div>

@@ -17,6 +17,7 @@ export interface Message {
   lastUpdate?: string;
   companyResponse?: string;
   adminNotes?: string;
+  previousStatus?: MessageStatus; // Статус до пометки как спам админом
 }
 
 export interface Company {

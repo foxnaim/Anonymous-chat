@@ -145,9 +145,20 @@ export const CompanyHeader = () => {
               <>
                 <HeadlessMenu.Button
                   as="button"
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm sm:text-base hover:bg-primary/20 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm sm:text-base hover:bg-primary/20 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 overflow-hidden"
                 >
-                  {user?.name?.charAt(0) || "C"}
+                  {company?.logoUrl ? (
+                    <Image
+                      src={company.logoUrl}
+                      alt={company.name || "Company logo"}
+                      width={40}
+                      height={40}
+                      className="w-full h-full object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    user?.name?.charAt(0) || "C"
+                  )}
                 </HeadlessMenu.Button>
 
                 <Transition

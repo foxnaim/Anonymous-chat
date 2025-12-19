@@ -121,6 +121,7 @@
     "resolved": "Решено",
     "rejected": "Отклонено",
     "spam": "Спам",
+    "rejectedByAdmin": "Отклонено админом",
     "enterIdDescription": "Введите ID сообщения, который вы получили после отправки отзыва",
     "search": "Поиск",
     "sentOn": "Отправлено",
@@ -283,6 +284,7 @@
         "consistent.description": "3 месяца подряд с активностью (минимум 5 сообщений в месяц)"
       },
       "quality": {
+        "level": "Уровень качества {{level}}",
         "highResolution": "Высокий процент решения",
         "highResolution.description": "Решите {{target}}% всех проблем",
         "excellentResolution": "Отличный процент решения",
@@ -589,6 +591,7 @@
     "noMessagesFound": "Сообщения не найдены",
     "statusUpdated": "Статус обновлен",
     "statusUpdateError": "Ошибка при обновлении статуса",
+    "cannotModifyRejected": "Это сообщение было отклонено админом. Изменение статуса и ответа недоступно.",
     "searchPlaceholder": "Поиск по содержимому, ID или коду компании...",
     "found": "Найдено",
     "message": "сообщение",

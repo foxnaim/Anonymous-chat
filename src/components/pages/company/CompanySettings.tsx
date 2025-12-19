@@ -19,6 +19,7 @@ import { authService } from "@/lib/api/auth";
 import { setUser } from "@/lib/redux/slices/authSlice";
 import type { UserRole } from "@/types";
 import { validatePasswordStrength } from "@/lib/utils/validation";
+import { compressImage, validateFileSize, validateImageType } from "@/lib/utils/imageCompression";
 
 const CompanySettings = () => {
   const { t, i18n: i18nInstance } = useTranslation();
@@ -28,6 +29,7 @@ const CompanySettings = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [newEmail, setNewEmail] = useState("");
@@ -59,25 +61,32 @@ const CompanySettings = () => {
       setLogoFile(null);
     }
   }, [company]);
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       // Проверка типа файла
-      if (!file.type.startsWith("image/")) {
+      if (!validateImageType(file)) {
         toast.error(t("company.logoInvalidFormat"));
         return;
       }
       // Проверка размера (макс 5MB)
-      if (file.size > 5 * 1024 * 1024) {
+      if (!validateFileSize(file, 5)) {
         toast.error(t("company.logoTooLarge"));
         return;
       }
-      setLogoFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      
+      setIsCompressing(true);
+      try {
+        // Сжимаем изображение до 200x200px и максимум 500KB
+        const compressedBase64 = await compressImage(file, 200, 200, 0.8, 500);
+        setLogoFile(file);
+        setLogoPreview(compressedBase64);
+      } catch (error: any) {
+        toast.error(error?.message || t("company.logoUploadError"));
+      } finally {
+        setIsCompressing(false);
+      }
     }
   };
   const handleRemoveLogo = () => {
@@ -220,21 +229,18 @@ const CompanySettings = () => {
     }
     
     // Загрузка логотипа
-    if (logoFile) {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64String = reader.result as string;
-        try {
-          await updateCompany({
-            id: user?.companyId || 0,
-            updates: { logoUrl: base64String },
-          });
-          toast.success(t("company.logoUploaded"));
-        } catch (error) {
-          toast.error(t("company.logoUploadError"));
-        }
-      };
-      reader.readAsDataURL(logoFile);
+    if (logoFile && logoPreview) {
+      // logoPreview уже содержит сжатую base64 строку
+      try {
+        await updateCompany({
+          id: user?.companyId || 0,
+          updates: { logoUrl: logoPreview },
+        });
+        toast.success(t("company.logoUploaded"));
+        setLogoFile(null); // Сбрасываем файл после успешной загрузки
+      } catch (error) {
+        toast.error(t("company.logoUploadError"));
+      }
     } else if (logoPreview === null && company?.logoUrl) {
       // Удаление логотипа
       await updateCompany({
@@ -272,14 +278,16 @@ const CompanySettings = () => {
                   <div className="relative">
                     {logoPreview ? (
                       <div className="relative">
-                        <Image
-                          src={logoPreview}
-                          alt={t("company.companyLogo")}
-                          width={96}
-                          height={96}
-                          className="w-24 h-24 object-cover rounded-lg border-2 border-border"
-                          unoptimized
-                        />
+                        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-border flex items-center justify-center bg-muted">
+                          <Image
+                            src={logoPreview}
+                            alt={t("company.companyLogo")}
+                            width={96}
+                            height={96}
+                            className="w-full h-full object-cover"
+                            unoptimized
+                          />
+                        </div>
                         <button
                           type="button"
                           onClick={handleRemoveLogo}
@@ -289,7 +297,7 @@ const CompanySettings = () => {
                         </button>
                       </div>
                     ) : (
-                      <div className="w-24 h-24 border-2 border-dashed border-border rounded-lg flex items-center justify-center bg-muted">
+                      <div className="w-24 h-24 border-2 border-dashed border-border rounded-full flex items-center justify-center bg-muted">
                         <FiUpload className="h-8 w-8 text-muted-foreground" />
                       </div>
                     )}
@@ -307,9 +315,10 @@ const CompanySettings = () => {
                       type="button"
                       variant="outline"
                       onClick={() => fileInputRef.current?.click()}
+                      disabled={isCompressing}
                     >
                       <FiUpload className="h-4 w-4 mr-2" />
-                      {logoPreview ? t("company.changeLogo") : t("company.uploadLogo")}
+                      {isCompressing ? t("common.loading") || "Загрузка..." : (logoPreview ? t("company.changeLogo") : t("company.uploadLogo"))}
                     </Button>
                     <p className="text-xs text-muted-foreground mt-2">
                       {t("company.logoDescription")}

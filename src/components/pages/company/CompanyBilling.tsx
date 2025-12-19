@@ -85,8 +85,8 @@ const CompanyBilling = () => {
     <div className="min-h-screen bg-background flex flex-col overflow-x-hidden w-full">
       <CompanyHeader />
       <div className="flex flex-col flex-1 overflow-hidden w-full min-h-0">
-        <main className="flex-1 px-6 py-4 overflow-hidden w-full flex flex-col min-h-0">
-          <div className="flex flex-col gap-4 w-full h-full min-h-0 overflow-hidden">
+        <main className="flex-1 px-6 py-4 overflow-y-auto w-full flex flex-col min-h-0">
+          <div className="flex flex-col gap-4 w-full min-h-0 pb-6">
             {/* Current Plan */}
             {currentPlan && company && (
               <Card className="p-6 border-border shadow-lg relative overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.03))' }}>
@@ -158,7 +158,7 @@ const CompanyBilling = () => {
               </Card>
             )}
             {/* Available Plans */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 pb-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
               {plans.map((plan) => {
                 const planName = typeof plan.name === "string" ? plan.name : getTranslatedValue(plan.name);

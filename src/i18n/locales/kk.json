@@ -121,6 +121,7 @@
     "resolved": "Шешілді",
     "rejected": "Қабылданбады",
     "spam": "Спам",
+    "rejectedByAdmin": "Админ тарапынан қабылданбады",
     "enterIdDescription": "Пікір жібергеннен кейін алған хабарлама ID-ін енгізіңіз",
     "search": "Іздеу",
     "sentOn": "Жіберілген",
@@ -281,6 +282,7 @@
         "consistent.description": "3 ай қатарынан белсенділік (айына кемінде 5 хабарлама)"
       },
       "quality": {
+        "level": "Сапа деңгейі {{level}}",
         "highResolution": "Жоғары шешім пайызы",
         "highResolution.description": "Барлық мәселелердің {{target}}% шешіңіз",
         "excellentResolution": "Тамаша шешім пайызы",
@@ -604,6 +606,7 @@
     "noMessagesFound": "Хабарламалар табылмады",
     "statusUpdated": "Статус жаңартылды",
     "statusUpdateError": "Статусты жаңарту кезінде қате",
+    "cannotModifyRejected": "Бұл хабарлама админ тарапынан қабылданбады. Статусты және жауапты өзгерту мүмкін емес.",
     "searchPlaceholder": "Мазмұн, ID немесе компания коды бойынша іздеу...",
     "found": "Табылды",
     "message": "хабарлама",

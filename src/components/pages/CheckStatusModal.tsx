@@ -51,31 +51,46 @@ const CheckStatusModal = ({ open, onOpenChange }: CheckStatusModalProps) => {
   };
 
   const getStatusIcon = (status: string) => {
+    if (!status || typeof status !== 'string') {
+      return <FiMessageSquare className="h-5 w-5" />;
+    }
     const statusLower = status.toLowerCase();
-    if (statusLower === t("checkStatus.inProgress").toLowerCase() || status === "In Progress" || status === "В работе") {
+    const inProgressTranslated = t("checkStatus.inProgress");
+    const resolvedTranslated = t("checkStatus.resolved");
+    const spamTranslated = t("checkStatus.spam");
+    
+    if ((inProgressTranslated && statusLower === inProgressTranslated.toLowerCase()) || status === "In Progress" || status === "В работе") {
       return <FiClock className="h-5 w-5" />;
     }
-    if (statusLower === t("checkStatus.resolved").toLowerCase() || status === "Resolved" || status === "Решено") {
+    if ((resolvedTranslated && statusLower === resolvedTranslated.toLowerCase()) || status === "Resolved" || status === "Решено") {
       return <FiCheckCircle className="h-5 w-5" />;
     }
-    if (statusLower === t("checkStatus.spam").toLowerCase() || status === "Spam" || status === "Спам") {
+    if ((spamTranslated && statusLower === spamTranslated.toLowerCase()) || status === "Spam" || status === "Спам") {
       return <FiAlertCircle className="h-5 w-5" />;
     }
     return <FiMessageSquare className="h-5 w-5" />;
   };
 
   const getStatusColor = (status: string) => {
+    if (!status || typeof status !== 'string') {
+      return "bg-muted text-muted-foreground";
+    }
     const statusLower = status.toLowerCase();
-    if (statusLower === t("checkStatus.new").toLowerCase() || status === "New" || status === "Новое") {
+    const newTranslated = t("checkStatus.new");
+    const inProgressTranslated = t("checkStatus.inProgress");
+    const resolvedTranslated = t("checkStatus.resolved");
+    const spamTranslated = t("checkStatus.spam");
+    
+    if ((newTranslated && statusLower === newTranslated.toLowerCase()) || status === "New" || status === "Новое") {
         return "bg-accent text-accent-foreground";
     }
-    if (statusLower === t("checkStatus.inProgress").toLowerCase() || status === "In Progress" || status === "В работе") {
+    if ((inProgressTranslated && statusLower === inProgressTranslated.toLowerCase()) || status === "In Progress" || status === "В работе") {
         return "bg-secondary text-secondary-foreground";
     }
-    if (statusLower === t("checkStatus.resolved").toLowerCase() || status === "Resolved" || status === "Решено") {
+    if ((resolvedTranslated && statusLower === resolvedTranslated.toLowerCase()) || status === "Resolved" || status === "Решено") {
         return "bg-success text-success-foreground";
     }
-    if (statusLower === t("checkStatus.spam").toLowerCase() || status === "Spam" || status === "Спам") {
+    if ((spamTranslated && statusLower === spamTranslated.toLowerCase()) || status === "Spam" || status === "Спам") {
         return "bg-destructive text-destructive-foreground";
     }
     return "bg-muted text-muted-foreground";
