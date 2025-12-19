@@ -107,7 +107,6 @@ class ApiClient {
           }
         } catch (parseError) {
           // Если не удалось распарсить JSON, используем стандартное сообщение
-          console.warn("Failed to parse error response:", parseError);
         }
 
         const error: ApiError = {
@@ -115,9 +114,6 @@ class ApiClient {
           status: response.status,
           code: errorCode,
         };
-        
-        // Логируем ошибку для отладки
-        console.error("API Error:", error);
         
         throw error;
       }

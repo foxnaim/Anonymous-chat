@@ -390,7 +390,6 @@ const AdminCompanies = () => {
       status: selectedStatus,
     }).catch((error) => {
       // Дополнительная обработка, если onError не сработал
-      console.error("Error in catch block:", error);
       // onError должен обработать, но на всякий случай показываем общую ошибку
       if (!error?.handled) {
         toast.error(error?.message || t("common.error"));

@@ -168,7 +168,6 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
       }
       
       toast.error(errorMessage);
-      console.error("Registration error:", error);
     } finally {
       setIsPending(false);
     }

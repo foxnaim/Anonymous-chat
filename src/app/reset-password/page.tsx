@@ -110,10 +110,10 @@ const ResetPasswordContent = () => {
                 <FiLock className="h-8 w-8 text-primary" />
               </div>
               <h1 className="text-3xl font-bold text-foreground mb-2" suppressHydrationWarning>
-                Сброс пароля
+                {t("auth.resetPasswordTitle")}
               </h1>
               <p className="text-muted-foreground" suppressHydrationWarning>
-                Введите новый пароль для вашего аккаунта
+                {t("auth.resetPasswordDescription")}
               </p>
             </div>
           </div>
@@ -121,10 +121,10 @@ const ResetPasswordContent = () => {
           {!token ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">
-                Токен восстановления не найден. Пожалуйста, используйте ссылку из email.
+                {t("auth.resetTokenNotFound")}
               </p>
               <Button asChild variant="outline">
-                <Link href="/">Вернуться к входу</Link>
+                <Link href="/">{t("common.back")}</Link>
               </Button>
             </div>
           ) : (
@@ -191,12 +191,12 @@ const ResetPasswordContent = () => {
 
               <Button type="submit" className="w-full" disabled={isLoading}>
                 <FiLock className="mr-2 h-5 w-5" />
-                {isLoading ? t("common.loading") : "Сбросить пароль"}
+                {isLoading ? t("common.loading") : t("auth.resetPasswordButton")}
               </Button>
 
               <div className="text-center text-sm">
                 <Link href="/" className="text-primary hover:underline">
-                  Вернуться к входу
+                  {t("common.back")}
                 </Link>
               </div>
             </form>
@@ -211,10 +211,10 @@ const ResetPassword = () => {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Загрузка...</p>
-        </div>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Загрузка...</p>
+          </div>
       </div>
     }>
       <ResetPasswordContent />

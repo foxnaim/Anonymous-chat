@@ -68,7 +68,6 @@ export const useAuth = () => {
           queryClient.clear();
         } catch (error) {
           // Игнорируем ошибки при очистке кэша
-          console.error('Error clearing query cache:', error);
         }
       };
       

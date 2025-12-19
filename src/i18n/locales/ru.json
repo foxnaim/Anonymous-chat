@@ -194,7 +194,8 @@
     "loginError": "Ошибка входа",
     "resetTokenNotFound": "Токен восстановления не найден. Пожалуйста, используйте ссылку из email.",
     "passwordResetSuccess": "Пароль успешно изменен!",
-    "passwordResetError": "Ошибка при сбросе пароля"
+    "passwordResetError": "Ошибка при сбросе пароля",
+    "passwordMustBeDifferent": "Новый пароль должен отличаться от текущего"
   },
   "company": {
     "dashboard": "Панель управления",
@@ -354,6 +355,8 @@
     "logoUploaded": "Логотип успешно загружен",
     "logoUploadError": "Ошибка при загрузке логотипа",
     "settingsSaved": "Настройки успешно сохранены",
+    "settingsSaveError": "Ошибка при сохранении настроек",
+    "emailChangeError": "Ошибка при изменении email",
     "preferences": "Настройки",
     "notifications": "Уведомления",
     "emailNotifications": "Email уведомления",
@@ -521,6 +524,9 @@
     "noData": "Нет данных",
     "adminDeleted": "Администратор удален",
     "addAdmin": "Добавить администратора",
+    "createError": "Ошибка при создании администратора",
+    "updateError": "Ошибка при обновлении администратора",
+    "deleteError": "Ошибка при удалении администратора",
     "superAdminOnly": "Доступно только супер-администратору",
     "searchAdmins": "Поиск администраторов...",
     "superAdmin": "Супер Админ",

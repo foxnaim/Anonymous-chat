@@ -194,7 +194,8 @@
     "loginError": "Login error",
     "resetTokenNotFound": "Reset token not found. Please use the link from the email.",
     "passwordResetSuccess": "Password has been successfully changed!",
-    "passwordResetError": "Error resetting password"
+    "passwordResetError": "Error resetting password",
+    "passwordMustBeDifferent": "New password must be different from current password"
   },
   "company": {
     "dashboard": "Dashboard",
@@ -369,6 +370,8 @@
     "logoUploaded": "Logo uploaded successfully",
     "logoUploadError": "Error uploading logo",
     "settingsSaved": "Settings saved successfully",
+    "settingsSaveError": "Error saving settings",
+    "emailChangeError": "Error changing email",
     "preferences": "Settings",
     "notifications": "Notifications",
     "emailNotifications": "Email Notifications",
@@ -535,6 +538,9 @@
     "noData": "No data available",
     "adminDeleted": "Administrator deleted",
     "addAdmin": "Add Administrator",
+    "createError": "Error creating administrator",
+    "updateError": "Error updating administrator",
+    "deleteError": "Error deleting administrator",
     "superAdminOnly": "Available only for super admin",
     "searchAdmins": "Search administrators...",
     "superAdmin": "Super Admin",

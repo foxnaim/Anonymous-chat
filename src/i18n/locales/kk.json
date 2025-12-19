@@ -194,7 +194,8 @@
     "loginError": "Кіру қатесі",
     "resetTokenNotFound": "Қалпына келтіру токені табылмады. Email-дегі сілтемені пайдаланыңыз.",
     "passwordResetSuccess": "Құпия сөз сәтті өзгертілді!",
-    "passwordResetError": "Құпия сөзді қалпына келтіру қатесі"
+    "passwordResetError": "Құпия сөзді қалпына келтіру қатесі",
+    "passwordMustBeDifferent": "Жаңа құпия сөз ағымдағы құпия сөзден өзгеше болуы керек"
   },
   "company": {
     "dashboard": "Басқару панелі",
@@ -369,6 +370,8 @@
     "logoUploaded": "Логотип сәтті жүктелді",
     "logoUploadError": "Логотипті жүктеу кезінде қате",
     "settingsSaved": "Баптаулар сәтті сақталды",
+    "settingsSaveError": "Баптауларды сақтау кезінде қате",
+    "emailChangeError": "Email өзгерту кезінде қате",
     "preferences": "Баптаулар",
     "notifications": "Хабарландырулар",
     "emailNotifications": "Email хабарландырулары",
@@ -536,6 +539,9 @@
     "noData": "Деректер жоқ",
     "adminDeleted": "Әкімші жойылды",
     "addAdmin": "Әкімші қосу",
+    "createError": "Әкімші құру кезінде қате",
+    "updateError": "Әкімшіні жаңарту кезінде қате",
+    "deleteError": "Әкімшіні жою кезінде қате",
     "superAdminOnly": "Тек супер әкімшіге қолжетімді",
     "searchAdmins": "Әкімшілерді іздеу...",
     "superAdmin": "Супер Әкімші",

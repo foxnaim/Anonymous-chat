@@ -123,7 +123,7 @@ const CompanySettings = () => {
         if (message.includes("incorrect") || message.includes("invalid")) {
           errorMessage = t("auth.passwordInvalid") || "Неверный текущий пароль";
         } else if (message.includes("same") || message.includes("different")) {
-          errorMessage = "Новый пароль должен отличаться от текущего";
+          errorMessage = t("auth.passwordMustBeDifferent") || "Новый пароль должен отличаться от текущего";
         } else if (message.includes("required")) {
           errorMessage = t("common.fillAllFields");
         } else {
