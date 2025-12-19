@@ -19,7 +19,6 @@ import {
   FiSearch,
   FiFilter,
   FiPlus,
-  FiEye,
   FiX,
   FiCopy,
   FiEdit,

@@ -99,7 +99,7 @@ const AdminAnalytics = () => {
       : 0;
     
     // Всего сотрудников
-    const totalEmployees = companies.reduce((sum, c) => sum + (c.employees || 0), 0);
+    const totalEmployees = companies.reduce((sum, c) => sum + (c.employees ?? 0), 0);
 
     return {
       totalCompanies,

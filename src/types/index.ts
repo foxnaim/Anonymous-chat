@@ -28,11 +28,11 @@ export interface Company {
   plan: PlanType;
   registered: string;
   trialEndDate?: string; // Дата окончания пробного периода (2 месяца после регистрации)
-  employees: number;
+  employees?: number; // Опциональное поле, больше не используется в интерфейсе
   messages: number;
   messagesThisMonth?: number;
   messagesLimit?: number;
-  storageUsed?: number;
+  storageUsed?: number; // Опциональное поле, больше не используется в интерфейсе
   storageLimit?: number;
   logoUrl?: string;
   fullscreenMode?: boolean;
