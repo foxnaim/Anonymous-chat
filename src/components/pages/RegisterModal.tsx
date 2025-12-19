@@ -115,28 +115,40 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
         });
       }
     } catch (error: any) {
-      // Получаем сообщение об ошибке с бэкенда
-      const backendMessage = error?.message || error?.response?.data?.error?.message || "";
+      // Получаем сообщение об ошибке с бэкенда (проверяем разные возможные пути)
+      const backendMessage = 
+        error?.response?.data?.error?.message || 
+        error?.response?.data?.message || 
+        error?.message || 
+        "";
       
-      // Маппинг сообщений об ошибках на ключи переводов
-      let translationKey = "common.error";
+      // Маппинг сообщений об ошибках
+      let errorMessage = "";
       
-      if (backendMessage.includes("User already exists") || backendMessage.toLowerCase().includes("user already")) {
-        translationKey = "auth.userAlreadyExists";
-      } else if (backendMessage.includes("Email and password are required")) {
-        translationKey = "auth.emailAndPasswordRequired";
-      } else if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
-        translationKey = "auth.companyCodeAlreadyExists";
+      // Проверяем конкретные типы ошибок уникальности в порядке приоритета
+      if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
+        errorMessage = t("auth.companyCodeAlreadyExists");
+      } else if (backendMessage.includes("Company with this name already exists") || backendMessage.includes("name already exists")) {
+        errorMessage = t("auth.companyNameAlreadyExists");
+      } else if (backendMessage.includes("Company with this email already exists")) {
+        errorMessage = t("auth.companyEmailAlreadyExists");
+      } else if (backendMessage.includes("Admin with this email already exists")) {
+        errorMessage = t("auth.adminEmailAlreadyExists");
+      } else if (backendMessage.includes("User already exists") || backendMessage.toLowerCase().includes("user already")) {
+        errorMessage = t("auth.userAlreadyExists");
+      } else if (backendMessage.includes("Email and password are required") || backendMessage.includes("required")) {
+        errorMessage = t("auth.emailAndPasswordRequired");
       } else if (backendMessage.includes("Password must be at least 8 characters") || backendMessage.includes("Password must be at least 6 characters")) {
-        translationKey = "auth.passwordMinLength";
-      } else if (backendMessage.includes("required")) {
-        translationKey = "auth.emailAndPasswordRequired";
+        errorMessage = t("auth.passwordMinLength", { length: 8 });
+      } else if (backendMessage) {
+        // Если есть сообщение, но нет перевода, показываем оригинальное
+        errorMessage = backendMessage;
+      } else {
+        errorMessage = t("common.error");
       }
       
-      // Показываем переведенное сообщение или оригинальное, если перевода нет
-      const translatedMessage = t(translationKey);
-      const finalMessage = translatedMessage !== translationKey ? translatedMessage : backendMessage || t("common.error");
-      toast.error(finalMessage);
+      toast.error(errorMessage);
+      console.error("Registration error:", error);
     } finally {
       setIsPending(false);
     }

@@ -131,28 +131,42 @@ const AdminCompanies = () => {
       toast.success(t("admin.companyCreated") || "Компания создана");
     },
     onError: (error: any) => {
-      // Получаем сообщение об ошибке с бэкенда
-      const backendMessage = error?.message || error?.response?.data?.error?.message || "";
+      // Получаем сообщение об ошибке с бэкенда (проверяем разные возможные пути)
+      const backendMessage = 
+        error?.response?.data?.error?.message || 
+        error?.response?.data?.message || 
+        error?.message || 
+        "";
       
       // Маппинг сообщений об ошибках на ключи переводов
-      let translationKey = "common.error";
+      let errorMessage = "";
       
+      // Проверяем конкретные типы ошибок уникальности в порядке приоритета
       if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
-        translationKey = "auth.companyCodeAlreadyExists";
+        errorMessage = t("auth.companyCodeAlreadyExists");
+      } else if (backendMessage.includes("Company with this name already exists") || backendMessage.includes("name already exists")) {
+        errorMessage = t("auth.companyNameAlreadyExists");
+      } else if (backendMessage.includes("Company with this email already exists")) {
+        errorMessage = t("auth.companyEmailAlreadyExists");
+      } else if (backendMessage.includes("Admin with this email already exists")) {
+        errorMessage = t("auth.adminEmailAlreadyExists");
       } else if (backendMessage.includes("User with this email already exists") || backendMessage.includes("user already exists")) {
-        translationKey = "auth.userEmailAlreadyExists";
+        errorMessage = t("auth.userEmailAlreadyExists");
       } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.includes("required")) {
-        translationKey = "auth.companyFieldsRequired";
+        errorMessage = t("auth.companyFieldsRequired");
       } else if (backendMessage.includes("Password must be at least 8 characters") || backendMessage.includes("Password must be at least 6 characters")) {
-        translationKey = "auth.passwordMinLength";
+        errorMessage = t("auth.passwordMinLength", { length: 8 });
       } else if (backendMessage.includes("Access denied")) {
-        translationKey = "auth.accessDenied";
+        errorMessage = t("auth.accessDenied");
+      } else if (backendMessage) {
+        // Если есть сообщение, но нет перевода, показываем оригинальное
+        errorMessage = backendMessage;
+      } else {
+        errorMessage = t("common.error");
       }
       
-      // Показываем переведенное сообщение или оригинальное, если перевода нет
-      const translatedMessage = t(translationKey);
-      const finalMessage = translatedMessage !== translationKey ? translatedMessage : backendMessage || t("common.error");
-      toast.error(finalMessage);
+      toast.error(errorMessage);
+      console.error("Company creation error:", error);
     },
   });
 
