@@ -6,6 +6,14 @@ const nextConfig = {
   experimental: {
     typedRoutes: true
   },
+  webpack: (config, { isServer }) => {
+    // Исключаем socket.io-client из серверного бандла
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push('socket.io-client');
+    }
+    return config;
+  },
   async headers() {
     return [
       {

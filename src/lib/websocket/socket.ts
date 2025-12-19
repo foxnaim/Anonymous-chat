@@ -2,12 +2,13 @@
  * WebSocket клиент для real-time обновлений
  */
 
-import { io, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import { getToken } from '../utils/cookies';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 let socket: Socket | null = null;
+let socketIOClient: typeof import('socket.io-client') | null = null;
 
 export const getSocket = (forceReconnect = false): Socket | null => {
   if (typeof window === 'undefined') {
@@ -37,7 +38,12 @@ export const getSocket = (forceReconnect = false): Socket | null => {
     return null;
   }
 
-  socket = io(API_URL, {
+  // Динамический импорт socket.io-client только на клиенте
+  if (!socketIOClient) {
+    socketIOClient = require('socket.io-client');
+  }
+
+  socket = socketIOClient.io(API_URL, {
     auth: {
       token: token,
     },
