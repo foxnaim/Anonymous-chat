@@ -50,15 +50,15 @@ export const getSocket = (forceReconnect = false): Socket | null => {
   });
 
   socket.on('connect', () => {
-    console.log('WebSocket connected');
+    // WebSocket connected
   });
 
   socket.on('disconnect', (reason) => {
-    console.log('WebSocket disconnected:', reason);
+    // WebSocket disconnected
   });
 
   socket.on('connect_error', (error) => {
-    console.error('WebSocket connection error:', error);
+    // WebSocket connection error
   });
 
   return socket;

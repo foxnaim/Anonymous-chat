@@ -70,8 +70,6 @@ export const useSocketMessages = (companyCode?: string | null) => {
 
     // Обработчик нового сообщения
     const handleNewMessage = (message: Message) => {
-      console.log('Received new message via WebSocket:', message);
-      
       // Обновляем кэш React Query для текущего фильтра (companyCode или все для админа)
       const queryKey = [...queryKeys.messages(companyCode || undefined)];
       queryClient.setQueryData<Message[]>(
@@ -132,8 +130,6 @@ export const useSocketMessages = (companyCode?: string | null) => {
 
     // Обработчик обновления сообщения
     const handleMessageUpdate = (message: Message) => {
-      console.log('Received message update via WebSocket:', message);
-      
       // Обновляем кэш React Query для текущего фильтра
       const queryKey = [...queryKeys.messages(companyCode || undefined)];
       queryClient.setQueryData<Message[]>(

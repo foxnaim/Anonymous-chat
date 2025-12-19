@@ -39,10 +39,7 @@ export const messageService = {
         // Аутентификация обрабатывается на уровне ProtectedRoute
         return [];
       }
-      // Для других ошибок также возвращаем пустой массив, но логируем в dev режиме
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Error fetching messages:', error?.message || error);
-      }
+      // Для других ошибок также возвращаем пустой массив
       return [];
     }
   },
