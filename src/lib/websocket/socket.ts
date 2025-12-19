@@ -51,14 +51,23 @@ export const getSocket = (forceReconnect = false): Socket | null => {
 
   socket.on('connect', () => {
     // WebSocket connected
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[WebSocket] Connected successfully');
+    }
   });
 
   socket.on('disconnect', (reason) => {
     // WebSocket disconnected
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[WebSocket] Disconnected:', reason);
+    }
   });
 
   socket.on('connect_error', (error) => {
     // WebSocket connection error
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[WebSocket] Connection error:', error);
+    }
   });
 
   return socket;

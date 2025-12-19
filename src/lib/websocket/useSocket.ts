@@ -66,7 +66,23 @@ export const useSocketMessages = (companyCode?: string | null) => {
   useEffect(() => {
     // Переподключаемся при изменении companyCode или при монтировании
     const socket = getSocket(false);
-    if (!socket) return;
+    if (!socket) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[WebSocket] Cannot connect: no authentication token');
+      }
+      return;
+    }
+    
+    // Проверяем подключение
+    if (socket.connected) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[WebSocket] Already connected, subscribing to messages');
+      }
+    } else {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[WebSocket] Connecting...');
+      }
+    }
 
     // Обработчик нового сообщения
     const handleNewMessage = (message: Message) => {

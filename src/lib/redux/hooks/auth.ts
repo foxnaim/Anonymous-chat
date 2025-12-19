@@ -31,7 +31,7 @@ export const useAuth = () => {
       if (loginAsync.fulfilled.match(result)) {
         // Переподключаем WebSocket с новым токеном после успешного логина
         if (typeof window !== 'undefined') {
-          const { reconnectSocket } = require('../../websocket/socket');
+          const { reconnectSocket } = require('../websocket/socket');
           reconnectSocket();
         }
         return { success: true, user: result.payload };
@@ -57,7 +57,7 @@ export const useAuth = () => {
       if (registerAsync.fulfilled.match(result)) {
         // Переподключаем WebSocket с новым токеном после успешной регистрации
         if (typeof window !== 'undefined') {
-          const { reconnectSocket } = require('../../websocket/socket');
+          const { reconnectSocket } = require('../websocket/socket');
           reconnectSocket();
         }
         return true;
@@ -74,7 +74,7 @@ export const useAuth = () => {
     
     // Отключаем WebSocket при выходе
     if (typeof window !== 'undefined') {
-      const { disconnectSocket } = require('../../websocket/socket');
+      const { disconnectSocket } = require('../websocket/socket');
       disconnectSocket();
     }
     
