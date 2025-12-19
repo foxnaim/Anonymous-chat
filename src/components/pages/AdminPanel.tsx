@@ -51,7 +51,7 @@ const COMPANY_STATUS: Record<string, CompanyStatus> = {
   BLOCKED: "Заблокирована",
 };
 
-const PLAN_OPTIONS = ["Пробный", "Стандарт", "Бизнес"] as const;
+const PLAN_OPTIONS = ["Пробный", "Стандарт", "Про"] as const;
 
 const AdminPanel = () => {
   const { t } = useTranslation();

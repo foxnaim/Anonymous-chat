@@ -7,7 +7,6 @@ import { AdminHeader } from "@/components/AdminHeader";
 import { useCompanies, useMessages } from "@/lib/query";
 import { 
   FiMessageSquare, 
-  FiUsers, 
   FiTrendingUp, 
   FiCheckCircle, 
   FiClock, 
@@ -36,13 +35,12 @@ const AdminAnalytics = () => {
         complaints: 0,
         praises: 0,
         suggestions: 0,
-        freePlan: 0,
+        trialPlan: 0,
+        standardPlan: 0,
         proPlan: 0,
-        businessPlan: 0,
         topCompanies: [],
         resolutionRate: 0,
         avgMessagesPerCompany: 0,
-        totalEmployees: 0,
       };
     }
 
@@ -53,10 +51,11 @@ const AdminAnalytics = () => {
     const newStatus = t("checkStatus.new");
     const inProgressStatus = t("checkStatus.inProgress");
     const resolvedStatus = t("checkStatus.resolved");
-    // Названия планов (используем прямые значения, так как они хранятся в БД)
-    const trialPlanText = "Пробный";
-    const proPlanText = t("admin.planPro");
-    const businessPlanText = t("admin.planBusiness");
+    
+    // Названия планов - учитываем все возможные варианты
+    const trialPlanNames = ["Пробный", "Trial", "Сынақ"];
+    const standardPlanNames = ["Стандарт", "Стандартный", "Standard"];
+    const proPlanNames = ["Про", "Pro"];
 
     // Основные метрики
     const totalCompanies = companies.length;
@@ -74,10 +73,16 @@ const AdminAnalytics = () => {
     const praises = messages.filter((m) => m.type === "praise").length;
     const suggestions = messages.filter((m) => m.type === "suggestion").length;
     
-    // Распределение по планам
-    const freePlan = companies.filter((c) => c.plan === trialPlanText).length;
-    const proPlan = companies.filter((c) => c.plan === proPlanText).length;
-    const businessPlan = companies.filter((c) => c.plan === businessPlanText).length;
+    // Распределение по планам (учитываем все возможные варианты названий)
+    const trialPlan = companies.filter((c) => 
+      trialPlanNames.some(name => c.plan === name)
+    ).length;
+    const standardPlan = companies.filter((c) => 
+      standardPlanNames.some(name => c.plan === name)
+    ).length;
+    const proPlan = companies.filter((c) => 
+      proPlanNames.some(name => c.plan === name)
+    ).length;
     
     // Топ компаний по сообщениям
     const topCompanies = companies
@@ -97,9 +102,6 @@ const AdminAnalytics = () => {
     const avgMessagesPerCompany = totalCompanies > 0 
       ? Math.round(totalMessages / totalCompanies) 
       : 0;
-    
-    // Всего сотрудников
-    const totalEmployees = companies.reduce((sum, c) => sum + (c.employees ?? 0), 0);
 
     return {
       totalCompanies,
@@ -113,13 +115,12 @@ const AdminAnalytics = () => {
       complaints,
       praises,
       suggestions,
-      freePlan,
+      trialPlan,
+      standardPlan,
       proPlan,
-      businessPlan,
       topCompanies,
       resolutionRate,
       avgMessagesPerCompany,
-      totalEmployees,
     };
   }, [companies, messages, t]);
 
@@ -146,7 +147,7 @@ const AdminAnalytics = () => {
           </h2>
 
           {/* Основные метрики */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             <Card className="p-4 sm:p-6">
               <div className="flex items-center gap-3 mb-2">
                 <FiHome className="h-5 w-5 text-primary" />
@@ -175,19 +176,6 @@ const AdminAnalytics = () => {
                 <span>•</span>
                 <span>{analytics.resolutionRate}% {t("admin.resolutionRate")}</span>
               </div>
-            </Card>
-
-            <Card className="p-4 sm:p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <FiUsers className="h-5 w-5 text-primary" />
-                <p className="text-sm text-muted-foreground">{t("admin.users")}</p>
-              </div>
-              <p className="text-2xl sm:text-3xl font-bold text-foreground">
-                {analytics.totalEmployees.toLocaleString()}
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">
-                {t("admin.inAllCompanies")}
-              </p>
             </Card>
 
             <Card className="p-4 sm:p-6">
@@ -334,9 +322,9 @@ const AdminAnalytics = () => {
               </h3>
               <div className="space-y-3">
                 {[
-                  { name: "Пробный", count: analytics.freePlan, color: "bg-muted" },
-                  { name: t("admin.planPro"), count: analytics.proPlan, color: "bg-primary" },
-                  { name: t("admin.planBusiness"), count: analytics.businessPlan, color: "bg-secondary" },
+                  { name: "Пробный", count: analytics.trialPlan, color: "bg-muted" },
+                  { name: "Стандарт", count: analytics.standardPlan, color: "bg-primary" },
+                  { name: t("admin.planPro"), count: analytics.proPlan, color: "bg-secondary" },
                 ].map((plan) => {
                   const percent = analytics.totalCompanies > 0 
                     ? Math.round((plan.count / analytics.totalCompanies) * 100) 

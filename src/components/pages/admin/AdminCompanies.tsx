@@ -514,7 +514,7 @@ const AdminCompanies = () => {
         toast.success(t("admin.dataExported"));
       }, 0);
     }
-  }, [filteredCompanies]);
+  }, [filteredCompanies, t]);
 
   return (
     <div className="min-h-screen bg-background">

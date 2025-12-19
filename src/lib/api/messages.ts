@@ -76,4 +76,11 @@ export const messageApi = {
     const response = await apiClient.post<ApiResponse<Message>>(`/messages/${id}/moderate`, { action });
     return response.data;
   },
+
+  /**
+   * Удалить сообщение - только для админов
+   */
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete<ApiResponse<void>>(`/messages/${id}`);
+  },
 };

@@ -83,6 +83,10 @@ export const messageService = {
     const response = await apiClient.post<ApiResponse<Message>>(`/messages/${id}/moderate`, { action });
     return response.data;
   },
+
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete<ApiResponse<void>>(`/messages/${id}`);
+  },
 };
 
 // ========== COMPANY SERVICES ==========

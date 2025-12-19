@@ -7,7 +7,17 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { FiSearch, FiEye, FiCheckCircle, FiX, FiChevronDown, FiCheck } from "react-icons/fi";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { FiSearch, FiEye, FiCheckCircle, FiX, FiChevronDown, FiCheck, FiTrash2 } from "react-icons/fi";
 import { AdminHeader } from "@/components/AdminHeader";
 import { useMessages } from "@/lib/query";
 import { messageService } from "@/lib/query/services";
@@ -22,6 +32,7 @@ const AdminMessages = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { data: messages = [], isLoading, refetch } = useMessages();
   
   // Функция для нормализации статуса: переводит переведенное значение в значение из БД
@@ -61,6 +72,23 @@ const AdminMessages = () => {
       refetch();
     } catch (error) {
       toast.error(t("admin.moderationError"));
+    }
+  };
+
+  const handleDeleteClick = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedMessage) return;
+    try {
+      await messageService.delete(selectedMessage.id);
+      toast.success(t("admin.messageDeleted"));
+      setIsDialogOpen(false);
+      setIsDeleteDialogOpen(false);
+      refetch();
+    } catch (error) {
+      toast.error(t("admin.deleteMessageError"));
     }
   };
 
@@ -263,6 +291,14 @@ const AdminMessages = () => {
                           <FiX className="h-4 w-4 mr-2" />
                           {t("admin.reject")}
                         </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={handleDeleteClick}
+                          className="flex-1 w-full sm:w-auto"
+                        >
+                          <FiTrash2 className="h-4 w-4 mr-2" />
+                          {t("admin.deleteMessage")}
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -272,6 +308,29 @@ const AdminMessages = () => {
           </div>
         </Dialog>
       </Transition>
+
+      {/* Delete Message Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("admin.deleteMessage")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("admin.deleteMessageConfirm")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t("common.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
