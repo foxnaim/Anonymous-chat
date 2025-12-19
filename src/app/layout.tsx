@@ -78,14 +78,26 @@ export default function RootLayout({
                   'extensionstate.js',
                   'heuristicsredefinitions.js',
                   'err_file_not_found',
-                  'failed to load resource'
+                  'failed to load resource',
+                  'cannot read properties',
+                  'reading \'control\'',
+                  'permissions-policy',
+                  'browsing-topics'
                 ];
                 
                 const isExtError = function(msg, src) {
                   if (!msg && !src) return false;
                   const text = (String(msg || '') + ' ' + String(src || '')).toLowerCase();
-                  return EXT_PATTERNS.some(p => text.includes(p)) ||
-                         EXTENSION_IDS.some(id => text.includes(id));
+                  // Проверяем паттерны расширений
+                  if (EXT_PATTERNS.some(p => text.includes(p)) ||
+                      EXTENSION_IDS.some(id => text.includes(id))) {
+                    return true;
+                  }
+                  // Дополнительная проверка для ошибок с 'control' в content_script.js
+                  if (text.includes('control') && (text.includes('content_script') || text.includes('undefined'))) {
+                    return true;
+                  }
+                  return false;
                 };
                 
                 // Перехватываем все методы console

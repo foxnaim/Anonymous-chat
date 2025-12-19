@@ -6,6 +6,19 @@ const nextConfig = {
   experimental: {
     typedRoutes: true
   },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Permissions-Policy',
+            value: 'geolocation=(), microphone=(), camera=()'
+          }
+        ]
+      }
+    ];
+  }
 };
 
 export default nextConfig;
