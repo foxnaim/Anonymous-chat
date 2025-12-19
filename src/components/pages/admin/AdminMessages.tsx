@@ -25,6 +25,7 @@ import { Message, MessageStatus } from "@/types";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { MESSAGE_STATUSES } from "@/lib/utils/constants";
+import { useSocketMessages } from "@/lib/websocket/useSocket";
 
 const AdminMessages = () => {
   const { t } = useTranslation();
@@ -34,6 +35,9 @@ const AdminMessages = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { data: messages = [], isLoading, refetch } = useMessages();
+  
+  // Подключаемся к WebSocket для real-time обновлений
+  useSocketMessages();
   
   // Функция для нормализации статуса: переводит переведенное значение в значение из БД
   const normalizeStatus = (status: string): string => {

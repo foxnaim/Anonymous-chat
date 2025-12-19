@@ -631,6 +631,10 @@
     "emailChangeSameEmail": "The new email address must be different from your current email address. Please enter a different email.",
     "emailChangeEmailInUse": "This email address is already registered to another account. Please choose a different email address."
   },
+  "notifications": {
+    "newMessage": "New message",
+    "newMessageReceived": "New message received"
+  },
   "seo": {
     "defaultTitle": "FeedbackHub - Anonymous Feedback Platform",
     "defaultDescription": "Send anonymous feedback to your company. Secure platform for honest feedback.",

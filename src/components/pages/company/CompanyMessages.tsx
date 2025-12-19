@@ -16,6 +16,7 @@ import { useAuth } from "@/lib/redux";
 import { Message, MessageStatus } from "@/types";
 import { toast } from "sonner";
 import { MESSAGE_STATUSES } from "@/lib/utils/constants";
+import { useSocketMessages } from "@/lib/websocket/useSocket";
 
 const CompanyMessages = () => {
   const { t } = useTranslation();
@@ -72,6 +73,9 @@ const CompanyMessages = () => {
   const { data: messages = [], isLoading, refetch } = useMessages(company?.code, undefined, undefined, {
     enabled: !!company?.code,
   });
+  
+  // Подключаемся к WebSocket для real-time обновлений
+  useSocketMessages(company?.code);
   
   // Функция для нормализации статуса: переводит переведенное значение в значение из БД
   const normalizeStatus = (status: string): string => {
