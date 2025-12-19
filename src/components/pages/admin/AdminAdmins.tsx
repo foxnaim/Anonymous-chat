@@ -82,36 +82,49 @@ const AdminAdmins = () => {
       });
     },
     onError: (error: any) => {
-      // Получаем сообщение об ошибке с бэкенда (проверяем разные возможные пути)
-      const backendMessage = 
-        error?.message || 
-        error?.response?.data?.error?.message || 
-        error?.response?.data?.message || 
-        "";
+      // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
+      const backendMessage = String(error?.message || "").trim();
+      const errorStatus = error?.status || 0;
       
-      console.log("Admin creation error:", error);
-      console.log("Backend message:", backendMessage);
-      
-      // Маппинг сообщений об ошибках
+      // Маппинг сообщений об ошибках - проверяем в строгом порядке приоритета
       let errorMessage = "";
+      const msgLower = backendMessage.toLowerCase();
       
-      // Проверяем конкретные типы ошибок уникальности в порядке приоритета
-      if (backendMessage.includes("Admin with this name already exists") || (backendMessage.toLowerCase().includes("name already exists") && backendMessage.toLowerCase().includes("admin"))) {
+      // 1. Проверка имени админа
+      if (backendMessage.includes("Admin with this name already exists") || 
+          (msgLower.includes("name") && msgLower.includes("already exists") && msgLower.includes("admin"))) {
         errorMessage = t("auth.adminNameAlreadyExists");
-      } else if (backendMessage.includes("Admin with this email already exists") || (backendMessage.toLowerCase().includes("admin already exists") || (backendMessage.toLowerCase().includes("email already exists") && backendMessage.toLowerCase().includes("admin")))) {
+      }
+      // 2. Проверка email админа
+      else if (backendMessage.includes("Admin with this email already exists") || 
+               (msgLower.includes("email") && msgLower.includes("already exists") && msgLower.includes("admin"))) {
         errorMessage = t("auth.adminEmailAlreadyExists");
-      } else if (backendMessage.includes("Company with this email already exists") || (backendMessage.toLowerCase().includes("email already exists") && backendMessage.toLowerCase().includes("company"))) {
+      }
+      // 3. Проверка email компании
+      else if (backendMessage.includes("Company with this email already exists") || 
+               (msgLower.includes("email") && msgLower.includes("already exists") && msgLower.includes("company"))) {
         errorMessage = t("auth.companyEmailAlreadyExists");
-      } else if (backendMessage.includes("User with this email already exists") || backendMessage.toLowerCase().includes("user already exists")) {
+      }
+      // 4. Проверка email пользователя
+      else if (backendMessage.includes("User with this email already exists") || 
+               (msgLower.includes("user") && msgLower.includes("already exists")) ||
+               (msgLower.includes("email") && msgLower.includes("already exists") && !msgLower.includes("company") && !msgLower.includes("admin"))) {
         errorMessage = t("auth.userEmailAlreadyExists");
-      } else if (backendMessage.includes("Email is required") || backendMessage.toLowerCase().includes("required")) {
+      }
+      // 5. Остальные ошибки
+      else if (backendMessage.includes("Email is required") || msgLower.includes("required")) {
         errorMessage = t("auth.emailAndPasswordRequired");
-      } else if (backendMessage.includes("Access denied")) {
+      }
+      else if (backendMessage.includes("Access denied")) {
         errorMessage = t("auth.accessDenied");
-      } else if (backendMessage) {
-        // Если есть сообщение, но нет перевода, показываем оригинальное
+      }
+      else if (errorStatus === 409) {
+        errorMessage = "Данные уже существуют. Проверьте уникальность имени и email.";
+      }
+      else if (backendMessage && !backendMessage.includes("HTTP error")) {
         errorMessage = backendMessage;
-      } else {
+      }
+      else {
         errorMessage = t("admin.createError") || t("common.error");
       }
       

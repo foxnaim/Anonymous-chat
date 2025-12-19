@@ -115,38 +115,55 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
         });
       }
     } catch (error: any) {
-      // Получаем сообщение об ошибке с бэкенда (проверяем разные возможные пути)
-      const backendMessage = 
-        error?.message || 
-        error?.response?.data?.error?.message || 
-        error?.response?.data?.message || 
-        "";
+      // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
+      const backendMessage = String(error?.message || "").trim();
+      const errorStatus = error?.status || 0;
       
-      console.log("Registration error:", error);
-      console.log("Backend message:", backendMessage);
-      
-      // Маппинг сообщений об ошибках
+      // Маппинг сообщений об ошибках - проверяем в строгом порядке приоритета
       let errorMessage = "";
+      const msgLower = backendMessage.toLowerCase();
       
-      // Проверяем конкретные типы ошибок уникальности в порядке приоритета
-      if (backendMessage.includes("Company with this code already exists") || backendMessage.toLowerCase().includes("code already exists")) {
+      // 1. Проверка кода компании
+      if (backendMessage.includes("Company with this code already exists") || 
+          (msgLower.includes("code") && msgLower.includes("already exists"))) {
         errorMessage = t("auth.companyCodeAlreadyExists");
-      } else if (backendMessage.includes("Company with this name already exists") || (backendMessage.toLowerCase().includes("name already exists") && backendMessage.toLowerCase().includes("company"))) {
+      }
+      // 2. Проверка имени компании
+      else if (backendMessage.includes("Company with this name already exists") || 
+               (msgLower.includes("name") && msgLower.includes("already exists") && msgLower.includes("company"))) {
         errorMessage = t("auth.companyNameAlreadyExists");
-      } else if (backendMessage.includes("Company with this email already exists") || (backendMessage.toLowerCase().includes("email already exists") && backendMessage.toLowerCase().includes("company"))) {
+      }
+      // 3. Проверка email компании
+      else if (backendMessage.includes("Company with this email already exists") || 
+               (msgLower.includes("email") && msgLower.includes("already exists") && msgLower.includes("company"))) {
         errorMessage = t("auth.companyEmailAlreadyExists");
-      } else if (backendMessage.includes("Admin with this email already exists") || (backendMessage.toLowerCase().includes("email already exists") && backendMessage.toLowerCase().includes("admin"))) {
+      }
+      // 4. Проверка email админа
+      else if (backendMessage.includes("Admin with this email already exists") || 
+               (msgLower.includes("email") && msgLower.includes("already exists") && msgLower.includes("admin"))) {
         errorMessage = t("auth.adminEmailAlreadyExists");
-      } else if (backendMessage.includes("User already exists") || backendMessage.toLowerCase().includes("user already exists")) {
+      }
+      // 5. Проверка email пользователя
+      else if (backendMessage.includes("User already exists") || 
+               backendMessage.includes("User with this email already exists") ||
+               (msgLower.includes("user") && msgLower.includes("already exists")) ||
+               (msgLower.includes("email") && msgLower.includes("already exists") && !msgLower.includes("company") && !msgLower.includes("admin"))) {
         errorMessage = t("auth.userAlreadyExists");
-      } else if (backendMessage.includes("Email and password are required") || backendMessage.toLowerCase().includes("required")) {
+      }
+      // 6. Остальные ошибки
+      else if (backendMessage.includes("Email and password are required") || msgLower.includes("required")) {
         errorMessage = t("auth.emailAndPasswordRequired");
-      } else if (backendMessage.includes("Password must be at least 8 characters") || backendMessage.includes("Password must be at least 6 characters")) {
+      }
+      else if (backendMessage.includes("Password must be at least")) {
         errorMessage = t("auth.passwordMinLength", { length: 8 });
-      } else if (backendMessage) {
-        // Если есть сообщение, но нет перевода, показываем оригинальное
+      }
+      else if (errorStatus === 409) {
+        errorMessage = "Данные уже существуют. Проверьте уникальность имени, email и кода компании.";
+      }
+      else if (backendMessage && !backendMessage.includes("HTTP error")) {
         errorMessage = backendMessage;
-      } else {
+      }
+      else {
         errorMessage = t("common.error");
       }
       

@@ -96,14 +96,18 @@ class ApiClient {
 
         try {
           const errorData = await response.json();
-          if (errorData.error?.message) {
+          // Бэкенд возвращает ошибку в формате: { success: false, error: { message: string, code?: string } }
+          if (errorData?.error?.message) {
             errorMessage = errorData.error.message;
+          } else if (errorData?.message) {
+            errorMessage = errorData.message;
           }
-          if (errorData.error?.code) {
+          if (errorData?.error?.code) {
             errorCode = errorData.error.code;
           }
-        } catch {
+        } catch (parseError) {
           // Если не удалось распарсить JSON, используем стандартное сообщение
+          console.warn("Failed to parse error response:", parseError);
         }
 
         const error: ApiError = {
@@ -111,6 +115,10 @@ class ApiClient {
           status: response.status,
           code: errorCode,
         };
+        
+        // Логируем ошибку для отладки
+        console.error("API Error:", error);
+        
         throw error;
       }
 

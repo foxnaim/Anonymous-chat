@@ -131,47 +131,62 @@ const AdminCompanies = () => {
       toast.success(t("admin.companyCreated") || "Компания создана");
     },
     onError: (error: any) => {
-      // Получаем сообщение об ошибке с бэкенда
-      // apiClient выбрасывает ApiError с полями: { message, status, code }
-      let backendMessage = error?.message || "";
+      // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
+      const backendMessage = String(error?.message || "").trim();
+      const errorStatus = error?.status || 0;
       
-      // Логируем для отладки
-      console.error("Company creation error:", error);
-      console.error("Error message:", backendMessage);
-      console.error("Error status:", error?.status);
-      console.error("Full error object:", JSON.stringify(error, null, 2));
-      
-      // Маппинг сообщений об ошибках на ключи переводов
+      // Маппинг сообщений об ошибках - проверяем в строгом порядке приоритета
       let errorMessage = "";
-      const messageLower = backendMessage.toLowerCase();
+      const msgLower = backendMessage.toLowerCase();
       
-      // Проверяем конкретные типы ошибок уникальности в порядке приоритета
-      if (backendMessage.includes("Company with this code already exists") || messageLower.includes("code already exists")) {
+      // 1. Проверка кода компании (самая специфичная)
+      if (backendMessage.includes("Company with this code already exists") || 
+          (msgLower.includes("code") && msgLower.includes("already exists"))) {
         errorMessage = t("auth.companyCodeAlreadyExists");
-      } else if (backendMessage.includes("Company with this name already exists") || (messageLower.includes("name already exists") && messageLower.includes("company"))) {
+      }
+      // 2. Проверка имени компании
+      else if (backendMessage.includes("Company with this name already exists") || 
+               (msgLower.includes("name") && msgLower.includes("already exists") && msgLower.includes("company"))) {
         errorMessage = t("auth.companyNameAlreadyExists");
-      } else if (backendMessage.includes("Company with this email already exists") || (messageLower.includes("email already exists") && messageLower.includes("company"))) {
+      }
+      // 3. Проверка email компании
+      else if (backendMessage.includes("Company with this email already exists") || 
+               (msgLower.includes("email") && msgLower.includes("already exists") && msgLower.includes("company"))) {
         errorMessage = t("auth.companyEmailAlreadyExists");
-      } else if (backendMessage.includes("Admin with this email already exists") || (messageLower.includes("email already exists") && messageLower.includes("admin"))) {
+      }
+      // 4. Проверка email админа
+      else if (backendMessage.includes("Admin with this email already exists") || 
+               (msgLower.includes("email") && msgLower.includes("already exists") && msgLower.includes("admin"))) {
         errorMessage = t("auth.adminEmailAlreadyExists");
-      } else if (backendMessage.includes("User with this email already exists") || messageLower.includes("user already exists") || (messageLower.includes("email already exists") && !messageLower.includes("company") && !messageLower.includes("admin"))) {
+      }
+      // 5. Проверка email пользователя
+      else if (backendMessage.includes("User with this email already exists") || 
+               (msgLower.includes("user") && msgLower.includes("already exists")) ||
+               (msgLower.includes("email") && msgLower.includes("already exists") && !msgLower.includes("company") && !msgLower.includes("admin"))) {
         errorMessage = t("auth.userEmailAlreadyExists");
-      } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || messageLower.includes("required")) {
+      }
+      // 6. Остальные ошибки
+      else if (backendMessage.includes("Name, code, adminEmail, and password are required") || 
+               msgLower.includes("required")) {
         errorMessage = t("auth.companyFieldsRequired");
-      } else if (backendMessage.includes("Password must be at least 8 characters") || backendMessage.includes("Password must be at least 6 characters")) {
+      }
+      else if (backendMessage.includes("Password must be at least")) {
         errorMessage = t("auth.passwordMinLength", { length: 8 });
-      } else if (backendMessage.includes("Access denied")) {
+      }
+      else if (backendMessage.includes("Access denied")) {
         errorMessage = t("auth.accessDenied");
-      } else if (backendMessage && backendMessage !== "HTTP error! status: 409") {
-        // Если есть сообщение, но нет перевода, показываем оригинальное
+      }
+      // 7. Если статус 409, но сообщение не распознано
+      else if (errorStatus === 409) {
+        errorMessage = "Данные уже существуют. Проверьте уникальность имени, email и кода компании.";
+      }
+      // 8. Если есть сообщение, показываем его
+      else if (backendMessage && !backendMessage.includes("HTTP error")) {
         errorMessage = backendMessage;
-      } else {
-        // Если сообщение не найдено, но есть ошибка 409, показываем общее сообщение о конфликте
-        if (error?.status === 409) {
-          errorMessage = "Данные уже существуют. Проверьте уникальность имени, email и кода компании.";
-        } else {
-          errorMessage = t("common.error");
-        }
+      }
+      // 9. Общая ошибка
+      else {
+        errorMessage = t("common.error") || "Произошла ошибка при создании компании";
       }
       
       // Всегда показываем toast с ошибкой
@@ -369,15 +384,18 @@ const AdminCompanies = () => {
     }
 
     // Добавляем обязательное поле status при создании компании
-    try {
-      await createCompany({
-        ...newCompany,
-        status: selectedStatus,
-      });
-    } catch (error) {
-      // Ошибка уже обработана в onError, но на всякий случай логируем
-      console.error("Error creating company:", error);
-    }
+    // Используем mutateAsync - ошибка будет обработана в onError
+    await createCompany({
+      ...newCompany,
+      status: selectedStatus,
+    }).catch((error) => {
+      // Дополнительная обработка, если onError не сработал
+      console.error("Error in catch block:", error);
+      // onError должен обработать, но на всякий случай показываем общую ошибку
+      if (!error?.handled) {
+        toast.error(error?.message || t("common.error"));
+      }
+    });
   };
 
   const handleEdit = async () => {
