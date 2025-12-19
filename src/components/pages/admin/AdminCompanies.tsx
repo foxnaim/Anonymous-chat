@@ -1196,6 +1196,42 @@ const AdminCompanies = () => {
                 </div>
                 {selectedCompany && (
                   <div className="space-y-6">
+                    {/* Company Header with Logo */}
+                    <Card className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold text-lg overflow-hidden flex-shrink-0">
+                          {selectedCompany.logoUrl ? (
+                            <Image
+                              src={selectedCompany.logoUrl}
+                              alt={selectedCompany.name}
+                              width={48}
+                              height={48}
+                              className="w-full h-full object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            selectedCompany.name.charAt(0)
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-semibold text-foreground truncate">{selectedCompany.name}</h5>
+                          <p className="text-sm text-muted-foreground truncate">{selectedCompany.adminEmail || "—"}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              {selectedCompany.code}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => copyToClipboard(selectedCompany.code)}
+                            >
+                              <FiCopy className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
                     <div className="grid grid-cols-2 gap-4">
                       <Card className="p-4">
                         <div className="text-sm text-muted-foreground mb-1">

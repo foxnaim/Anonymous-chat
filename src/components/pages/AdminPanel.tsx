@@ -458,8 +458,19 @@ const AdminPanel = () => {
                   className="p-4 space-y-4 transition"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold text-lg">
-                      {selectedCompanyData.name.charAt(0)}
+                    <div className="w-12 h-12 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold text-lg overflow-hidden flex-shrink-0">
+                      {selectedCompanyData.logoUrl ? (
+                        <Image
+                          src={selectedCompanyData.logoUrl}
+                          alt={selectedCompanyData.name}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        selectedCompanyData.name.charAt(0)
+                      )}
                     </div>
                     <div className="flex-1">
                       <h5 className="font-semibold text-foreground">{selectedCompanyData.name}</h5>
@@ -675,8 +686,19 @@ const AdminPanel = () => {
                         <>
                           <Card className="p-4 space-y-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
-                                {selectedCompanyData.name.charAt(0)}
+                              <div className="w-12 h-12 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold text-lg flex-shrink-0 overflow-hidden">
+                                {selectedCompanyData.logoUrl ? (
+                                  <Image
+                                    src={selectedCompanyData.logoUrl}
+                                    alt={selectedCompanyData.name}
+                                    width={48}
+                                    height={48}
+                                    className="w-full h-full object-cover"
+                                    unoptimized
+                                  />
+                                ) : (
+                                  selectedCompanyData.name.charAt(0)
+                                )}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <h5 className="font-semibold text-foreground truncate">{selectedCompanyData.name}</h5>
@@ -1016,8 +1038,19 @@ const AdminPanel = () => {
                 <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-xl bg-card border border-border shadow-xl transition-all p-6 space-y-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
-                      <div className="w-12 h-12 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold text-lg">
-                        {selectedCompanyData?.name?.charAt(0) || "C"}
+                      <div className="w-12 h-12 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold text-lg overflow-hidden flex-shrink-0">
+                        {selectedCompanyData?.logoUrl ? (
+                          <Image
+                            src={selectedCompanyData.logoUrl}
+                            alt={selectedCompanyData?.name || "Company logo"}
+                            width={48}
+                            height={48}
+                            className="w-full h-full object-cover"
+                            unoptimized
+                          />
+                        ) : (
+                          selectedCompanyData?.name?.charAt(0) || "C"
+                        )}
                       </div>
                       <div className="space-y-1">
                         <Dialog.Title className="text-lg font-semibold text-foreground">

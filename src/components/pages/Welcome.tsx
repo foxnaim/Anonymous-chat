@@ -291,8 +291,19 @@ const Welcome = () => {
                   >
                     <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 sm:p-4 min-w-0 overflow-hidden">
                       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                          <FiHome className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {company?.logoUrl ? (
+                            <Image
+                              src={company.logoUrl}
+                              alt={company.name || "Company logo"}
+                              width={40}
+                              height={40}
+                              className="w-full h-full object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <FiHome className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-foreground text-sm sm:text-base truncate">{company?.name || ""}</p>
