@@ -1,14 +1,16 @@
 /**
  * Утилиты для отладки WebSocket подключения
  * Используйте в консоли браузера: window.checkWebSocket()
+ * 
+ * Этот файл инициализируется только на клиенте
  */
 
 import { getSocket } from './socket';
 
 declare global {
   interface Window {
-    checkWebSocket: () => void;
-    getWebSocketStatus: () => {
+    checkWebSocket?: () => void;
+    getWebSocketStatus?: () => {
       connected: boolean;
       id: string | null;
       url: string;
@@ -16,6 +18,7 @@ declare global {
   }
 }
 
+// Инициализация только на клиенте
 if (typeof window !== 'undefined') {
   window.checkWebSocket = () => {
     const socket = getSocket();
@@ -46,10 +49,14 @@ if (typeof window !== 'undefined') {
     };
   };
   
+  // Показываем подсказку только в development
   if (process.env.NODE_ENV === 'development') {
-    console.log('💡 WebSocket debug tools available:');
-    console.log('  - window.checkWebSocket() - Check connection status');
-    console.log('  - window.getWebSocketStatus() - Get status object');
+    // Используем setTimeout, чтобы не блокировать рендеринг
+    setTimeout(() => {
+      console.log('💡 WebSocket debug tools available:');
+      console.log('  - window.checkWebSocket() - Check connection status');
+      console.log('  - window.getWebSocketStatus() - Get status object');
+    }, 1000);
   }
 }
 

@@ -11,10 +11,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import "@/i18n/config";
 // Подавление ошибок Chrome-расширений
 import "@/lib/utils/suppressExtensionErrors";
-// WebSocket debug tools (только в development)
-if (process.env.NODE_ENV === 'development') {
-  import("@/lib/websocket/debug");
-}
 
 // Компонент для принудительной установки светлой темы при первой загрузке
 const ThemeInitializer = ({ children }: { children: ReactNode }) => {
