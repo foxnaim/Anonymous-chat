@@ -127,8 +127,12 @@ const AdminPanel = () => {
     }
   };
 
-  // Автовыбор первой компании при загрузке и после фильтра / поиска
+  // Автовыбор первой компании при загрузке и после фильтра / поиска (только для десктопа)
   useEffect(() => {
+    // На мобильных устройствах не выбираем автоматически
+    if (isMobile) {
+      return;
+    }
     if (filteredCompanies.length === 0) {
       setSelectedCompanyId(null);
       return;
@@ -143,15 +147,14 @@ const AdminPanel = () => {
     if (!exists) {
       setSelectedCompanyId(filteredCompanies[0].id);
     }
-  }, [filteredCompanies, selectedCompanyId]);
+  }, [filteredCompanies, selectedCompanyId, isMobile]);
 
   const selectedCompanyData =
     (selectedCompanyId && filteredCompanies.find((c) => c.id === selectedCompanyId)) ||
-    filteredCompanies[0] ||
     null;
   
-  // Для мобильных: определяем, показывать ли модальное окно
-  const shouldShowMobileModal = selectedCompanyId !== null && filteredCompanies.length > 0;
+  // Для мобильных: определяем, показывать ли модальное окно (только при явном выборе)
+  const shouldShowMobileModal = selectedCompanyId !== null && isMobile;
 
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden">
@@ -480,6 +483,24 @@ const AdminPanel = () => {
                       {t("admin.activateCompany")}
                     </Button>
                   )}
+                  <Button
+                    className="w-full"
+                    variant="destructive"
+                    onClick={async () => {
+                      if (confirm(t("admin.deleteCompanyWarning") || "Вы уверены, что хотите удалить эту компанию? Это действие нельзя отменить.")) {
+                        try {
+                          await deleteCompany(selectedCompanyData.id);
+                          setSelectedCompanyId(null);
+                        } catch (error) {
+                          toast.error(t("common.error"));
+                        }
+                      }
+                    }}
+                    disabled={isDeleting}
+                  >
+                    <FiTrash2 className="h-4 w-4 mr-2" />
+                    {isDeleting ? t("common.loading") : (t("admin.deleteCompany") || "Удалить компанию")}
+                  </Button>
                 </>
               )}
             </div>
@@ -531,8 +552,8 @@ const AdminPanel = () => {
           </aside>
         </div>
 
-        {/* Mobile Company Detail Modal */}
-        <Transition show={shouldShowMobileModal && isMobile} as={Fragment}>
+        {/* Mobile Company Detail Panel - Side Panel */}
+        <Transition show={shouldShowMobileModal} as={Fragment}>
           <Dialog
             as="div"
             className="lg:hidden relative z-50"
@@ -548,29 +569,33 @@ const AdminPanel = () => {
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <div className="fixed inset-0 bg-black/50" />
+              <div className="fixed inset-0 bg-black/50" onClick={() => setSelectedCompanyId(null)} />
             </Transition.Child>
 
-            <div className="fixed inset-0 overflow-y-auto">
-              <div className="flex min-h-full items-end justify-center p-0">
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+              <div className="flex min-h-full items-stretch justify-end">
                 <Transition.Child
                   as={Fragment}
                   enter="ease-out duration-300"
-                  enterFrom="opacity-0 translate-y-full"
-                  enterTo="opacity-100 translate-y-0"
+                  enterFrom="opacity-0 translate-x-full"
+                  enterTo="opacity-100 translate-x-0"
                   leave="ease-in duration-200"
-                  leaveFrom="opacity-100 translate-y-0"
-                  leaveTo="opacity-0 translate-y-full"
+                  leaveFrom="opacity-100 translate-x-0"
+                  leaveTo="opacity-0 translate-x-full"
                 >
-                  <Dialog.Panel className="w-full max-h-[85vh] overflow-y-auto bg-card border-t border-border rounded-t-2xl shadow-xl transform transition-all">
+                  <Dialog.Panel className="w-full max-w-sm h-full overflow-y-auto bg-card border-l border-border shadow-xl transform transition-all pointer-events-auto">
                     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-2 sticky top-0 bg-card z-10 pb-2 border-b border-border">
                         <Dialog.Title className="text-base sm:text-lg font-semibold">{t("admin.companyDetails")}</Dialog.Title>
                         <Button
                           ref={detailCloseRef}
                           variant="ghost"
                           size="icon"
-                          onClick={() => setSelectedCompanyId(null)}
+                          className="cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCompanyId(null);
+                          }}
                         >
                           <FiX className="h-5 w-5" />
                         </Button>
@@ -586,6 +611,22 @@ const AdminPanel = () => {
                               <div className="flex-1 min-w-0">
                                 <h5 className="font-semibold text-foreground truncate">{selectedCompanyData.name}</h5>
                                 <p className="text-sm text-muted-foreground truncate">{selectedCompanyData.adminEmail}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge variant="outline" className="text-xs">
+                                    {selectedCompanyData.code}
+                                  </Badge>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => {
+                                      navigator.clipboard?.writeText(selectedCompanyData.code);
+                                      toast.success(t("common.copy") || "Скопировано");
+                                    }}
+                                  >
+                                    <FiCopy className="h-4 w-4 text-muted-foreground" />
+                                  </Button>
+                                </div>
                               </div>
                             </div>
 
@@ -673,6 +714,24 @@ const AdminPanel = () => {
                                 {t("admin.activateCompany")}
                               </Button>
                             ) : null}
+                            <Button
+                              className="w-full"
+                              variant="destructive"
+                              onClick={async () => {
+                                if (confirm(t("admin.deleteCompanyWarning") || "Вы уверены, что хотите удалить эту компанию? Это действие нельзя отменить.")) {
+                                  try {
+                                    await deleteCompany(selectedCompanyData.id);
+                                    setSelectedCompanyId(null);
+                                  } catch (error) {
+                                    toast.error(t("common.error"));
+                                  }
+                                }
+                              }}
+                              disabled={isDeleting}
+                            >
+                              <FiTrash2 className="h-4 w-4 mr-2" />
+                              {isDeleting ? t("common.loading") : (t("admin.deleteCompany") || "Удалить компанию")}
+                            </Button>
                           </div>
 
                           <Card className="p-4 bg-muted">

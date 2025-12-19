@@ -9,6 +9,8 @@ import QueryProvider from "./QueryProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "@/i18n/config";
+// Подавление ошибок Chrome-расширений
+import "@/lib/utils/suppressExtensionErrors";
 
 // Компонент для принудительной установки светлой темы при первой загрузке
 const ThemeInitializer = ({ children }: { children: ReactNode }) => {
