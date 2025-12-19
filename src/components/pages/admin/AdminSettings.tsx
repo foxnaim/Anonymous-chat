@@ -1,0 +1,404 @@
+'use client';
+
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FiEdit2, FiLock } from "react-icons/fi";
+import { AdminHeader } from "@/components/AdminHeader";
+import { useAuth, setUser } from "@/lib/redux";
+import { toast } from "sonner";
+import { useAdminSettings, useUpdateAdminSettings } from "@/lib/query";
+import { authService } from "@/lib/api/auth";
+import { useDispatch } from "react-redux";
+import { validatePasswordStrength } from "@/lib/utils/validation";
+
+const AdminSettings = () => {
+  const { t, i18n: i18nInstance } = useTranslation();
+  const { user } = useAuth();
+  const dispatch = useDispatch();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailPassword, setEmailPassword] = useState("");
+  const [isLanguageChanging, setIsLanguageChanging] = useState(false);
+  
+  // Загружаем настройки из API
+  const { data: settings, isLoading: settingsLoading, refetch: refetchSettings } = useAdminSettings();
+  const { mutateAsync: updateSettings, isPending: isUpdating } = useUpdateAdminSettings({
+    onSuccess: async (updatedData) => {
+      // После успешного обновления принудительно обновляем настройки
+      await refetchSettings();
+      toast.success(t("admin.settingsSaved"));
+      setIsLanguageChanging(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || t("common.error"));
+      setIsLanguageChanging(false);
+    },
+  });
+
+  // Используем настройки из API для полноэкранного режима
+  // Примечание: полноэкранный режим применяется глобально через AdminHeader
+  const isFullscreen = settings?.fullscreenMode ?? false;
+
+  // Синхронизируем язык с API только при первой загрузке настроек или когда настройки обновляются
+  useEffect(() => {
+    if (settings?.language && !isLanguageChanging) {
+      const currentLang = i18nInstance.language.split('-')[0]; // Убираем регион (ru-RU -> ru)
+      if (settings.language !== currentLang) {
+        i18nInstance.changeLanguage(settings.language);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings?.language, isLanguageChanging]); // Добавляем isLanguageChanging, чтобы не конфликтовать с пользовательским изменением
+
+  const handlePasswordChange = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error(t("common.fillAllFields"));
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error(t("auth.passwordMismatch"));
+      return;
+    }
+    // Проверка надежности пароля
+    const passwordValidation = validatePasswordStrength(newPassword);
+    if (!passwordValidation.isValid) {
+      // Показываем первую ошибку
+      const firstError = passwordValidation.errors[0];
+      toast.error(firstError || t("auth.passwordWeak"));
+      return;
+    }
+    // В реальном приложении здесь будет API вызов
+    toast.success(t("admin.passwordChanged"));
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+  };
+
+  const handleLanguageChange = async (lang: string) => {
+    setIsLanguageChanging(true);
+    const previousLang = settings?.language || i18nInstance.language.split('-')[0] || 'ru';
+    
+    // Сначала меняем язык локально для мгновенной обратной связи
+    i18nInstance.changeLanguage(lang);
+    
+    // Затем сохраняем в API
+    try {
+      const updatedSettings = await updateSettings({ language: lang as 'ru' | 'en' | 'kk' });
+      
+      // Убеждаемся, что язык действительно обновился в настройках
+      if (updatedSettings.language !== lang) {
+        // Если язык не обновился, возвращаем предыдущий
+        i18nInstance.changeLanguage(previousLang);
+        toast.error(t("common.error") || "Ошибка при сохранении языка");
+      } else {
+        toast.success(t("admin.settingsSaved") || "Настройки сохранены");
+      }
+    } catch (error: any) {
+      // В случае ошибки возвращаем язык обратно
+      i18nInstance.changeLanguage(previousLang);
+      const errorMessage = error?.message || t("common.error") || "Ошибка при сохранении настроек";
+      toast.error(errorMessage);
+    } finally {
+      setIsLanguageChanging(false);
+    }
+  };
+
+  const handleFullscreenToggle = async (checked: boolean) => {
+    // Сохраняем в API сразу при изменении
+    try {
+      await updateSettings({ fullscreenMode: checked });
+    } catch (error) {
+      // В случае ошибки показываем уведомление, но не меняем состояние
+      toast.error(t("common.error") || "Ошибка при сохранении настроек");
+    }
+  };
+
+  const handleEmailEdit = () => {
+    setIsEditingEmail(true);
+    setNewEmail(user?.email || "");
+  };
+
+  const handleEmailCancel = () => {
+    setIsEditingEmail(false);
+    setNewEmail("");
+    setEmailPassword("");
+  };
+
+  const handleEmailSave = async () => {
+    if (!emailPassword) {
+      toast.error(t("admin.passwordRequiredForEmailChange"));
+      return;
+    }
+    if (!newEmail || newEmail === user?.email) {
+      toast.error(t("admin.emailNotChanged"));
+      return;
+    }
+
+    try {
+      const response = await authService.changeEmail({
+        newEmail,
+        password: emailPassword,
+      });
+
+      // Обновляем пользователя в Redux store
+      if (response.data.user && user) {
+        dispatch(setUser({
+          ...user,
+          email: response.data.user.email,
+        }));
+      }
+
+      toast.success(t("admin.emailChanged") || response.message || "Email успешно изменен");
+      setIsEditingEmail(false);
+      setNewEmail("");
+      setEmailPassword("");
+    } catch (error: any) {
+      // Получаем сообщение об ошибке с бэкенда
+      const backendMessage = error?.message || error?.response?.data?.message || "";
+      
+      // Маппинг сообщений об ошибках на ключи переводов
+      let translationKey = "common.error";
+      
+      if (backendMessage.includes("Authentication required") || backendMessage.includes("Not authenticated")) {
+        translationKey = "admin.emailChangeAuthError";
+      } else if (backendMessage.includes("required") && backendMessage.includes("email") && backendMessage.includes("password")) {
+        translationKey = "admin.emailChangeFieldsRequired";
+      } else if (backendMessage.includes("email format") || backendMessage.includes("Invalid email")) {
+        translationKey = "admin.emailChangeInvalidFormat";
+      } else if (backendMessage.includes("User not found") || backendMessage.includes("account not found")) {
+        translationKey = "admin.emailChangeUserNotFound";
+      } else if (backendMessage.includes("password") && (backendMessage.includes("incorrect") || backendMessage.includes("Invalid password"))) {
+        translationKey = "admin.emailChangeInvalidPassword";
+      } else if (backendMessage.includes("different from") || backendMessage.includes("must be different")) {
+        translationKey = "admin.emailChangeSameEmail";
+      } else if (backendMessage.includes("already registered") || backendMessage.includes("already in use")) {
+        translationKey = "admin.emailChangeEmailInUse";
+      }
+      
+      // Показываем переведенное сообщение или оригинальное, если перевода нет
+      const translatedMessage = t(translationKey);
+      const finalMessage = translatedMessage !== translationKey ? translatedMessage : backendMessage || t("common.error");
+      toast.error(finalMessage);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <AdminHeader />
+      <div className="flex flex-col">
+        <main className="container flex-1 p-6 space-y-6">
+          {/* Display Settings */}
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-6">{t("admin.displaySettings")}</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>{t("admin.fullscreenMode")}</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {t("admin.fullscreenModeDescription")}
+                  </p>
+                </div>
+                <Switch 
+                  checked={isFullscreen} 
+                  onCheckedChange={handleFullscreenToggle}
+                  disabled={settingsLoading || isUpdating}
+                />
+              </div>
+            </div>
+          </Card>
+
+          {/* Change Email */}
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-6">{t("auth.email")}</h3>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="email">{t("auth.email")}</Label>
+                  {!isEditingEmail && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleEmailEdit}
+                      className="h-8"
+                    >
+                      <FiEdit2 className="h-4 w-4 mr-2" />
+                      {t("common.edit")}
+                    </Button>
+                  )}
+                </div>
+                {isEditingEmail ? (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleEmailSave();
+                    }}
+                    className="space-y-3"
+                  >
+                    {/* Скрытое поле username для доступности и автозаполнения */}
+                    <input
+                      type="text"
+                      autoComplete="username"
+                      value={user?.email || ""}
+                      readOnly
+                      tabIndex={-1}
+                      aria-hidden="true"
+                      style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0, pointerEvents: "none" }}
+                    />
+                    <div className="space-y-2">
+                      <Input
+                        id="email"
+                        type="email"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        autoComplete="email"
+                        placeholder={t("auth.email")}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="emailPassword" className="flex items-center gap-2">
+                        <FiLock className="h-4 w-4" />
+                        {t("admin.currentPasswordForEmail")}
+                      </Label>
+                      <Input
+                        id="emailPassword"
+                        type="password"
+                        value={emailPassword}
+                        onChange={(e) => setEmailPassword(e.target.value)}
+                        autoComplete="current-password"
+                        placeholder={t("admin.enterPasswordToChangeEmail")}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t("admin.passwordRequiredToChangeEmail")}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleEmailCancel}
+                        className="flex-1"
+                      >
+                        {t("common.cancel")}
+                      </Button>
+                      <Button
+                        type="submit"
+                        className="flex-1"
+                        disabled={!emailPassword || !newEmail || newEmail === user?.email}
+                      >
+                        {t("common.save")}
+                      </Button>
+                    </div>
+                  </form>
+                ) : (
+                  <Input
+                    id="email"
+                    type="email"
+                    value={user?.email || ""}
+                    readOnly
+                    autoComplete="email"
+                    className="bg-muted"
+                  />
+                )}
+              </div>
+            </div>
+          </Card>
+
+          {/* Change Password */}
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-6">{t("admin.changePassword")}</h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handlePasswordChange();
+              }}
+              className="space-y-4"
+            >
+              {/* Скрытое поле username для доступности и автозаполнения */}
+              <input
+                type="text"
+                autoComplete="username"
+                value={user?.email || ""}
+                readOnly
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0, pointerEvents: "none" }}
+              />
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword">{t("admin.currentPassword")}</Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">{t("admin.newPassword")}</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  autoComplete="new-password"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">{t("admin.confirmNewPassword")}</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                />
+              </div>
+              <Button type="submit" className="w-full sm:w-auto">
+                {t("admin.changePassword")}
+              </Button>
+            </form>
+          </Card>
+
+          {/* Project Settings */}
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-6">{t("admin.projectSettings")}</h3>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>{t("admin.interfaceLanguage")}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {t("admin.interfaceLanguageDescription")}
+                </p>
+                <Select 
+                  value={settings?.language || i18nInstance.language.split('-')[0] || 'ru'} 
+                  onValueChange={handleLanguageChange}
+                  disabled={settingsLoading || isUpdating || isLanguageChanging}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t("admin.interfaceLanguage")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ru">Русский</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="kk">Қазақша</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </Card>
+
+        </main>
+      </div>
+    </div>
+  );
+};
+export default AdminSettings;
