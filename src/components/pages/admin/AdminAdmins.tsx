@@ -83,24 +83,27 @@ const AdminAdmins = () => {
     onError: (error: any) => {
       // Получаем сообщение об ошибке с бэкенда (проверяем разные возможные пути)
       const backendMessage = 
+        error?.message || 
         error?.response?.data?.error?.message || 
         error?.response?.data?.message || 
-        error?.message || 
         "";
+      
+      console.log("Admin creation error:", error);
+      console.log("Backend message:", backendMessage);
       
       // Маппинг сообщений об ошибках
       let errorMessage = "";
       
       // Проверяем конкретные типы ошибок уникальности в порядке приоритета
-      if (backendMessage.includes("Admin with this name already exists") || backendMessage.includes("name already exists")) {
+      if (backendMessage.includes("Admin with this name already exists") || (backendMessage.toLowerCase().includes("name already exists") && backendMessage.toLowerCase().includes("admin"))) {
         errorMessage = t("auth.adminNameAlreadyExists");
-      } else if (backendMessage.includes("Admin with this email already exists") || backendMessage.includes("admin already exists")) {
+      } else if (backendMessage.includes("Admin with this email already exists") || (backendMessage.toLowerCase().includes("admin already exists") || (backendMessage.toLowerCase().includes("email already exists") && backendMessage.toLowerCase().includes("admin")))) {
         errorMessage = t("auth.adminEmailAlreadyExists");
-      } else if (backendMessage.includes("Company with this email already exists")) {
+      } else if (backendMessage.includes("Company with this email already exists") || (backendMessage.toLowerCase().includes("email already exists") && backendMessage.toLowerCase().includes("company"))) {
         errorMessage = t("auth.companyEmailAlreadyExists");
-      } else if (backendMessage.includes("User with this email already exists") || backendMessage.includes("user already exists")) {
+      } else if (backendMessage.includes("User with this email already exists") || backendMessage.toLowerCase().includes("user already exists")) {
         errorMessage = t("auth.userEmailAlreadyExists");
-      } else if (backendMessage.includes("Email is required") || backendMessage.includes("required")) {
+      } else if (backendMessage.includes("Email is required") || backendMessage.toLowerCase().includes("required")) {
         errorMessage = t("auth.emailAndPasswordRequired");
       } else if (backendMessage.includes("Access denied")) {
         errorMessage = t("auth.accessDenied");
@@ -112,7 +115,6 @@ const AdminAdmins = () => {
       }
       
       toast.error(errorMessage);
-      console.error("Admin creation error:", error);
     },
   });
 

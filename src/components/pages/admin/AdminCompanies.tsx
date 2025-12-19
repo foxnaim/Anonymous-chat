@@ -133,26 +133,29 @@ const AdminCompanies = () => {
     onError: (error: any) => {
       // Получаем сообщение об ошибке с бэкенда (проверяем разные возможные пути)
       const backendMessage = 
+        error?.message || 
         error?.response?.data?.error?.message || 
         error?.response?.data?.message || 
-        error?.message || 
         "";
+      
+      console.log("Company creation error:", error);
+      console.log("Backend message:", backendMessage);
       
       // Маппинг сообщений об ошибках на ключи переводов
       let errorMessage = "";
       
       // Проверяем конкретные типы ошибок уникальности в порядке приоритета
-      if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
+      if (backendMessage.includes("Company with this code already exists") || backendMessage.toLowerCase().includes("code already exists")) {
         errorMessage = t("auth.companyCodeAlreadyExists");
-      } else if (backendMessage.includes("Company with this name already exists") || backendMessage.includes("name already exists")) {
+      } else if (backendMessage.includes("Company with this name already exists") || backendMessage.toLowerCase().includes("name already exists") && backendMessage.toLowerCase().includes("company")) {
         errorMessage = t("auth.companyNameAlreadyExists");
-      } else if (backendMessage.includes("Company with this email already exists")) {
+      } else if (backendMessage.includes("Company with this email already exists") || (backendMessage.toLowerCase().includes("email already exists") && backendMessage.toLowerCase().includes("company"))) {
         errorMessage = t("auth.companyEmailAlreadyExists");
-      } else if (backendMessage.includes("Admin with this email already exists")) {
+      } else if (backendMessage.includes("Admin with this email already exists") || (backendMessage.toLowerCase().includes("email already exists") && backendMessage.toLowerCase().includes("admin"))) {
         errorMessage = t("auth.adminEmailAlreadyExists");
-      } else if (backendMessage.includes("User with this email already exists") || backendMessage.includes("user already exists")) {
+      } else if (backendMessage.includes("User with this email already exists") || (backendMessage.toLowerCase().includes("user already exists") || backendMessage.toLowerCase().includes("email already exists"))) {
         errorMessage = t("auth.userEmailAlreadyExists");
-      } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.includes("required")) {
+      } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.toLowerCase().includes("required")) {
         errorMessage = t("auth.companyFieldsRequired");
       } else if (backendMessage.includes("Password must be at least 8 characters") || backendMessage.includes("Password must be at least 6 characters")) {
         errorMessage = t("auth.passwordMinLength", { length: 8 });
@@ -166,7 +169,6 @@ const AdminCompanies = () => {
       }
       
       toast.error(errorMessage);
-      console.error("Company creation error:", error);
     },
   });
 
