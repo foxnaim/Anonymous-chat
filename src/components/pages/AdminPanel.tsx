@@ -26,6 +26,16 @@ import {
   FiCheck,
   FiTrash2,
 } from "react-icons/fi";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AdminHeader } from "@/components/AdminHeader";
 import { useCompanies, useCreateCompany, useDeleteCompany, usePlans, companyService } from "@/lib/query";
 import { getTranslatedValue } from "@/lib/utils/translations";
@@ -51,6 +61,7 @@ const AdminPanel = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [planEndDate, setPlanEndDate] = useState<string>("");
   const detailCloseRef = useRef<HTMLButtonElement | null>(null);
@@ -82,6 +93,7 @@ const AdminPanel = () => {
     onSuccess: async () => {
       await refetch();
       setIsViewOpen(false);
+      setIsDeleteDialogOpen(false);
       setSelectedCompanyId(null);
       toast.success(t("admin.deleteCompany") || "Компания удалена");
     },
@@ -486,20 +498,13 @@ const AdminPanel = () => {
                   <Button
                     className="w-full"
                     variant="destructive"
-                    onClick={async () => {
-                      if (confirm(t("admin.deleteCompanyWarning") || "Вы уверены, что хотите удалить эту компанию? Это действие нельзя отменить.")) {
-                        try {
-                          await deleteCompany(selectedCompanyData.id);
-                          setSelectedCompanyId(null);
-                        } catch (error) {
-                          toast.error(t("common.error"));
-                        }
-                      }
+                    onClick={() => {
+                      setIsDeleteDialogOpen(true);
                     }}
                     disabled={isDeleting}
                   >
                     <FiTrash2 className="h-4 w-4 mr-2" />
-                    {isDeleting ? t("common.loading") : (t("admin.deleteCompany") || "Удалить компанию")}
+                    {t("admin.deleteCompany") || "Удалить компанию"}
                   </Button>
                 </>
               )}
@@ -717,20 +722,13 @@ const AdminPanel = () => {
                             <Button
                               className="w-full"
                               variant="destructive"
-                              onClick={async () => {
-                                if (confirm(t("admin.deleteCompanyWarning") || "Вы уверены, что хотите удалить эту компанию? Это действие нельзя отменить.")) {
-                                  try {
-                                    await deleteCompany(selectedCompanyData.id);
-                                    setSelectedCompanyId(null);
-                                  } catch (error) {
-                                    toast.error(t("common.error"));
-                                  }
-                                }
+                              onClick={() => {
+                                setIsDeleteDialogOpen(true);
                               }}
                               disabled={isDeleting}
                             >
                               <FiTrash2 className="h-4 w-4 mr-2" />
-                              {isDeleting ? t("common.loading") : (t("admin.deleteCompany") || "Удалить компанию")}
+                              {t("admin.deleteCompany") || "Удалить компанию"}
                             </Button>
                           </div>
 
@@ -1121,14 +1119,12 @@ const AdminPanel = () => {
                             className="w-full"
                             variant="destructive"
                             onClick={() => {
-                              if (confirm(t("admin.deleteCompanyWarning") || "Вы уверены, что хотите удалить эту компанию? Это действие нельзя отменить.")) {
-                                deleteCompany(selectedCompanyData.id);
-                              }
+                              setIsDeleteDialogOpen(true);
                             }}
                             disabled={isDeleting}
                           >
                             <FiTrash2 className="h-4 w-4 mr-2" />
-                            {isDeleting ? t("common.loading") : (t("admin.deleteCompany") || "Удалить компанию")}
+                            {t("admin.deleteCompany") || "Удалить компанию"}
                           </Button>
                           {selectedCompanyData.status === t("admin.active") ? (
                             <Button
@@ -1177,14 +1173,12 @@ const AdminPanel = () => {
                         className="w-full sm:w-auto sm:ml-auto"
                         variant="destructive"
                         onClick={() => {
-                          if (confirm(t("admin.deleteCompanyWarning") || "Вы уверены, что хотите удалить эту компанию? Это действие нельзя отменить.")) {
-                            deleteCompany(selectedCompanyData.id);
-                          }
+                          setIsDeleteDialogOpen(true);
                         }}
                         disabled={isDeleting}
                       >
                         <FiTrash2 className="h-4 w-4 mr-2" />
-                        {isDeleting ? t("common.loading") : (t("admin.deleteCompany") || "Удалить компанию")}
+                        {t("admin.deleteCompany") || "Удалить компанию"}
                       </Button>
                     </div>
                   )}
@@ -1307,6 +1301,46 @@ const AdminPanel = () => {
           </div>
         </Dialog>
       </Transition>
+
+      {/* Delete Company Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("admin.deleteCompany") || "Удалить компанию"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("admin.deleteCompanyWarning") || "Вы уверены, что хотите удалить эту компанию? Это действие нельзя отменить. Все данные компании будут безвозвратно удалены."}
+              {selectedCompanyId && companies.find(c => c.id === selectedCompanyId) && (
+                <span className="block mt-2 font-semibold text-foreground">
+                  {companies.find(c => c.id === selectedCompanyId)?.name}
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setIsDeleteDialogOpen(false);
+            }}>
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (selectedCompanyId) {
+                  try {
+                    await deleteCompany(selectedCompanyId);
+                    setSelectedCompanyId(null);
+                  } catch (error) {
+                    toast.error(t("common.error"));
+                  }
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
+            >
+              {isDeleting ? t("common.loading") : (t("admin.deleteCompany") || "Удалить")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

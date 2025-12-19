@@ -38,6 +38,16 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AdminHeader } from "@/components/AdminHeader";
 import {
   useCompanies,
@@ -77,6 +87,8 @@ const AdminCompanies = () => {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
   
   // Формы
   const [newCompany, setNewCompany] = useState({
@@ -147,6 +159,11 @@ const AdminCompanies = () => {
   const { mutateAsync: deleteCompany, isPending: isDeleting } = useDeleteCompany({
     onSuccess: async () => {
       await refetch();
+      setIsDeleteDialogOpen(false);
+      setCompanyToDelete(null);
+      if (isViewOpen) {
+        setIsViewOpen(false);
+      }
       toast.success(t("admin.deleteCompany") || "Компания удалена");
     },
     onError: (error: any) => {
@@ -697,9 +714,8 @@ const AdminCompanies = () => {
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   onClick={() => {
-                                    if (confirm(t("admin.deleteCompanyWarning") || "Вы уверены, что хотите удалить эту компанию? Это действие нельзя отменить.")) {
-                                      deleteCompany(company.id);
-                                    }
+                                    setCompanyToDelete(company);
+                                    setIsDeleteDialogOpen(true);
                                   }}
                                   className="text-destructive focus:text-destructive"
                                 >
@@ -1273,15 +1289,13 @@ const AdminCompanies = () => {
                       <Button
                         variant="destructive"
                         onClick={() => {
-                          if (confirm(t("admin.deleteCompanyWarning") || "Вы уверены, что хотите удалить эту компанию? Это действие нельзя отменить.")) {
-                            deleteCompany(selectedCompany.id);
-                            setIsViewOpen(false);
-                          }
+                          setCompanyToDelete(selectedCompany);
+                          setIsDeleteDialogOpen(true);
                         }}
                         disabled={isDeleting}
                       >
                         <FiTrash2 className="h-4 w-4 mr-2" />
-                        {isDeleting ? t("common.loading") : (t("admin.deleteCompany") || "Удалить")}
+                        {t("admin.deleteCompany") || "Удалить"}
                       </Button>
                       <Button onClick={() => openEditModal(selectedCompany)}>
                         <FiEdit className="h-4 w-4 mr-2" />
@@ -1467,6 +1481,42 @@ const AdminCompanies = () => {
           </div>
         </Dialog>
       </Transition>
+
+      {/* Delete Company Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("admin.deleteCompany") || "Удалить компанию"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("admin.deleteCompanyWarning") || "Вы уверены, что хотите удалить эту компанию? Это действие нельзя отменить. Все данные компании будут безвозвратно удалены."}
+              {companyToDelete && (
+                <span className="block mt-2 font-semibold text-foreground">
+                  {companyToDelete.name}
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setIsDeleteDialogOpen(false);
+              setCompanyToDelete(null);
+            }}>
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (companyToDelete) {
+                  await deleteCompany(companyToDelete.id);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
+            >
+              {isDeleting ? t("common.loading") : (t("admin.deleteCompany") || "Удалить")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
