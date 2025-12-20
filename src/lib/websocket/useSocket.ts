@@ -2,8 +2,9 @@
  * React хук для работы с WebSocket
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+// Исправлено: удален неиспользуемый импорт disconnectSocket
 import { getSocket } from './socket';
 import { queryKeys } from '../query';
 import type { Message } from '@/types';
@@ -55,6 +56,12 @@ export const useSocketMessages = (companyCode?: string | null) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const notificationPermissionRef = useRef<boolean>(false);
+  const tRef = useRef(t);
+  
+  // Обновляем ref при изменении функции перевода
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
 
   useEffect(() => {
     // Запрашиваем разрешение на уведомления при монтировании
@@ -62,6 +69,117 @@ export const useSocketMessages = (companyCode?: string | null) => {
       notificationPermissionRef.current = granted;
     });
   }, []);
+
+  // Мемоизируем обработчики для избежания лишних переподписок
+  const handleNewMessage = useCallback((message: Message) => {
+    // Обновляем кэш React Query для текущего фильтра (companyCode или все для админа)
+    const queryKey = [...queryKeys.messages(companyCode || undefined)];
+    queryClient.setQueryData<Message[]>(
+      queryKey,
+      (old = []) => {
+        // Проверяем, нет ли уже такого сообщения
+        const exists = old.some((m) => m.id === message.id);
+        if (exists) {
+          return old.map((m) => (m.id === message.id ? message : m));
+        }
+        // Добавляем новое сообщение в начало списка
+        return [message, ...old];
+      }
+    );
+    
+    // Также обновляем кэш для всех сообщений (для админов)
+    if (!companyCode) {
+      queryClient.setQueryData<Message[]>(
+        queryKeys.messages(undefined),
+        (old = []) => {
+          const exists = old.some((m) => m.id === message.id);
+          if (exists) {
+            return old.map((m) => (m.id === message.id ? message : m));
+          }
+          return [message, ...old];
+        }
+      );
+    }
+
+    // Оптимизация: инвалидируем только активные запросы статистики
+    // Не инвалидируем все подзапросы, только если они активны (открыты на экране)
+    queryClient.invalidateQueries({ 
+      queryKey: ['stats'],
+      refetchType: 'active', // Только активные запросы (те, что видны на экране)
+    });
+
+    // Показываем уведомление браузера, если разрешено и вкладка неактивна
+    if (notificationPermissionRef.current && document.hidden) {
+      const messageType = message.type === 'complaint' 
+        ? tRef.current('sendMessage.complaint') 
+        : message.type === 'praise'
+        ? tRef.current('sendMessage.praise')
+        : tRef.current('sendMessage.suggestion');
+      
+      showNotification(
+        tRef.current('notifications.newMessage') || 'Новое сообщение',
+        {
+          body: `${messageType}: ${message.content.substring(0, 100)}${message.content.length > 100 ? '...' : ''}`,
+          tag: `message-${message.id}`,
+          requireInteraction: false,
+        }
+      );
+    }
+
+    // Показываем toast уведомление всегда (даже если вкладка активна)
+    toast.success(tRef.current('notifications.newMessageReceived') || 'Получено новое сообщение', {
+      duration: 3000,
+    });
+  }, [companyCode, queryClient]);
+
+  const handleMessageUpdate = useCallback((message: Message) => {
+    // Обновляем кэш React Query для текущего фильтра
+    const queryKey = [...queryKeys.messages(companyCode || undefined)];
+    queryClient.setQueryData<Message[]>(
+      queryKey,
+      (old = []) => {
+        return old.map((m) => (m.id === message.id ? message : m));
+      }
+    );
+    
+    // Также обновляем кэш для всех сообщений (для админов)
+    if (!companyCode) {
+      queryClient.setQueryData<Message[]>(
+        queryKeys.messages(undefined),
+        (old = []) => {
+          return old.map((m) => (m.id === message.id ? message : m));
+        }
+      );
+    }
+
+    // Обновляем отдельное сообщение в кэше
+    queryClient.setQueryData(queryKeys.message(message.id), message);
+
+    // Оптимизация: инвалидируем только активные запросы статистики
+    queryClient.invalidateQueries({ 
+      queryKey: ['stats'],
+      refetchType: 'active',
+    });
+  }, [companyCode, queryClient]);
+
+  const handleMessageDelete = useCallback((data: { id: string; companyCode: string }) => {
+    // Удаляем из кэша
+    queryClient.setQueryData<Message[]>(
+      [...queryKeys.messages(companyCode || undefined)],
+      (old = []) => {
+        return old.filter((m) => m.id !== data.id);
+      }
+    );
+
+    // Удаляем отдельное сообщение из кэша
+    queryClient.removeQueries({ queryKey: queryKeys.message(data.id) });
+
+    // Оптимизация: инвалидируем только активные запросы статистики
+    queryClient.invalidateQueries({ 
+      queryKey: ['stats'],
+      refetchType: 'active',
+    });
+  }, [companyCode, queryClient]);
 
   useEffect(() => {
     // Переподключаемся при изменении companyCode или при монтировании
@@ -84,117 +202,6 @@ export const useSocketMessages = (companyCode?: string | null) => {
       }
     }
 
-    // Обработчик нового сообщения
-    const handleNewMessage = (message: Message) => {
-      // Обновляем кэш React Query для текущего фильтра (companyCode или все для админа)
-      const queryKey = [...queryKeys.messages(companyCode || undefined)];
-      queryClient.setQueryData<Message[]>(
-        queryKey,
-        (old = []) => {
-          // Проверяем, нет ли уже такого сообщения
-          const exists = old.some((m) => m.id === message.id);
-          if (exists) {
-            return old.map((m) => (m.id === message.id ? message : m));
-          }
-          // Добавляем новое сообщение в начало списка
-          return [message, ...old];
-        }
-      );
-      
-      // Также обновляем кэш для всех сообщений (для админов)
-      if (!companyCode) {
-        queryClient.setQueryData<Message[]>(
-          queryKeys.messages(undefined),
-          (old = []) => {
-            const exists = old.some((m) => m.id === message.id);
-            if (exists) {
-              return old.map((m) => (m.id === message.id ? message : m));
-            }
-            return [message, ...old];
-          }
-        );
-      }
-
-      // Инвалидируем другие связанные запросы
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
-      queryClient.invalidateQueries({ queryKey: ['growth-metrics'] });
-      queryClient.invalidateQueries({ queryKey: ['achievements'] });
-
-      // Показываем уведомление браузера, если разрешено и вкладка неактивна
-      if (notificationPermissionRef.current && document.hidden) {
-        const messageType = message.type === 'complaint' 
-          ? t('sendMessage.complaint') 
-          : message.type === 'praise'
-          ? t('sendMessage.praise')
-          : t('sendMessage.suggestion');
-        
-        showNotification(
-          t('notifications.newMessage') || 'Новое сообщение',
-          {
-            body: `${messageType}: ${message.content.substring(0, 100)}${message.content.length > 100 ? '...' : ''}`,
-            tag: `message-${message.id}`,
-            requireInteraction: false,
-          }
-        );
-      }
-
-      // Показываем toast уведомление всегда (даже если вкладка активна)
-      toast.success(t('notifications.newMessageReceived') || 'Получено новое сообщение', {
-        duration: 3000,
-      });
-    };
-
-    // Обработчик обновления сообщения
-    const handleMessageUpdate = (message: Message) => {
-      // Обновляем кэш React Query для текущего фильтра
-      const queryKey = [...queryKeys.messages(companyCode || undefined)];
-      queryClient.setQueryData<Message[]>(
-        queryKey,
-        (old = []) => {
-          return old.map((m) => (m.id === message.id ? message : m));
-        }
-      );
-      
-      // Также обновляем кэш для всех сообщений (для админов)
-      if (!companyCode) {
-        queryClient.setQueryData<Message[]>(
-          queryKeys.messages(undefined),
-          (old = []) => {
-            return old.map((m) => (m.id === message.id ? message : m));
-          }
-        );
-      }
-
-      // Обновляем отдельное сообщение в кэше
-      queryClient.setQueryData(queryKeys.message(message.id), message);
-
-      // Инвалидируем связанные запросы
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
-      queryClient.invalidateQueries({ queryKey: ['message-distribution'] });
-      queryClient.invalidateQueries({ queryKey: ['growth-metrics'] });
-      queryClient.invalidateQueries({ queryKey: ['achievements'] });
-    };
-
-    // Обработчик удаления сообщения
-    const handleMessageDelete = (data: { id: string; companyCode: string }) => {
-      // Удаляем из кэша
-      queryClient.setQueryData<Message[]>(
-        [...queryKeys.messages(companyCode || undefined)],
-        (old = []) => {
-          return old.filter((m) => m.id !== data.id);
-        }
-      );
-
-      // Удаляем отдельное сообщение из кэша
-      queryClient.removeQueries({ queryKey: queryKeys.message(data.id) });
-
-      // Инвалидируем связанные запросы
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
-      queryClient.invalidateQueries({ queryKey: ['message-distribution'] });
-      queryClient.invalidateQueries({ queryKey: ['growth-metrics'] });
-      queryClient.invalidateQueries({ queryKey: ['achievements'] });
-    };
-
     // Подписываемся на события
     socket.on('message:new', handleNewMessage);
     socket.on('message:updated', handleMessageUpdate);
@@ -206,6 +213,6 @@ export const useSocketMessages = (companyCode?: string | null) => {
       socket?.off('message:updated', handleMessageUpdate);
       socket?.off('message:deleted', handleMessageDelete);
     };
-  }, [companyCode, queryClient, t]);
+  }, [companyCode, handleNewMessage, handleMessageUpdate, handleMessageDelete]);
 };
 

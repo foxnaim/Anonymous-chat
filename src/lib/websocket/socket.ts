@@ -75,44 +75,57 @@ export const getSocket = (forceReconnect = false): Socket | null => {
 
   const { io } = socketIO;
 
-  socket = io(API_URL, {
-    auth: {
-      token: token,
-    },
-    transports: ['websocket', 'polling'],
-    reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000,
-    reconnectionAttempts: 5,
-    autoConnect: true,
-  });
+  // Создаем новый сокет только если его еще нет
+  if (!socket) {
+    socket = io(API_URL, {
+      auth: {
+        token: token,
+      },
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5,
+      autoConnect: true,
+    });
 
-  socket.on('connect', () => {
-    // WebSocket connected
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[WebSocket] Connected successfully');
-    }
-  });
+    // Добавляем обработчики событий только один раз
+    socket.on('connect', () => {
+      // WebSocket connected
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[WebSocket] Connected successfully');
+      }
+    });
 
-  socket.on('disconnect', (reason) => {
-    // WebSocket disconnected
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[WebSocket] Disconnected:', reason);
-    }
-  });
+    socket.on('disconnect', (reason) => {
+      // WebSocket disconnected
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[WebSocket] Disconnected:', reason);
+      }
+    });
 
-  socket.on('connect_error', (error) => {
-    // WebSocket connection error
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[WebSocket] Connection error:', error);
+    socket.on('connect_error', (error) => {
+      // WebSocket connection error
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[WebSocket] Connection error:', error);
+      }
+    });
+  } else {
+    // Если сокет уже существует, обновляем токен аутентификации
+    socket.auth = { token: token };
+    // Если сокет не подключен, подключаемся
+    if (!socket.connected) {
+      socket.connect();
     }
-  });
+  }
 
   return socket;
 };
 
 export const disconnectSocket = (): void => {
   if (socket) {
+    // Удаляем все обработчики событий перед отключением
+    socket.removeAllListeners();
     socket.disconnect();
     socket = null;
   }
