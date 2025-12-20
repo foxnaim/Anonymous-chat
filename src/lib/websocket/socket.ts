@@ -1,5 +1,6 @@
 /**
  * WebSocket клиент для real-time обновлений
+ * Использует динамический импорт для избежания проблем с SSR
  */
 
 import type { Socket } from 'socket.io-client';
@@ -8,7 +9,35 @@ import { getToken } from '../utils/cookies';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 let socket: Socket | null = null;
-let socketIOClient: typeof import('socket.io-client') | null = null;
+let socketIOModule: typeof import('socket.io-client') | null = null;
+let socketIOLoading = false;
+
+// Загружаем socket.io-client только на клиенте
+const loadSocketIO = (): typeof import('socket.io-client') | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  
+  if (socketIOModule) {
+    return socketIOModule;
+  }
+  
+  if (socketIOLoading) {
+    return null;
+  }
+  
+  try {
+    // Используем require для динамической загрузки
+    // Next.js webpack настроен исключать это из серверного бандла
+    socketIOModule = require('socket.io-client');
+    return socketIOModule;
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[WebSocket] Failed to load socket.io-client:', error);
+    }
+    return null;
+  }
+};
 
 export const getSocket = (forceReconnect = false): Socket | null => {
   if (typeof window === 'undefined') {
@@ -38,12 +67,15 @@ export const getSocket = (forceReconnect = false): Socket | null => {
     return null;
   }
 
-  // Динамический импорт socket.io-client только на клиенте
-  if (!socketIOClient) {
-    socketIOClient = require('socket.io-client');
+  // Загружаем socket.io-client только на клиенте
+  const socketIO = loadSocketIO();
+  if (!socketIO) {
+    return null;
   }
 
-  socket = socketIOClient.io(API_URL, {
+  const { io } = socketIO;
+
+  socket = io(API_URL, {
     auth: {
       token: token,
     },

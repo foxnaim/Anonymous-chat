@@ -68,7 +68,7 @@ export const useSocketMessages = (companyCode?: string | null) => {
     const socket = getSocket(false);
     if (!socket) {
       if (process.env.NODE_ENV === 'development') {
-        console.warn('[WebSocket] Cannot connect: no authentication token');
+        console.warn('[WebSocket] Cannot connect: no authentication token or socket.io-client not loaded');
       }
       return;
     }
@@ -194,6 +194,11 @@ export const useSocketMessages = (companyCode?: string | null) => {
       queryClient.invalidateQueries({ queryKey: ['growth-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['achievements'] });
     };
+
+    // Подписываемся на события
+    socket.on('message:new', handleNewMessage);
+    socket.on('message:updated', handleMessageUpdate);
+    socket.on('message:deleted', handleMessageDelete);
 
     // Подписываемся на события
     socket.on('message:new', handleNewMessage);
