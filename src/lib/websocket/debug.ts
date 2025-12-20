@@ -68,3 +68,6 @@ if (typeof window !== 'undefined') {
   });
 }
 
+// Экспорт для того, чтобы файл считался модулем TypeScript
+export {};
+
