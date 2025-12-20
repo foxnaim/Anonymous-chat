@@ -4,7 +4,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { getSocket, disconnectSocket } from './socket';
+import { getSocket } from './socket';
 import { queryKeys } from '../query';
 import type { Message } from '@/types';
 import { toast } from 'sonner';
@@ -194,11 +194,6 @@ export const useSocketMessages = (companyCode?: string | null) => {
       queryClient.invalidateQueries({ queryKey: ['growth-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['achievements'] });
     };
-
-    // Подписываемся на события
-    socket.on('message:new', handleNewMessage);
-    socket.on('message:updated', handleMessageUpdate);
-    socket.on('message:deleted', handleMessageDelete);
 
     // Подписываемся на события
     socket.on('message:new', handleNewMessage);
