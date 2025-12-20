@@ -31,9 +31,18 @@ export const useAuth = () => {
       if (loginAsync.fulfilled.match(result)) {
         // Переподключаем WebSocket с новым токеном после успешного логина
         if (typeof window !== 'undefined') {
-          import('../websocket/socket').then(({ reconnectSocket }) => {
-            reconnectSocket();
-          });
+          // Используем setTimeout для асинхронной загрузки модуля
+          setTimeout(() => {
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-require-imports
+              const socketModule = require('@/lib/websocket/socket');
+              if (socketModule?.reconnectSocket) {
+                socketModule.reconnectSocket();
+              }
+            } catch {
+              // Игнорируем ошибки, если модуль не загружен
+            }
+          }, 0);
         }
         return { success: true, user: result.payload };
       }
@@ -58,9 +67,18 @@ export const useAuth = () => {
       if (registerAsync.fulfilled.match(result)) {
         // Переподключаем WebSocket с новым токеном после успешной регистрации
         if (typeof window !== 'undefined') {
-          import('../websocket/socket').then(({ reconnectSocket }) => {
-            reconnectSocket();
-          });
+          // Используем setTimeout для асинхронной загрузки модуля
+          setTimeout(() => {
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-require-imports
+              const socketModule = require('@/lib/websocket/socket');
+              if (socketModule?.reconnectSocket) {
+                socketModule.reconnectSocket();
+              }
+            } catch {
+              // Игнорируем ошибки, если модуль не загружен
+            }
+          }, 0);
         }
         return true;
       }
@@ -76,9 +94,18 @@ export const useAuth = () => {
     
     // Отключаем WebSocket при выходе
     if (typeof window !== 'undefined') {
-      import('../websocket/socket').then(({ disconnectSocket }) => {
-        disconnectSocket();
-      });
+      // Используем setTimeout для асинхронной загрузки модуля
+      setTimeout(() => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const socketModule = require('@/lib/websocket/socket');
+          if (socketModule?.disconnectSocket) {
+            socketModule.disconnectSocket();
+          }
+        } catch {
+          // Игнорируем ошибки, если модуль не загружен
+        }
+      }, 0);
     }
     
     // Все остальное делаем асинхронно, чтобы не блокировать UI

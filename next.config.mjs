@@ -11,6 +11,14 @@ const nextConfig = {
     if (isServer) {
       config.externals = config.externals || [];
       config.externals.push('socket.io-client');
+    } else {
+      // На клиенте разрешаем require для websocket модулей
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
     }
     return config;
   },
