@@ -34,7 +34,6 @@ export const useAuth = () => {
           // Используем setTimeout для асинхронной загрузки модуля
           setTimeout(() => {
             try {
-              // eslint-disable-next-line @typescript-eslint/no-require-imports
               const socketModule = require('@/lib/websocket/socket');
               if (socketModule?.reconnectSocket) {
                 socketModule.reconnectSocket();
@@ -70,7 +69,6 @@ export const useAuth = () => {
           // Используем setTimeout для асинхронной загрузки модуля
           setTimeout(() => {
             try {
-              // eslint-disable-next-line @typescript-eslint/no-require-imports
               const socketModule = require('@/lib/websocket/socket');
               if (socketModule?.reconnectSocket) {
                 socketModule.reconnectSocket();
@@ -97,7 +95,6 @@ export const useAuth = () => {
       // Используем setTimeout для асинхронной загрузки модуля
       setTimeout(() => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-require-imports
           const socketModule = require('@/lib/websocket/socket');
           if (socketModule?.disconnectSocket) {
             socketModule.disconnectSocket();
