@@ -35,10 +35,10 @@ const nextConfig = {
               enforce: true,
             },
             lib: {
-              test(module: any) {
+              test(module) {
                 return module.size() > 160000 && /node_modules[/\\]/.test(module.identifier());
               },
-              name(module: any) {
+              name(module) {
                 const hash = require('crypto').createHash('sha1');
                 hash.update(module.identifier());
                 return hash.digest('hex').substring(0, 8);
@@ -53,8 +53,8 @@ const nextConfig = {
               priority: 20,
             },
             shared: {
-              name(module: any, chunks: any) {
-                return require('crypto').createHash('sha1').update(chunks.reduce((acc: string, chunk: any) => acc + chunk.name, '')).digest('hex').substring(0, 8);
+              name(module, chunks) {
+                return require('crypto').createHash('sha1').update(chunks.reduce((acc, chunk) => acc + chunk.name, '')).digest('hex').substring(0, 8);
               },
               priority: 10,
               minChunks: 2,
