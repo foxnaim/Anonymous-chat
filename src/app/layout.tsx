@@ -7,50 +7,71 @@ const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
 export const metadata: Metadata = {
   title: {
-    default: "feed Back",
-    template: "%s | Anonymous Chat"
+    default: "feed Back — Анонимные отзывы для компаний",
+    template: "%s | feed Back"
   },
   description:
-    "Заранее настроенный фронтенд на Next.js + TypeScript для мгновенного запуска приватных чатов с анимациями, SEO и интеграциями.",
+    "Отправляйте анонимные отзывы в свою компанию. Безопасная платформа для честной обратной связи, жалоб, похвал и предложений.",
   keywords: [
-    "next.js",
-    "tailwind",
-    "anonymous chat",
-    "secure messaging",
-    "framer motion",
-    "redux",
-    "tanstack query"
+    "анонимные отзывы",
+    "обратная связь",
+    "HR",
+    "жалобы",
+    "предложения",
+    "анонимность",
+    "конфиденциальность",
+    "feedback",
+    "отзывы о компании"
   ],
-  authors: [{ name: "Anonymous Team" }],
-  metadataBase: new URL("https://anonymouschat.example"),
+  authors: [{ name: "feed Back Team" }],
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://feedbackhub.com"),
   icons: {
     icon: "/feedBack.svg"
   },
   openGraph: {
     type: "website",
     locale: "ru_RU",
-    url: "https://anonymouschat.example",
-    siteName: "Anonymous Chat",
-    title: "Anonymous Chat — безопасные и быстрые комьюнити",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://feedbackhub.com",
+    siteName: "feed Back",
+    title: "feed Back — Анонимные отзывы для компаний",
     description:
-      "Заранее настроенный фронтенд на Next.js + TypeScript для мгновенного запуска приватных чатов с анимациями, SEO и интеграциями.",
+      "Отправляйте анонимные отзывы в свою компанию. Безопасная платформа для честной обратной связи.",
     images: [
       {
-        url: "https://anonymouschat.example/og.jpg",
+        url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://feedbackhub.com"}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "Anonymous Chat Preview"
+        alt: "feed Back — Анонимные отзывы для компаний"
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
-    title: "Anonymous Chat — безопасные и быстрые комьюнити",
+    title: "feed Back — Анонимные отзывы для компаний",
     description:
-      "Заранее настроенный фронтенд на Next.js + TypeScript для мгновенного запуска приватных чатов с анимациями, SEO и интеграциями.",
-    creator: "@anonymouschat",
-    site: "@anonymouschat"
-  }
+      "Отправляйте анонимные отзывы в свою компанию. Безопасная платформа для честной обратной связи.",
+    creator: "@feedbackhub",
+    site: "@feedbackhub"
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    canonical: "/",
+    languages: {
+      "ru": "/?lang=ru",
+      "en": "/?lang=en",
+      "kk": "/?lang=kk",
+    },
+  },
 };
 
 export default function RootLayout({

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,12 +29,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const Welcome = () => {
+import type { Company } from "@/types";
+
+interface WelcomeProps {
+  initialCompanyCode?: string;
+  initialCompany?: Company | null;
+}
+
+const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAuth();
-  const [companyCode, setCompanyCode] = useState("");
+  const [companyCode, setCompanyCode] = useState(initialCompanyCode || "");
   const [validatedCode, setValidatedCode] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -43,7 +50,7 @@ const Welcome = () => {
   const [isCheckStatusModalOpen, setIsCheckStatusModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-  const [codeFromUrlLoaded, setCodeFromUrlLoaded] = useState(false);
+  const [codeFromUrlLoaded, setCodeFromUrlLoaded] = useState(!!initialCompanyCode);
 
   // Читаем код из URL при загрузке страницы (только один раз)
   useEffect(() => {
@@ -62,10 +69,37 @@ const Welcome = () => {
   // Передаем код в хук только если он готов (8 символов), иначе пустую строку
   const codeForQuery = debouncedCode.length === 8 ? debouncedCode : "";
 
+  // Используем серверные данные как initialData для React Query
   const { data: company, isLoading: isValidating } = useCompanyByCode(codeForQuery, {
     enabled: codeForQuery.length === 8,
     retry: false,
+    // Используем серверные данные как начальные, если код совпадает
+    initialData: initialCompany && codeForQuery === initialCompanyCode?.toUpperCase() 
+      ? initialCompany 
+      : undefined,
+    // Не рефетчить сразу, если есть серверные данные
+    refetchOnMount: !initialCompany || codeForQuery !== initialCompanyCode?.toUpperCase(),
   });
+
+  // Используем серверные данные для начального рендера, если они есть
+  const displayCompany = useMemo(() => {
+    return company || (initialCompany && codeForQuery === initialCompanyCode?.toUpperCase() ? initialCompany : null);
+  }, [company, initialCompany, codeForQuery, initialCompanyCode]);
+
+  // Мемоизируем строку статуса "Заблокирована" для сравнения
+  const blockedStatusText = useMemo(() => t("admin.blocked"), [t]);
+
+  // Используем серверные данные для начальной валидации
+  // Оптимизировано: проверяем только при монтировании или изменении кода
+  useEffect(() => {
+    if (initialCompany && initialCompanyCode && initialCompanyCode.toUpperCase() === debouncedCode.toUpperCase()) {
+      if (initialCompany.status === blockedStatusText) {
+        setValidatedCode(null);
+        return;
+      }
+      setValidatedCode(debouncedCode);
+    }
+  }, [initialCompany, initialCompanyCode, debouncedCode, blockedStatusText]);
 
   // Автоматическая проверка кода только после ввода 8 символов
   useEffect(() => {
@@ -77,7 +111,7 @@ const Welcome = () => {
 
     // Проверяем только когда код равен 8 символам
     if (debouncedCode.length === 8 && company) {
-      if (company?.status === t("admin.blocked")) {
+      if (company?.status === blockedStatusText) {
         toast.error(t("admin.blockCompany"));
         setValidatedCode(null);
         return;
@@ -86,7 +120,7 @@ const Welcome = () => {
     } else if (debouncedCode.length === 8 && !isValidating && !company) {
       setValidatedCode(null);
     }
-  }, [company, debouncedCode, isValidating, t]);
+  }, [company, debouncedCode, isValidating, blockedStatusText, t]);
 
   const handleCodeChange = (value: string) => {
     setCompanyCode(value.toUpperCase().trim());
@@ -283,7 +317,7 @@ const Welcome = () => {
                   )}
                 </div>
 
-                {company && validatedCode && (
+                {displayCompany && validatedCode && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -292,10 +326,10 @@ const Welcome = () => {
                     <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 sm:p-4 min-w-0 overflow-hidden">
                       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                         <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                          {company?.logoUrl ? (
+                          {displayCompany?.logoUrl ? (
                             <Image
-                              src={company.logoUrl}
-                              alt={company.name || "Company logo"}
+                              src={displayCompany.logoUrl}
+                              alt={displayCompany.name || "Company logo"}
                               width={40}
                               height={40}
                               className="w-full h-full object-cover"
@@ -306,7 +340,7 @@ const Welcome = () => {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-foreground text-sm sm:text-base truncate">{company?.name || ""}</p>
+                          <p className="font-semibold text-foreground text-sm sm:text-base truncate">{displayCompany?.name || ""}</p>
                           <p className="text-xs sm:text-sm text-muted-foreground">{t("welcome.codeValid")}</p>
                         </div>
                         <Button
@@ -367,7 +401,7 @@ const Welcome = () => {
                   </motion.div>
                 )}
 
-                {companyCode && !company && !isValidating && debouncedCode.length === 8 && (
+                {companyCode && !displayCompany && !isValidating && debouncedCode.length === 8 && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -466,8 +500,8 @@ const Welcome = () => {
         open={isSendMessageModalOpen}
         onOpenChange={setIsSendMessageModalOpen}
         companyCode={validatedCode || ""}
-        companyName={company?.name || ""}
-        companyPlan={company?.plan}
+        companyName={displayCompany?.name || ""}
+        companyPlan={displayCompany?.plan}
         onSuccess={() => {
           // После успешной отправки можно сбросить форму
           setCompanyCode("");

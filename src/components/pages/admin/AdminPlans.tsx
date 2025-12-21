@@ -261,7 +261,7 @@ const AdminPlans = () => {
 
                         updateFreePlan({
                           messagesLimit,
-                          storageLimit: 1,
+                        storageLimit: 1,
                           freePeriodDays,
                         });
                       }}
