@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { ReactNode } from 'react';
+import type { Route } from 'next';
 
 interface OptimizedLinkProps {
-  href: string;
+  href: string | Route;
   children: ReactNode;
   className?: string;
   prefetch?: boolean;
@@ -15,7 +16,7 @@ interface OptimizedLinkProps {
  */
 export function OptimizedLink({ href, children, className, prefetch = true }: OptimizedLinkProps) {
   return (
-    <Link href={href} className={className} prefetch={prefetch}>
+    <Link href={href as Route} className={className} prefetch={prefetch}>
       {children}
     </Link>
   );
