@@ -1,5 +1,7 @@
 // Настройка тестового окружения
 require('@testing-library/jest-dom');
+// Импортируем типы для TypeScript
+require('@testing-library/jest-dom/matchers');
 
 // Мокаем next/router
 jest.mock('next/navigation', () => ({
