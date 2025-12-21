@@ -2,8 +2,15 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "@/styles/globals.css";
 import AppProviders from "@/components/providers/AppProviders";
+import { PerformanceMonitorComponent } from "@/components/PerformanceMonitor";
 
-const inter = Inter({ subsets: ["latin", "cyrillic"] });
+// Оптимизация загрузки шрифтов
+const inter = Inter({ 
+  subsets: ["latin", "cyrillic"],
+  display: 'swap', // Показывать fallback шрифт пока загружается основной
+  preload: true, // Предзагрузка шрифта
+  variable: '--font-inter', // CSS переменная для использования
+});
 
 export const metadata: Metadata = {
   title: {
@@ -82,6 +89,30 @@ export default function RootLayout({
   return (
     <html lang="ru" suppressHydrationWarning>
       <head>
+        {/* Service Worker для агрессивного кэширования */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then((reg) => console.log('SW registered:', reg))
+                    .catch((err) => console.log('SW registration failed:', err));
+                });
+              }
+            `,
+          }}
+        />
+        {/* Resource hints для ускорения загрузки */}
+        <link rel="preconnect" href={process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'} />
+        <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'} />
+        {/* Prefetch критичных маршрутов */}
+        <link rel="prefetch" href="/login" as="document" />
+        <link rel="prefetch" href="/register" as="document" />
+        {/* Preload критичных ресурсов */}
+        <link rel="preload" href="/feedBack.svg" as="image" />
+        {/* Preload критичных шрифтов */}
+        <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         {/* Ранняя загрузка утилиты для подавления ошибок расширений */}
         <script
           dangerouslySetInnerHTML={{
@@ -210,7 +241,10 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.className} overflow-x-hidden`}>
-        <AppProviders>{children}</AppProviders>
+        <AppProviders>
+          <PerformanceMonitorComponent />
+          {children}
+        </AppProviders>
       </body>
     </html>
   );

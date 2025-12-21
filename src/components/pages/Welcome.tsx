@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -122,13 +122,13 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
     }
   }, [company, debouncedCode, isValidating, blockedStatusText, t]);
 
-  const handleCodeChange = (value: string) => {
+  const handleCodeChange = useCallback((value: string) => {
     setCompanyCode(value.toUpperCase().trim());
     setValidatedCode(null);
     setPassword("");
-  };
+  }, []);
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = useCallback(async () => {
     if (!validatedCode) {
       toast.error(t("welcome.enterCode"));
       return;
@@ -164,7 +164,7 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
       toast.error(t("welcome.passwordError"));
       setIsVerifyingPassword(false);
     }
-  };
+  }, [validatedCode, password, t]);
 
   const steps = [
     { number: "1", title: t("sendMessage.step1Title"), icon: FiKey },
@@ -332,6 +332,9 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
                               alt={displayCompany.name || "Company logo"}
                               width={40}
                               height={40}
+                              loading="lazy"
+                              placeholder="blur"
+                              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZGRkIi8+PC9zdmc+"
                               className="w-full h-full object-cover"
                               unoptimized
                             />
@@ -531,4 +534,5 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
   );
 };
 
-export default Welcome;
+// Мемоизация компонента для предотвращения ненужных ре-рендеров
+export default React.memo(Welcome);

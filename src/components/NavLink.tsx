@@ -25,6 +25,7 @@ const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(
         ref={ref}
         href={linkHref as any}
         className={cn(className, isActive && activeClassName)}
+        prefetch={true}
         {...props}
       >
         {children}
