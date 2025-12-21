@@ -7,7 +7,7 @@ const nextConfig = {
   },
   experimental: {
     typedRoutes: true,
-    optimizeCss: true, // Оптимизация CSS
+    // optimizeCss: true, // Отключено из-за проблем с critters на Railway
     optimizePackageImports: ['react-icons', 'date-fns', 'framer-motion', '@radix-ui'], // Tree-shaking для больших библиотек
   },
   // Оптимизация bundle size
