@@ -26,15 +26,9 @@ const customJestConfig = {
     '**/*.{test,spec}.{js,jsx,ts,tsx}',
   ],
   testPathIgnorePatterns: ['/node_modules/', '/.next/', '/dist/'],
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
-  transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', {
-      tsconfig: {
-        jsx: 'react',
-      },
-    }],
-  },
+  transformIgnorePatterns: [
+    '/node_modules/(?!(@radix-ui|lucide-react|date-fns|react-day-picker|embla-carousel-react|cmdk|input-otp|vaul|sonner|recharts)/)',
+  ],
 };
 
 module.exports = createJestConfig(customJestConfig);
-

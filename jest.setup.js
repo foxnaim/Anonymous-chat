@@ -1,5 +1,5 @@
 // Настройка тестового окружения
-import '@testing-library/jest-dom';
+require('@testing-library/jest-dom');
 
 // Мокаем next/router
 jest.mock('next/navigation', () => ({
@@ -25,13 +25,13 @@ jest.mock('next/navigation', () => ({
 // Мокаем next-i18next
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string) => key,
+    t: (key) => key,
     i18n: {
       changeLanguage: jest.fn(),
       language: 'ru',
     },
   }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
+  Trans: ({ children }) => children,
 }));
 
 // Мокаем window.matchMedia
@@ -58,5 +58,5 @@ global.IntersectionObserver = class IntersectionObserver {
     return [];
   }
   unobserve() {}
-} as any;
+};
 
