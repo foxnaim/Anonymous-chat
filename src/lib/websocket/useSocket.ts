@@ -72,11 +72,18 @@ export const useSocketMessages = (companyCode?: string | null) => {
 
   // Мемоизируем обработчики для избежания лишних переподписок
   const handleNewMessage = useCallback((message: Message) => {
-    // Обновляем кэш React Query для текущего фильтра (companyCode или все для админа)
-    const queryKey = [...queryKeys.messages(companyCode || undefined)];
-    queryClient.setQueryData<Message[]>(
-      queryKey,
-      (old = []) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[WebSocket] Received new message:', message.id, 'for company:', message.companyCode);
+    }
+    
+    // Обновляем все запросы сообщений для данного companyCode (включая все варианты page/limit)
+    // Используем setQueriesData для обновления всех запросов, начинающихся с ['messages', companyCode]
+    const baseQueryKey = queryKeys.messages(companyCode || undefined);
+    
+    queryClient.setQueriesData<Message[]>(
+      { queryKey: baseQueryKey, exact: false },
+      (old) => {
+        if (!old) return old;
         // Проверяем, нет ли уже такого сообщения
         const exists = old.some((m) => m.id === message.id);
         if (exists) {
@@ -87,11 +94,27 @@ export const useSocketMessages = (companyCode?: string | null) => {
       }
     );
     
-    // Также обновляем кэш для всех сообщений (для админов)
+    // Также обновляем кэш для всех сообщений (для админов), если это сообщение для другой компании
+    if (!companyCode && message.companyCode) {
+      queryClient.setQueriesData<Message[]>(
+        { queryKey: queryKeys.messages(message.companyCode), exact: false },
+        (old) => {
+          if (!old) return old;
+          const exists = old.some((m) => m.id === message.id);
+          if (exists) {
+            return old.map((m) => (m.id === message.id ? message : m));
+          }
+          return [message, ...old];
+        }
+      );
+    }
+    
+    // Обновляем общий список всех сообщений для админов
     if (!companyCode) {
-      queryClient.setQueryData<Message[]>(
-        queryKeys.messages(undefined),
-        (old = []) => {
+      queryClient.setQueriesData<Message[]>(
+        { queryKey: queryKeys.messages(undefined), exact: false },
+        (old) => {
+          if (!old) return old;
           const exists = old.some((m) => m.id === message.id);
           if (exists) {
             return old.map((m) => (m.id === message.id ? message : m));
@@ -133,20 +156,34 @@ export const useSocketMessages = (companyCode?: string | null) => {
   }, [companyCode, queryClient]);
 
   const handleMessageUpdate = useCallback((message: Message) => {
-    // Обновляем кэш React Query для текущего фильтра
-    const queryKey = [...queryKeys.messages(companyCode || undefined)];
-    queryClient.setQueryData<Message[]>(
-      queryKey,
-      (old = []) => {
+    // Обновляем все запросы сообщений для данного companyCode (включая все варианты page/limit)
+    const baseQueryKey = queryKeys.messages(companyCode || message.companyCode || undefined);
+    
+    queryClient.setQueriesData<Message[]>(
+      { queryKey: baseQueryKey, exact: false },
+      (old) => {
+        if (!old) return old;
         return old.map((m) => (m.id === message.id ? message : m));
       }
     );
     
     // Также обновляем кэш для всех сообщений (для админов)
     if (!companyCode) {
-      queryClient.setQueryData<Message[]>(
-        queryKeys.messages(undefined),
-        (old = []) => {
+      queryClient.setQueriesData<Message[]>(
+        { queryKey: queryKeys.messages(undefined), exact: false },
+        (old) => {
+          if (!old) return old;
+          return old.map((m) => (m.id === message.id ? message : m));
+        }
+      );
+    }
+    
+    // Обновляем запросы для компании, которой принадлежит сообщение
+    if (message.companyCode && message.companyCode !== companyCode) {
+      queryClient.setQueriesData<Message[]>(
+        { queryKey: queryKeys.messages(message.companyCode), exact: false },
+        (old) => {
+          if (!old) return old;
           return old.map((m) => (m.id === message.id ? message : m));
         }
       );
@@ -163,10 +200,22 @@ export const useSocketMessages = (companyCode?: string | null) => {
   }, [companyCode, queryClient]);
 
   const handleMessageDelete = useCallback((data: { id: string; companyCode: string }) => {
-    // Удаляем из кэша
-    queryClient.setQueryData<Message[]>(
-      [...queryKeys.messages(companyCode || undefined)],
-      (old = []) => {
+    // Удаляем из всех запросов сообщений для данного companyCode
+    const baseQueryKey = queryKeys.messages(companyCode || data.companyCode || undefined);
+    
+    queryClient.setQueriesData<Message[]>(
+      { queryKey: baseQueryKey, exact: false },
+      (old) => {
+        if (!old) return old;
+        return old.filter((m) => m.id !== data.id);
+      }
+    );
+    
+    // Также удаляем из общего списка всех сообщений (для админов)
+    queryClient.setQueriesData<Message[]>(
+      { queryKey: queryKeys.messages(undefined), exact: false },
+      (old) => {
+        if (!old) return old;
         return old.filter((m) => m.id !== data.id);
       }
     );
@@ -206,6 +255,10 @@ export const useSocketMessages = (companyCode?: string | null) => {
     socket.on('message:new', handleNewMessage);
     socket.on('message:updated', handleMessageUpdate);
     socket.on('message:deleted', handleMessageDelete);
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[WebSocket] Subscribed to message events for companyCode:', companyCode || 'all');
+    }
 
     // Очистка при размонтировании
     return () => {
