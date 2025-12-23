@@ -69,82 +69,55 @@ const AdminAdmins = () => {
 
   const { mutateAsync: createAdminMutation, isPending: isCreating } = useCreateAdmin({
     onSuccess: async () => {
-      // Закрываем модальное окно сразу
-      setIsDialogOpen(false);
-      
-      // Очищаем форму
-      resetCreateAdminForm();
-      
-      // Обновляем список админов для немедленного отображения
       await refetch();
-      
-      // Показываем успешное сообщение
+      setIsDialogOpen(false);
+      resetCreateAdminForm();
       toast.success(t("admin.adminCreated") || t("common.success") || "Администратор создан");
     },
     onError: (error: any) => {
       // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
-      // Формат ошибки: { code: "CONFLICT", message: "Admin with this email already exists", status: 409 }
-      let backendMessage = "";
-      
-      // Пытаемся извлечь сообщение из разных мест (в порядке приоритета)
-      if (error?.message) {
-        backendMessage = String(error.message).trim();
-      } else if (error?.response?.data?.error?.message) {
-        backendMessage = String(error.response.data.error.message).trim();
-      } else if (error?.response?.data?.message) {
-        backendMessage = String(error.response.data.message).trim();
-      }
-      
-      const errorStatus = error?.status || error?.response?.status || 0;
-      const errorCode = error?.code || error?.response?.data?.error?.code || "";
-      const msgLower = backendMessage.toLowerCase();
+      const backendMessage = String(error?.message || "").trim();
+      const errorStatus = error?.status || 0;
       
       // Маппинг сообщений об ошибках - проверяем в строгом порядке приоритета
       let errorMessage = "";
+      const msgLower = backendMessage.toLowerCase();
       
       // 1. Проверка email админа (самая частая ошибка)
       if (backendMessage.includes("Admin with this email already exists") || 
-          (msgLower.includes("admin") && msgLower.includes("email") && msgLower.includes("already exists")) ||
-          (msgLower.includes("администратор") && msgLower.includes("email") && (msgLower.includes("уже существует") || msgLower.includes("существует")))) {
+          (msgLower.includes("admin") && msgLower.includes("email") && msgLower.includes("already exists"))) {
         errorMessage = t("auth.adminEmailAlreadyExists");
       }
       // 2. Проверка имени админа
       else if (backendMessage.includes("Admin with this name already exists") || 
-               (msgLower.includes("admin") && msgLower.includes("name") && msgLower.includes("already exists")) ||
-               (msgLower.includes("администратор") && msgLower.includes("имя") && (msgLower.includes("уже существует") || msgLower.includes("существует")))) {
+               (msgLower.includes("admin") && msgLower.includes("name") && msgLower.includes("already exists"))) {
         errorMessage = t("auth.adminNameAlreadyExists");
       }
       // 3. Проверка email компании
       else if (backendMessage.includes("Company with this email already exists") || 
-               (msgLower.includes("company") && msgLower.includes("email") && msgLower.includes("already exists")) ||
-               (msgLower.includes("компания") && msgLower.includes("email") && (msgLower.includes("уже существует") || msgLower.includes("существует")))) {
+               (msgLower.includes("company") && msgLower.includes("email") && msgLower.includes("already exists"))) {
         errorMessage = t("auth.companyEmailAlreadyExists");
       }
       // 4. Проверка email пользователя
       else if (backendMessage.includes("User with this email already exists") || 
-               (msgLower.includes("user") && msgLower.includes("email") && msgLower.includes("already exists")) ||
-               (msgLower.includes("пользователь") && msgLower.includes("email") && (msgLower.includes("уже существует") || msgLower.includes("существует")))) {
+               (msgLower.includes("user") && msgLower.includes("already exists")) ||
+               (msgLower.includes("email") && msgLower.includes("already exists") && !msgLower.includes("company") && !msgLower.includes("admin"))) {
         errorMessage = t("auth.userEmailAlreadyExists");
       }
       // 5. Остальные ошибки
       else if (backendMessage.includes("Email is required") || 
-               (msgLower.includes("email") && msgLower.includes("required")) ||
-               (msgLower.includes("email") && msgLower.includes("обязателен"))) {
+               msgLower.includes("required")) {
         errorMessage = t("auth.emailAndPasswordRequired");
       }
-      else if (backendMessage.includes("Access denied") || 
-               msgLower.includes("access denied") ||
-               msgLower.includes("доступ запрещен")) {
+      else if (backendMessage.includes("Password must be at least")) {
+        errorMessage = t("auth.passwordMinLength", { length: 8 });
+      }
+      else if (backendMessage.includes("Access denied")) {
         errorMessage = t("auth.accessDenied");
       }
-      // 6. Если статус 409 или код CONFLICT, но сообщение не распознано - показываем общее сообщение
-      else if (errorStatus === 409 || errorCode === "CONFLICT") {
-        // Пытаемся показать оригинальное сообщение, если оно есть
-        if (backendMessage && !backendMessage.includes("HTTP error") && !backendMessage.includes("Conflict")) {
-          errorMessage = backendMessage;
-        } else {
-          errorMessage = t("auth.adminEmailAlreadyExists") || "Администратор с таким email уже существует. Пожалуйста, используйте другой email.";
-        }
+      // 6. Если статус 409, но сообщение не распознано
+      else if (errorStatus === 409) {
+        errorMessage = "Данные уже существуют. Проверьте уникальность имени и email администратора.";
       }
       // 7. Если есть сообщение, показываем его
       else if (backendMessage && !backendMessage.includes("HTTP error")) {
@@ -152,21 +125,19 @@ const AdminAdmins = () => {
       }
       // 8. Общая ошибка
       else {
-        errorMessage = t("admin.createError") || t("common.error") || "Произошла ошибка при создании администратора";
+        errorMessage = t("common.error") || "Произошла ошибка при создании администратора";
       }
       
-      // Если ошибка 409 (Conflict), обновляем список и очищаем форму
-      if (errorStatus === 409 || errorCode === "CONFLICT") {
-        // Обновляем список админов, чтобы показать существующего
-        refetch();
-        // Очищаем форму, чтобы пользователь мог ввести новые данные
-        resetCreateAdminForm();
-      }
-      
-      // Показываем ошибку пользователю
+      // Всегда показываем toast с ошибкой
       toast.error(errorMessage);
       
-      // Форма остается открытой, чтобы пользователь мог исправить данные
+      // Форма остается открытой с данными, чтобы пользователь мог исправить
+      // Очищаем только пароли для безопасности
+      setCreateAdminForm(prev => ({
+        ...prev,
+        password: "",
+        confirmPassword: "",
+      }));
     },
   });
 
