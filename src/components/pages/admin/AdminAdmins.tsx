@@ -69,15 +69,14 @@ const AdminAdmins = () => {
 
   const { mutateAsync: createAdminMutation, isPending: isCreating } = useCreateAdmin({
     onSuccess: async () => {
-      // Хук useCreateAdmin уже обновляет кэш оптимистично и инвалидирует его
-      // Делаем явный refetch для гарантированного обновления списка (как в создании компании)
-      await refetch();
-      
-      // Закрываем модальное окно сразу после обновления
+      // Закрываем модальное окно СРАЗУ (синхронно) для мгновенного отклика
       setIsDialogOpen(false);
       
-      // Очищаем форму (useEffect закроет форму автоматически, но очистим явно для надежности)
+      // Очищаем форму сразу
       resetCreateAdminForm();
+      
+      // Обновляем список админов для немедленного отображения (как в создании компании)
+      await refetch();
       
       // Показываем успешное сообщение
       toast.success(t("admin.adminCreated") || t("common.success") || "Администратор создан");
@@ -205,12 +204,42 @@ const AdminAdmins = () => {
 
   const deleteAdminMutation = useDeleteAdmin({
     onSuccess: async (_, adminId) => {
+      // Закрываем диалог удаления
+      setIsDeleteDialogOpen(false);
+      setAdminToDelete(null);
+      
       // Явно обновляем список админов для немедленного отображения
       await refetch();
-      toast.success(t("admin.adminDeleted"));
+      
+      toast.success(t("admin.adminDeleted") || "Администратор удален");
     },
-    onError: () => {
-      toast.error(t("admin.deleteError"));
+    onError: (error: any) => {
+      // Получаем сообщение об ошибке с бэкенда
+      const backendMessage = error?.message || error?.response?.data?.error?.message || "";
+      const errorStatus = error?.status || error?.response?.status || 0;
+      
+      // Маппинг сообщений об ошибках
+      let errorMessage = "";
+      
+      if (errorStatus === 404 || backendMessage.includes("not found") || backendMessage.includes("не найден")) {
+        errorMessage = t("admin.adminNotFound") || "Администратор не найден. Возможно, он уже был удален.";
+        // Закрываем диалог и обновляем список, если админ не найден (возможно, уже удален)
+        setIsDeleteDialogOpen(false);
+        setAdminToDelete(null);
+        refetch();
+      } else if (errorStatus === 403 || backendMessage.includes("Access denied") || backendMessage.includes("доступ запрещен")) {
+        errorMessage = t("auth.accessDenied") || "Доступ запрещен";
+      } else if (backendMessage.includes("Cannot delete yourself") || backendMessage.includes("нельзя удалить себя")) {
+        errorMessage = t("admin.cannotDeleteYourself") || "Нельзя удалить самого себя";
+      } else if (backendMessage.includes("Cannot delete super admin") || backendMessage.includes("нельзя удалить суперадмина")) {
+        errorMessage = t("admin.cannotDeleteSuperAdmin") || "Нельзя удалить суперадминистратора";
+      } else if (backendMessage && !backendMessage.includes("HTTP error")) {
+        errorMessage = backendMessage;
+      } else {
+        errorMessage = t("admin.deleteError") || "Произошла ошибка при удалении администратора";
+      }
+      
+      toast.error(errorMessage);
     },
   });
 
@@ -221,9 +250,16 @@ const AdminAdmins = () => {
 
   const handleDeleteConfirm = () => {
     if (adminToDelete) {
+      // Проверяем, что ID существует и валиден
+      if (!adminToDelete.id) {
+        toast.error(t("admin.adminNotFound") || "ID администратора не найден");
+        setIsDeleteDialogOpen(false);
+        setAdminToDelete(null);
+        return;
+      }
+      
+      // Удаляем админа (диалог закроется в onSuccess/onError)
       deleteAdminMutation.mutate(adminToDelete.id);
-      setIsDeleteDialogOpen(false);
-      setAdminToDelete(null);
     }
   };
 
@@ -419,7 +455,7 @@ const AdminAdmins = () => {
       </div>
       {/* Add Admin Dialog */}
       <Transition show={isDialogOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-50" onClose={setIsDialogOpen}>
+        <Dialog as="div" className="relative z-50" onClose={() => setIsDialogOpen(false)}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
