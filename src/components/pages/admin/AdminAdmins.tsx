@@ -69,9 +69,16 @@ const AdminAdmins = () => {
 
   const { mutateAsync: createAdminMutation, isPending: isCreating } = useCreateAdmin({
     onSuccess: async () => {
+      // Сначала обновляем список админов
       await refetch();
+      
+      // Затем закрываем модальное окно
       setIsDialogOpen(false);
+      
+      // Очищаем форму
       resetCreateAdminForm();
+      
+      // Показываем успешное сообщение
       toast.success(t("admin.adminCreated") || t("common.success") || "Администратор создан");
     },
     onError: (error: any) => {
@@ -104,7 +111,27 @@ const AdminAdmins = () => {
                (msgLower.includes("email") && msgLower.includes("already exists") && !msgLower.includes("company") && !msgLower.includes("admin"))) {
         errorMessage = t("auth.userEmailAlreadyExists");
       }
-      // 5. Остальные ошибки
+      // 5. Обработка ошибок валидации
+      else if (backendMessage.includes("Validation error") || errorStatus === 400) {
+        // Пытаемся извлечь детали валидации
+        const validationDetails = error?.details || error?.response?.data?.error?.details;
+        if (validationDetails && Array.isArray(validationDetails) && validationDetails.length > 0) {
+          // Берем первую ошибку валидации
+          const firstError = validationDetails[0];
+          if (firstError.message) {
+            errorMessage = firstError.message;
+          } else if (firstError.path?.includes("name")) {
+            errorMessage = t("auth.nameRequired") || "Имя обязательно для заполнения";
+          } else if (firstError.path?.includes("email")) {
+            errorMessage = t("auth.invalidEmail") || "Некорректный email";
+          } else {
+            errorMessage = firstError.message || "Ошибка валидации данных";
+          }
+        } else {
+          errorMessage = t("auth.validationError") || "Ошибка валидации данных. Проверьте правильность заполнения полей.";
+        }
+      }
+      // 6. Остальные ошибки
       else if (backendMessage.includes("Email is required") || 
                msgLower.includes("required")) {
         errorMessage = t("auth.emailAndPasswordRequired");
@@ -115,15 +142,15 @@ const AdminAdmins = () => {
       else if (backendMessage.includes("Access denied")) {
         errorMessage = t("auth.accessDenied");
       }
-      // 6. Если статус 409, но сообщение не распознано
+      // 7. Если статус 409, но сообщение не распознано
       else if (errorStatus === 409) {
         errorMessage = "Данные уже существуют. Проверьте уникальность имени и email администратора.";
       }
-      // 7. Если есть сообщение, показываем его
+      // 8. Если есть сообщение, показываем его
       else if (backendMessage && !backendMessage.includes("HTTP error")) {
         errorMessage = backendMessage;
       }
-      // 8. Общая ошибка
+      // 9. Общая ошибка
       else {
         errorMessage = t("common.error") || "Произошла ошибка при создании администратора";
       }
@@ -136,6 +163,7 @@ const AdminAdmins = () => {
       // Всегда показываем toast с ошибкой
       toast.error(errorMessage);
       
+      // ВАЖНО: Модальное окно НЕ закрывается при ошибке
       // Форма остается открытой с данными, чтобы пользователь мог исправить
       // Очищаем только пароли для безопасности
       setCreateAdminForm(prev => ({
@@ -143,6 +171,8 @@ const AdminAdmins = () => {
         password: "",
         confirmPassword: "",
       }));
+      
+      // Модальное окно остается открытым (isDialogOpen не меняется)
     },
   });
 
@@ -180,12 +210,12 @@ const AdminAdmins = () => {
 
   const deleteAdminMutation = useDeleteAdmin({
     onSuccess: async (_, adminId) => {
-      // Закрываем диалог удаления
+      // Сначала обновляем список админов для немедленного отображения
+      await refetch();
+      
+      // Затем закрываем диалог удаления
       setIsDeleteDialogOpen(false);
       setAdminToDelete(null);
-      
-      // Явно обновляем список админов для немедленного отображения
-      await refetch();
       
       toast.success(t("admin.adminDeleted") || "Администратор удален");
     },
@@ -287,17 +317,11 @@ const AdminAdmins = () => {
     // Создаем админа через API (пароль не передается, бэкенд создаст дефолтный)
     // Используем уже нормализованные данные
     // Проверка на дубликаты выполняется на сервере - ошибка будет обработана в onError колбэке
-    try {
-      await createAdminMutation({
-        email: normalizedEmail,
-        name: normalizedName,
-        role: "admin",
-      });
-    } catch (error) {
-      // Ошибка уже обработана в onError колбэке хука useCreateAdmin
-      // Не нужно логировать или показывать ошибку здесь, чтобы избежать дублирования
-      // Просто игнорируем ошибку, так как она уже обработана
-    }
+    await createAdminMutation({
+      email: normalizedEmail,
+      name: normalizedName,
+      role: "admin",
+    });
   };
 
   const handleEdit = () => {
