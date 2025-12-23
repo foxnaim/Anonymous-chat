@@ -83,49 +83,75 @@ const AdminAdmins = () => {
     },
     onError: async (error: any) => {
       // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
-      const backendMessage = String(error?.message || "").trim();
-      const errorStatus = error?.status || 0;
+      // Также может быть error.response?.data?.error?.message для некоторых случаев
+      let backendMessage = "";
+      
+      // Пытаемся извлечь сообщение из разных мест
+      if (error?.message) {
+        backendMessage = String(error.message).trim();
+      } else if (error?.response?.data?.error?.message) {
+        backendMessage = String(error.response.data.error.message).trim();
+      } else if (error?.response?.data?.message) {
+        backendMessage = String(error.response.data.message).trim();
+      }
+      
+      const errorStatus = error?.status || error?.response?.status || 0;
+      const msgLower = backendMessage.toLowerCase();
       
       // Маппинг сообщений об ошибках - проверяем в строгом порядке приоритета
       let errorMessage = "";
-      const msgLower = backendMessage.toLowerCase();
       
-      // 1. Проверка имени админа
-      if (backendMessage.includes("Admin with this name already exists") || 
-          (msgLower.includes("name") && msgLower.includes("already exists") && msgLower.includes("admin"))) {
-        errorMessage = t("auth.adminNameAlreadyExists");
-      }
-      // 2. Проверка email админа
-      else if (backendMessage.includes("Admin with this email already exists") || 
-               (msgLower.includes("email") && msgLower.includes("already exists") && msgLower.includes("admin"))) {
+      // 1. Проверка email админа (самая частая ошибка)
+      if (backendMessage.includes("Admin with this email already exists") || 
+          (msgLower.includes("admin") && msgLower.includes("email") && msgLower.includes("already exists")) ||
+          (msgLower.includes("администратор") && msgLower.includes("email") && (msgLower.includes("уже существует") || msgLower.includes("существует")))) {
         errorMessage = t("auth.adminEmailAlreadyExists");
+      }
+      // 2. Проверка имени админа
+      else if (backendMessage.includes("Admin with this name already exists") || 
+               (msgLower.includes("admin") && msgLower.includes("name") && msgLower.includes("already exists")) ||
+               (msgLower.includes("администратор") && msgLower.includes("имя") && (msgLower.includes("уже существует") || msgLower.includes("существует")))) {
+        errorMessage = t("auth.adminNameAlreadyExists");
       }
       // 3. Проверка email компании
       else if (backendMessage.includes("Company with this email already exists") || 
-               (msgLower.includes("email") && msgLower.includes("already exists") && msgLower.includes("company"))) {
+               (msgLower.includes("company") && msgLower.includes("email") && msgLower.includes("already exists")) ||
+               (msgLower.includes("компания") && msgLower.includes("email") && (msgLower.includes("уже существует") || msgLower.includes("существует")))) {
         errorMessage = t("auth.companyEmailAlreadyExists");
       }
       // 4. Проверка email пользователя
       else if (backendMessage.includes("User with this email already exists") || 
-               (msgLower.includes("user") && msgLower.includes("already exists")) ||
-               (msgLower.includes("email") && msgLower.includes("already exists") && !msgLower.includes("company") && !msgLower.includes("admin"))) {
+               (msgLower.includes("user") && msgLower.includes("email") && msgLower.includes("already exists")) ||
+               (msgLower.includes("пользователь") && msgLower.includes("email") && (msgLower.includes("уже существует") || msgLower.includes("существует")))) {
         errorMessage = t("auth.userEmailAlreadyExists");
       }
       // 5. Остальные ошибки
-      else if (backendMessage.includes("Email is required") || msgLower.includes("required")) {
+      else if (backendMessage.includes("Email is required") || 
+               (msgLower.includes("email") && msgLower.includes("required")) ||
+               (msgLower.includes("email") && msgLower.includes("обязателен"))) {
         errorMessage = t("auth.emailAndPasswordRequired");
       }
-      else if (backendMessage.includes("Access denied")) {
+      else if (backendMessage.includes("Access denied") || 
+               msgLower.includes("access denied") ||
+               msgLower.includes("доступ запрещен")) {
         errorMessage = t("auth.accessDenied");
       }
+      // 6. Если статус 409, но сообщение не распознано - показываем общее сообщение
       else if (errorStatus === 409) {
-        errorMessage = "Данные уже существуют. Проверьте уникальность имени и email.";
+        // Пытаемся показать оригинальное сообщение, если оно есть
+        if (backendMessage && !backendMessage.includes("HTTP error") && !backendMessage.includes("Conflict")) {
+          errorMessage = backendMessage;
+        } else {
+          errorMessage = t("auth.adminEmailAlreadyExists") || "Администратор с таким email уже существует. Пожалуйста, используйте другой email.";
+        }
       }
+      // 7. Если есть сообщение, показываем его
       else if (backendMessage && !backendMessage.includes("HTTP error")) {
         errorMessage = backendMessage;
       }
+      // 8. Общая ошибка
       else {
-        errorMessage = t("admin.createError") || t("common.error");
+        errorMessage = t("admin.createError") || t("common.error") || "Произошла ошибка при создании администратора";
       }
       
       // Если ошибка 409 (Conflict), обновляем список чтобы показать существующего админа
@@ -133,7 +159,10 @@ const AdminAdmins = () => {
         await refetch();
       }
       
+      // Показываем ошибку пользователю
       toast.error(errorMessage);
+      
+      // Форма остается открытой, чтобы пользователь мог исправить данные
     },
   });
 
