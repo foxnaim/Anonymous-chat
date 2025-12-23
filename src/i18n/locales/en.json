@@ -549,6 +549,8 @@
     "createError": "Error creating administrator",
     "updateError": "Error updating administrator",
     "deleteError": "Error deleting administrator",
+    "confirmDelete": "Confirm deletion",
+    "deleteAdminWarning": "Are you sure you want to delete administrator \"{{name}}\" ({{email}})? This action cannot be undone.",
     "superAdminOnly": "Available only for super admin",
     "searchAdmins": "Search administrators...",
     "superAdmin": "Super Admin",

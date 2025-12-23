@@ -665,7 +665,10 @@ const AdminAdmins = () => {
                     <p className="text-sm text-muted-foreground">
                       {adminToDelete && (
                         <>
-                          {t("admin.deleteAdminWarning") || `Вы уверены, что хотите удалить администратора "${adminToDelete.name}" (${adminToDelete.email})? Это действие нельзя отменить.`}
+                          {t("admin.deleteAdminWarning", { 
+                            name: adminToDelete.name, 
+                            email: adminToDelete.email 
+                          }) || `Вы уверены, что хотите удалить администратора "${adminToDelete.name}" (${adminToDelete.email})? Это действие нельзя отменить.`}
                         </>
                       )}
                     </p>
