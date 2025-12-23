@@ -69,9 +69,9 @@ const AdminAdmins = () => {
   const filteredAdmins = adminsLocal.filter(admin => admin.role !== "super_admin");
   
   const { mutateAsync: createAdminMutation, isPending: isCreating } = useCreateAdmin({
-    onSuccess: async (newAdmin) => {
-      // Принудительно обновляем список админов
-      await refetch();
+    onSuccess: (newAdmin) => {
+      // Хук useCreateAdmin уже обновляет кэш через invalidateQueries и refetchQueries
+      // Не нужно вызывать refetch() здесь, чтобы избежать двойного запроса
       
       // Закрываем модальное окно и очищаем форму
       setIsDialogOpen(false);
@@ -155,8 +155,10 @@ const AdminAdmins = () => {
       }
       
       // Если ошибка 409 (Conflict), обновляем список чтобы показать существующего админа
+      // Хук useCreateAdmin уже делает invalidateQueries, поэтому refetch не нужен
+      // Но можно вызвать для немедленного обновления
       if (errorStatus === 409) {
-        await refetch();
+        refetch();
       }
       
       // Показываем ошибку пользователю
@@ -229,6 +231,11 @@ const AdminAdmins = () => {
   };
 
   const handleCreate = async () => {
+    // Защита от двойной отправки
+    if (isCreating) {
+      return;
+    }
+
     const { name, email, password, confirmPassword } = createAdminForm;
 
     // Проверка заполненности полей
@@ -261,17 +268,16 @@ const AdminAdmins = () => {
 
     // Создаем админа через API (пароль не передается, бэкенд создаст дефолтный)
     // Используем mutateAsync - ошибка будет обработана в onError
-    await createAdminMutation({
-      email,
-      name,
-      role: "admin",
-    }).catch((error) => {
-      // Дополнительная обработка, если onError не сработал
-      // onError должен обработать, но на всякий случай показываем общую ошибку
-      if (!error?.handled) {
-        toast.error(error?.message || t("common.error"));
-      }
-    });
+    try {
+      await createAdminMutation({
+        email,
+        name,
+        role: "admin",
+      });
+    } catch (error) {
+      // Ошибка уже обработана в onError, здесь просто логируем для отладки
+      console.error("Error creating admin:", error);
+    }
   };
 
   const handleEdit = () => {

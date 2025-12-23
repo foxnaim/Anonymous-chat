@@ -242,12 +242,9 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
         return [newAdmin, ...old];
       });
       
-      // Затем инвалидируем и принудительно обновляем для гарантированного обновления UI
+      // Инвалидируем кэш - это автоматически вызовет refetch для активных запросов
+      // Не нужно вызывать refetchQueries отдельно, чтобы избежать двойного запроса
       queryClient.invalidateQueries({ queryKey: queryKeys.admins });
-      queryClient.refetchQueries({ 
-        queryKey: queryKeys.admins,
-        type: 'active',
-      });
       
       // Вызываем пользовательский onSuccess если он есть
       if (userOnSuccess) {
