@@ -225,6 +225,7 @@ export const useAdmins = (page?: number, limit?: number, options?: Omit<UseQuery
  */
 export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { email: string; name: string; role?: 'admin' | 'super_admin' }>) => {
   const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess;
   
   return useMutation({
     mutationFn: (data: { email: string; name: string; role?: 'admin' | 'super_admin' }) => adminService.createAdmin(data),
@@ -249,8 +250,8 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
       });
       
       // Вызываем пользовательский onSuccess если он есть
-      if (options?.onSuccess) {
-        options.onSuccess(newAdmin, variables, context);
+      if (userOnSuccess) {
+        userOnSuccess(newAdmin, variables, context);
       }
     },
     ...options,
