@@ -68,7 +68,7 @@ const AdminAdmins = () => {
   // Фильтруем супер-админа из списка (он управляется через настройки)
   const filteredAdmins = adminsLocal.filter(admin => admin.role !== "super_admin");
   
-  const { mutateAsync: createAdmin, isPending: isCreating } = useCreateAdmin({
+  const { mutateAsync: createAdminMutation, isPending: isCreating } = useCreateAdmin({
     onSuccess: async (newAdmin) => {
       // Принудительно обновляем список админов
       await refetch();
@@ -261,7 +261,7 @@ const AdminAdmins = () => {
 
     // Создаем админа через API (пароль не передается, бэкенд создаст дефолтный)
     // Используем mutateAsync - ошибка будет обработана в onError
-    await createAdmin({
+    await createAdminMutation({
       email,
       name,
       role: "admin",
