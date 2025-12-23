@@ -23,7 +23,6 @@ const AdminAdmins = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [adminToDelete, setAdminToDelete] = useState<AdminUser | null>(null);
   const { data: admins = [], isLoading, refetch } = useAdmins();
-  const [adminsLocal, setAdminsLocal] = useState<AdminUser[]>(admins);
   const [editAdmin, setEditAdmin] = useState<{
     id: string;
     name: string;
@@ -43,11 +42,6 @@ const AdminAdmins = () => {
   const [showEditConfirmPassword, setShowEditConfirmPassword] = useState(false);
   const { user } = useAuth();
 
-  // Синхронизируем с моковыми данными
-  useEffect(() => {
-    setAdminsLocal(admins);
-  }, [admins]);
-
   // Сбрасываем состояние при закрытии модальных окон
   useEffect(() => {
     if (!isDialogOpen) {
@@ -66,12 +60,12 @@ const AdminAdmins = () => {
   }, [isEditOpen]);
 
   // Фильтруем супер-админа из списка (он управляется через настройки)
-  const filteredAdmins = adminsLocal.filter(admin => admin.role !== "super_admin");
+  const filteredAdmins = admins.filter(admin => admin.role !== "super_admin");
   
   const { mutateAsync: createAdminMutation, isPending: isCreating } = useCreateAdmin({
-    onSuccess: (newAdmin) => {
-      // Хук useCreateAdmin уже обновляет кэш через invalidateQueries и refetchQueries
-      // Не нужно вызывать refetch() здесь, чтобы избежать двойного запроса
+    onSuccess: async (newAdmin) => {
+      // Явно обновляем список админов для немедленного отображения (как в создании компании)
+      await refetch();
       
       // Закрываем модальное окно и очищаем форму
       setIsDialogOpen(false);
@@ -201,11 +195,10 @@ const AdminAdmins = () => {
   });
 
   const deleteAdminMutation = useDeleteAdmin({
-    onSuccess: (_, adminId) => {
+    onSuccess: async (_, adminId) => {
+      // Явно обновляем список админов для немедленного отображения
+      await refetch();
       toast.success(t("admin.adminDeleted"));
-      setAdminsLocal(prev => prev.filter(admin => admin.id !== adminId));
-      // Явно обновляем список админов
-      refetch();
     },
     onError: () => {
       toast.error(t("admin.deleteError"));
