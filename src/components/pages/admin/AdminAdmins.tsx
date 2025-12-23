@@ -81,7 +81,7 @@ const AdminAdmins = () => {
       // Показываем успешное сообщение
       toast.success(t("admin.adminCreated") || t("common.success") || "Администратор создан");
     },
-    onError: async (error: any) => {
+    onError: (error: any) => {
       // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
       // Формат ошибки: { code: "CONFLICT", message: "Admin with this email already exists", status: 409 }
       let backendMessage = "";
@@ -158,8 +158,8 @@ const AdminAdmins = () => {
       // Если ошибка 409 (Conflict), обновляем список и очищаем форму
       if (errorStatus === 409 || errorCode === "CONFLICT") {
         // Обновляем список админов, чтобы показать существующего
-        await refetch();
-        // Очищаем форму сразу после обновления, чтобы пользователь мог ввести новые данные
+        refetch();
+        // Очищаем форму, чтобы пользователь мог ввести новые данные
         resetCreateAdminForm();
       }
       
