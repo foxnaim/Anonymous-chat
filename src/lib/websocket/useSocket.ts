@@ -72,29 +72,25 @@ export const useSocketMessages = (companyCode?: string | null) => {
 
   // Мемоизируем обработчики для избежания лишних переподписок
   const handleNewMessage = useCallback((message: Message) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[WebSocket] Received new message:', message.id, 'for company:', message.companyCode);
-    }
+    console.log('[WebSocket] Received new message:', message.id, 'for company:', message.companyCode, 'current companyCode:', companyCode);
     
-    // Обновляем все запросы сообщений для данного companyCode (включая все варианты page/limit)
-    // Используем setQueriesData для обновления всех запросов, начинающихся с ['messages', companyCode]
+    // Сначала обновляем кэш оптимистично для мгновенного отображения
     const baseQueryKey = queryKeys.messages(companyCode || undefined);
     
+    // Обновляем все запросы, которые начинаются с базового ключа
     queryClient.setQueriesData<Message[]>(
       { queryKey: baseQueryKey, exact: false },
       (old) => {
         if (!old) return old;
-        // Проверяем, нет ли уже такого сообщения
         const exists = old.some((m) => m.id === message.id);
         if (exists) {
           return old.map((m) => (m.id === message.id ? message : m));
         }
-        // Добавляем новое сообщение в начало списка
         return [message, ...old];
       }
     );
     
-    // Также обновляем кэш для всех сообщений (для админов), если это сообщение для другой компании
+    // Также обновляем кэш для всех сообщений (для админов)
     if (!companyCode && message.companyCode) {
       queryClient.setQueriesData<Message[]>(
         { queryKey: queryKeys.messages(message.companyCode), exact: false },
@@ -123,12 +119,29 @@ export const useSocketMessages = (companyCode?: string | null) => {
         }
       );
     }
+    
+    // КРИТИЧЕСКИ ВАЖНО: Принудительно обновляем активные запросы для немедленного отображения
+    // Используем refetchQueries для гарантированного обновления UI
+    // Это заставит React Query перерисовать компоненты с обновленными данными
+    queryClient.refetchQueries({ 
+      queryKey: ['messages'],
+      exact: false,
+      type: 'active', // Только активные запросы (те, что видны на экране)
+    });
+    
+    // Если сообщение для другой компании, также обновляем её запросы
+    if (message.companyCode && message.companyCode !== companyCode) {
+      queryClient.refetchQueries({ 
+        queryKey: queryKeys.messages(message.companyCode),
+        exact: false,
+        type: 'active',
+      });
+    }
 
-    // Оптимизация: инвалидируем только активные запросы статистики
-    // Не инвалидируем все подзапросы, только если они активны (открыты на экране)
+    // Инвалидируем статистику
     queryClient.invalidateQueries({ 
       queryKey: ['stats'],
-      refetchType: 'active', // Только активные запросы (те, что видны на экране)
+      refetchType: 'active',
     });
 
     // Показываем уведомление браузера, если разрешено и вкладка неактивна
@@ -234,37 +247,49 @@ export const useSocketMessages = (companyCode?: string | null) => {
     // Переподключаемся при изменении companyCode или при монтировании
     const socket = getSocket(false);
     if (!socket) {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('[WebSocket] Cannot connect: no authentication token or socket.io-client not loaded');
-      }
+      console.warn('[WebSocket] Cannot connect: no authentication token or socket.io-client not loaded');
       return;
     }
     
-    // Проверяем подключение
-    if (socket.connected) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[WebSocket] Already connected, subscribing to messages');
-      }
-    } else {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[WebSocket] Connecting...');
-      }
-    }
-
-    // Подписываемся на события
-    socket.on('message:new', handleNewMessage);
-    socket.on('message:updated', handleMessageUpdate);
-    socket.on('message:deleted', handleMessageDelete);
+    // Функция для подписки на события
+    const subscribeToEvents = () => {
+      if (!socket) return;
+      
+      // Подписываемся на события
+      socket.on('message:new', handleNewMessage);
+      socket.on('message:updated', handleMessageUpdate);
+      socket.on('message:deleted', handleMessageDelete);
+      
+      console.log('[WebSocket] ✅ Subscribed to message events', {
+        companyCode: companyCode || 'all',
+        connected: socket.connected,
+        socketId: socket.id
+      });
+    };
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[WebSocket] Subscribed to message events for companyCode:', companyCode || 'all');
+    // Если уже подключен, подписываемся сразу
+    if (socket.connected) {
+      subscribeToEvents();
+    } else {
+      // Если не подключен, ждем подключения
+      const onConnect = () => {
+        console.log('[WebSocket] ✅ Connected, subscribing to messages');
+        subscribeToEvents();
+      };
+      
+      socket.once('connect', onConnect);
+      
+      console.log('[WebSocket] ⏳ Waiting for connection...');
     }
 
     // Очистка при размонтировании
     return () => {
-      socket?.off('message:new', handleNewMessage);
-      socket?.off('message:updated', handleMessageUpdate);
-      socket?.off('message:deleted', handleMessageDelete);
+      if (socket) {
+        socket.off('message:new', handleNewMessage);
+        socket.off('message:updated', handleMessageUpdate);
+        socket.off('message:deleted', handleMessageDelete);
+        socket.off('connect');
+      }
     };
   }, [companyCode, handleNewMessage, handleMessageUpdate, handleMessageDelete]);
 };
