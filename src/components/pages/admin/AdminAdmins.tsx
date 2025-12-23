@@ -31,7 +31,7 @@ const AdminAdmins = () => {
     password: string;
     confirmPassword: string;
   } | null>(null);
-  const [createAdmin, setCreateAdmin] = useState({
+  const [createAdminForm, setCreateAdminForm] = useState({
     name: "",
     email: "",
     password: "",
@@ -51,7 +51,7 @@ const AdminAdmins = () => {
   // Сбрасываем состояние при закрытии модальных окон
   useEffect(() => {
     if (!isDialogOpen) {
-      setCreateAdmin({ name: "", email: "", password: "", confirmPassword: "" });
+      setCreateAdminForm({ name: "", email: "", password: "", confirmPassword: "" });
       setShowPassword(false);
       setShowConfirmPassword(false);
     }
@@ -75,7 +75,7 @@ const AdminAdmins = () => {
       
       // Закрываем модальное окно и очищаем форму
       setIsDialogOpen(false);
-      setCreateAdmin({ name: "", email: "", password: "", confirmPassword: "" });
+      setCreateAdminForm({ name: "", email: "", password: "", confirmPassword: "" });
       setShowPassword(false);
       setShowConfirmPassword(false);
       
@@ -229,7 +229,7 @@ const AdminAdmins = () => {
   };
 
   const handleCreate = async () => {
-    const { name, email, password, confirmPassword } = createAdmin;
+    const { name, email, password, confirmPassword } = createAdminForm;
 
     // Проверка заполненности полей
     if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
@@ -450,8 +450,8 @@ const AdminAdmins = () => {
                       <Input
                         placeholder={t("admin.adminNamePlaceholder")}
                         autoComplete="name"
-                        value={createAdmin.name}
-                        onChange={(e) => setCreateAdmin({ ...createAdmin, name: e.target.value })}
+                        value={createAdminForm.name}
+                        onChange={(e) => setCreateAdminForm({ ...createAdminForm, name: e.target.value })}
                       />
                     </div>
                     <div>
@@ -460,8 +460,8 @@ const AdminAdmins = () => {
                         type="email"
                         placeholder="admin@example.com"
                         autoComplete="username"
-                        value={createAdmin.email}
-                        onChange={(e) => setCreateAdmin({ ...createAdmin, email: e.target.value })}
+                        value={createAdminForm.email}
+                        onChange={(e) => setCreateAdminForm({ ...createAdminForm, email: e.target.value })}
                       />
                     </div>
                     <div>
@@ -471,8 +471,8 @@ const AdminAdmins = () => {
                           type={showPassword ? "text" : "password"}
                           placeholder="********"
                           autoComplete="new-password"
-                          value={createAdmin.password}
-                          onChange={(e) => setCreateAdmin({ ...createAdmin, password: e.target.value })}
+                          value={createAdminForm.password}
+                          onChange={(e) => setCreateAdminForm({ ...createAdminForm, password: e.target.value })}
                           className="pr-10"
                           minLength={8}
                         />
@@ -501,8 +501,8 @@ const AdminAdmins = () => {
                           type={showConfirmPassword ? "text" : "password"}
                           placeholder="********"
                           autoComplete="new-password"
-                          value={createAdmin.confirmPassword}
-                          onChange={(e) => setCreateAdmin({ ...createAdmin, confirmPassword: e.target.value })}
+                          value={createAdminForm.confirmPassword}
+                          onChange={(e) => setCreateAdminForm({ ...createAdminForm, confirmPassword: e.target.value })}
                           className="pr-10"
                           minLength={8}
                         />
