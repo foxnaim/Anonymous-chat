@@ -69,11 +69,14 @@ const AdminAdmins = () => {
 
   const { mutateAsync: createAdminMutation, isPending: isCreating } = useCreateAdmin({
     onSuccess: async () => {
-      // Сначала обновляем список админов для немедленного отображения (как в создании компании)
+      // Хук useCreateAdmin уже обновляет кэш оптимистично и инвалидирует его
+      // Делаем явный refetch для гарантированного обновления списка (как в создании компании)
       await refetch();
       
-      // Закрываем модальное окно и очищаем форму синхронно
+      // Закрываем модальное окно сразу после обновления
       setIsDialogOpen(false);
+      
+      // Очищаем форму (useEffect закроет форму автоматически, но очистим явно для надежности)
       resetCreateAdminForm();
       
       // Показываем успешное сообщение
@@ -153,11 +156,11 @@ const AdminAdmins = () => {
         errorMessage = t("admin.createError") || t("common.error") || "Произошла ошибка при создании администратора";
       }
       
-      // Если ошибка 409 (Conflict), обновляем список чтобы показать существующего админа
+      // Если ошибка 409 (Conflict), обновляем список и очищаем форму
       if (errorStatus === 409 || errorCode === "CONFLICT") {
         // Обновляем список админов, чтобы показать существующего
         await refetch();
-        // Очищаем форму, чтобы пользователь мог ввести новые данные
+        // Очищаем форму сразу после обновления, чтобы пользователь мог ввести новые данные
         resetCreateAdminForm();
       }
       
@@ -269,26 +272,9 @@ const AdminAdmins = () => {
       return;
     }
 
-    // Проверка на дубликаты перед отправкой (чтобы избежать 409 ошибок)
-    const existingAdminByEmail = admins.find(
-      admin => admin.email.toLowerCase() === normalizedEmail
-    );
-    if (existingAdminByEmail) {
-      toast.error(t("auth.adminEmailAlreadyExists") || "Администратор с таким email уже существует");
-      return;
-    }
-
-    const existingAdminByName = admins.find(
-      admin => admin.name?.toLowerCase().trim() === normalizedName.toLowerCase()
-    );
-    if (existingAdminByName) {
-      toast.error(t("auth.adminNameAlreadyExists") || "Администратор с таким именем уже существует");
-      return;
-    }
-
     // Создаем админа через API (пароль не передается, бэкенд создаст дефолтный)
     // Используем уже нормализованные данные
-    // Ошибка будет обработана в onError колбэке
+    // Проверка на дубликаты выполняется на сервере - ошибка будет обработана в onError колбэке
     await createAdminMutation({
       email: normalizedEmail,
       name: normalizedName,
