@@ -30,7 +30,7 @@ export const useMessages = (companyCode?: string | null, page?: number, limit?: 
     queryKey: [...queryKeys.messages(normalizedCode), page, limit],
     queryFn: () => messageService.getAll(normalizedCode, page, limit),
     enabled: companyCode !== null, // enabled если не null (undefined разрешен для админа)
-    staleTime: 1000 * 30, // 30 секунд - сообщения могут обновляться часто, но не нужно рефетчить постоянно
+    staleTime: 1000 * 10, // 10 секунд - сообщения обновляются часто, уменьшено для более быстрого обновления
     gcTime: 1000 * 60 * 5, // 5 минут в кэше
     ...options,
   });
@@ -229,7 +229,7 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
   
   return useMutation({
     mutationFn: (data: { email: string; name: string; role?: 'admin' | 'super_admin' }) => adminService.createAdmin(data),
-    onSuccess: (newAdmin, variables, context) => {
+    onSuccess: (newAdmin, variables, context, mutation) => {
       // Сначала обновляем кэш оптимистично для мгновенного отображения
       queryClient.setQueryData<AdminUser[]>(queryKeys.admins, (old = []) => {
         // Проверяем, нет ли уже такого админа
@@ -251,7 +251,7 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
       
       // Вызываем пользовательский onSuccess если он есть
       if (userOnSuccess) {
-        userOnSuccess(newAdmin, variables, context);
+        userOnSuccess(newAdmin, variables, context, mutation);
       }
     },
     ...options,

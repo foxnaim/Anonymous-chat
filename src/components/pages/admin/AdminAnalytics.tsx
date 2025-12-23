@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { AdminHeader } from "@/components/AdminHeader";
 import { useCompanies, useMessages } from "@/lib/query";
+import { useSocketMessages } from "@/lib/websocket/useSocket";
 import { 
   FiMessageSquare, 
   FiTrendingUp, 
@@ -20,6 +21,9 @@ const AdminAnalytics = () => {
   const { t } = useTranslation();
   const { data: companies = [], isLoading: companiesLoading } = useCompanies();
   const { data: messages = [], isLoading: messagesLoading } = useMessages();
+  
+  // Подключаемся к WebSocket для real-time обновлений аналитики
+  useSocketMessages();
 
   const analytics = useMemo(() => {
     if (!companies || !messages) {
