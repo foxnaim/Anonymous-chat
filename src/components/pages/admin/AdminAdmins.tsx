@@ -42,12 +42,17 @@ const AdminAdmins = () => {
   const [showEditConfirmPassword, setShowEditConfirmPassword] = useState(false);
   const { user } = useAuth();
 
+  // Функция для сброса формы создания админа
+  const resetCreateAdminForm = () => {
+    setCreateAdminForm({ name: "", email: "", password: "", confirmPassword: "" });
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+  };
+
   // Сбрасываем состояние при закрытии модальных окон
   useEffect(() => {
     if (!isDialogOpen) {
-      setCreateAdminForm({ name: "", email: "", password: "", confirmPassword: "" });
-      setShowPassword(false);
-      setShowConfirmPassword(false);
+      resetCreateAdminForm();
     }
   }, [isDialogOpen]);
 
@@ -61,18 +66,17 @@ const AdminAdmins = () => {
 
   // Фильтруем супер-админа из списка (он управляется через настройки)
   const filteredAdmins = admins.filter(admin => admin.role !== "super_admin");
-  
+
   const { mutateAsync: createAdminMutation, isPending: isCreating } = useCreateAdmin({
-    onSuccess: async (newAdmin) => {
-      // Явно обновляем список админов для немедленного отображения (как в создании компании)
+    onSuccess: async () => {
+      // Сначала обновляем список админов для немедленного отображения (как в создании компании)
       await refetch();
       
-      // Закрываем модальное окно и очищаем форму
+      // Закрываем модальное окно и очищаем форму синхронно
       setIsDialogOpen(false);
-      setCreateAdminForm({ name: "", email: "", password: "", confirmPassword: "" });
-      setShowPassword(false);
-      setShowConfirmPassword(false);
+      resetCreateAdminForm();
       
+      // Показываем успешное сообщение
       toast.success(t("admin.adminCreated") || t("common.success") || "Администратор создан");
     },
     onError: async (error: any) => {
@@ -152,7 +156,9 @@ const AdminAdmins = () => {
       // Если ошибка 409 (Conflict), обновляем список чтобы показать существующего админа
       if (errorStatus === 409 || errorCode === "CONFLICT") {
         // Обновляем список админов, чтобы показать существующего
-        refetch();
+        await refetch();
+        // Очищаем форму, чтобы пользователь мог ввести новые данные
+        resetCreateAdminForm();
       }
       
       // Показываем ошибку пользователю
@@ -263,20 +269,31 @@ const AdminAdmins = () => {
       return;
     }
 
+    // Проверка на дубликаты перед отправкой (чтобы избежать 409 ошибок)
+    const existingAdminByEmail = admins.find(
+      admin => admin.email.toLowerCase() === normalizedEmail
+    );
+    if (existingAdminByEmail) {
+      toast.error(t("auth.adminEmailAlreadyExists") || "Администратор с таким email уже существует");
+      return;
+    }
+
+    const existingAdminByName = admins.find(
+      admin => admin.name?.toLowerCase().trim() === normalizedName.toLowerCase()
+    );
+    if (existingAdminByName) {
+      toast.error(t("auth.adminNameAlreadyExists") || "Администратор с таким именем уже существует");
+      return;
+    }
+
     // Создаем админа через API (пароль не передается, бэкенд создаст дефолтный)
     // Используем уже нормализованные данные
-    // Используем mutateAsync - ошибка будет обработана в onError
-    try {
-      await createAdminMutation({
-        email: normalizedEmail,
-        name: normalizedName,
-        role: "admin",
-      });
-    } catch (error) {
-      // Ошибка уже обработана в onError колбэке хука useCreateAdmin
-      // Не нужно логировать или показывать ошибку здесь, чтобы избежать дублирования
-      // Просто игнорируем ошибку, так как она уже обработана
-    }
+    // Ошибка будет обработана в onError колбэке
+    await createAdminMutation({
+      email: normalizedEmail,
+      name: normalizedName,
+      role: "admin",
+    });
   };
 
   const handleEdit = () => {
