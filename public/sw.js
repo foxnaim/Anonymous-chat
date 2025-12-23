@@ -43,20 +43,27 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // API запросы - кэшируем с коротким TTL
+  // API запросы - кэшируем только GET запросы
   if (url.pathname.startsWith('/api/')) {
+    // Не кэшируем POST, PUT, DELETE и другие методы, которые изменяют данные
+    // Cache API не поддерживает кэширование этих методов
+    if (request.method !== 'GET') {
+      event.respondWith(fetch(request));
+      return;
+    }
+
     event.respondWith(
       caches.open(API_CACHE).then((cache) => {
         return fetch(request)
           .then((response) => {
-            // Кэшируем только успешные ответы
+            // Кэшируем только успешные GET ответы
             if (response.status === 200) {
               cache.put(request, response.clone());
             }
             return response;
           })
           .catch(() => {
-            // Fallback на кэш если сеть недоступна
+            // Fallback на кэш если сеть недоступна (только для GET)
             return cache.match(request);
           });
       })
@@ -90,7 +97,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Остальные запросы - Network First
+  // Остальные запросы - Network First (только для GET)
+  // Не кэшируем POST, PUT, DELETE и другие методы
+  if (request.method !== 'GET') {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   event.respondWith(
     fetch(request)
       .then((response) => {
