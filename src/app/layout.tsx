@@ -106,13 +106,8 @@ export default function RootLayout({
         {/* Resource hints для ускорения загрузки */}
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'} />
         <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'} />
-        {/* Prefetch критичных маршрутов */}
-        <link rel="prefetch" href="/login" as="document" />
-        <link rel="prefetch" href="/register" as="document" />
         {/* Preload критичных ресурсов */}
         <link rel="preload" href="/feedBack.svg" as="image" />
-        {/* Preload критичных шрифтов */}
-        <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         {/* Ранняя загрузка утилиты для подавления ошибок расширений */}
         <script
           dangerouslySetInnerHTML={{
@@ -132,8 +127,7 @@ export default function RootLayout({
                   'err_file_not_found',
                   'failed to load resource',
                   'cannot read properties',
-                  'reading \'control\'',
-                  'reading "control"',
+                  'reading control',
                   'permissions-policy',
                   'browsing-topics',
                   'unexpected identifier',
