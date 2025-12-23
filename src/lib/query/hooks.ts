@@ -225,31 +225,12 @@ export const useAdmins = (page?: number, limit?: number, options?: Omit<UseQuery
  */
 export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { email: string; name: string; role?: 'admin' | 'super_admin' }>) => {
   const queryClient = useQueryClient();
-  const userOnSuccess = options?.onSuccess;
   
   return useMutation({
     mutationFn: (data: { email: string; name: string; role?: 'admin' | 'super_admin' }) => adminService.createAdmin(data),
-    onSuccess: (newAdmin, variables, context, mutation) => {
-      // Сначала обновляем кэш оптимистично для мгновенного отображения
-      queryClient.setQueryData<AdminUser[]>(queryKeys.admins, (old = []) => {
-        // Проверяем, нет ли уже такого админа
-        const exists = old.some(admin => admin.id === newAdmin.id || admin.email === newAdmin.email);
-        if (exists) {
-          return old.map(admin => 
-            (admin.id === newAdmin.id || admin.email === newAdmin.email) ? newAdmin : admin
-          );
-        }
-        return [newAdmin, ...old];
-      });
-      
-      // Инвалидируем кэш - это автоматически вызовет refetch для активных запросов
-      // Не нужно вызывать refetchQueries отдельно, чтобы избежать двойного запроса
+    onSuccess: () => {
+      // Инвалидируем кэш - компонент сам сделает refetch (как в useCreateCompany)
       queryClient.invalidateQueries({ queryKey: queryKeys.admins });
-      
-      // Вызываем пользовательский onSuccess если он есть
-      if (userOnSuccess) {
-        userOnSuccess(newAdmin, variables, context, mutation);
-      }
     },
     ...options,
   });

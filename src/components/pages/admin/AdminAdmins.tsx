@@ -69,14 +69,14 @@ const AdminAdmins = () => {
 
   const { mutateAsync: createAdminMutation, isPending: isCreating } = useCreateAdmin({
     onSuccess: async () => {
-      // Закрываем модальное окно СРАЗУ (синхронно) для мгновенного отклика
-      setIsDialogOpen(false);
-      
-      // Очищаем форму сразу
-      resetCreateAdminForm();
-      
       // Обновляем список админов для немедленного отображения (как в создании компании)
       await refetch();
+      
+      // Закрываем модальное окно
+      setIsDialogOpen(false);
+      
+      // Очищаем форму
+      resetCreateAdminForm();
       
       // Показываем успешное сообщение
       toast.success(t("admin.adminCreated") || t("common.success") || "Администратор создан");
@@ -311,11 +311,17 @@ const AdminAdmins = () => {
     // Создаем админа через API (пароль не передается, бэкенд создаст дефолтный)
     // Используем уже нормализованные данные
     // Проверка на дубликаты выполняется на сервере - ошибка будет обработана в onError колбэке
-    await createAdminMutation({
-      email: normalizedEmail,
-      name: normalizedName,
-      role: "admin",
-    });
+    try {
+      await createAdminMutation({
+        email: normalizedEmail,
+        name: normalizedName,
+        role: "admin",
+      });
+    } catch (error) {
+      // Ошибка уже обработана в onError колбэке хука useCreateAdmin
+      // Не нужно логировать или показывать ошибку здесь, чтобы избежать дублирования
+      // Просто игнорируем ошибку, так как она уже обработана
+    }
   };
 
   const handleEdit = () => {
