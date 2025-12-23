@@ -238,15 +238,19 @@ const AdminAdmins = () => {
 
     const { name, email, password, confirmPassword } = createAdminForm;
 
+    // Нормализуем данные сразу для валидации
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedName = name.trim();
+
     // Проверка заполненности полей
-    if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
+    if (!normalizedName || !normalizedEmail || !password.trim() || !confirmPassword.trim()) {
       toast.error(t("common.fillAllFields"));
       return;
     }
 
-    // Проверка валидности email
+    // Проверка валидности email (после нормализации)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(normalizedEmail)) {
       toast.error(t("auth.invalidEmail"));
       return;
     }
@@ -267,11 +271,12 @@ const AdminAdmins = () => {
     }
 
     // Создаем админа через API (пароль не передается, бэкенд создаст дефолтный)
+    // Используем уже нормализованные данные
     // Используем mutateAsync - ошибка будет обработана в onError
     try {
       await createAdminMutation({
-        email,
-        name,
+        email: normalizedEmail,
+        name: normalizedName,
         role: "admin",
       });
     } catch (error) {
