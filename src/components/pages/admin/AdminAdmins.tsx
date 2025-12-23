@@ -128,6 +128,11 @@ const AdminAdmins = () => {
         errorMessage = t("common.error") || "Произошла ошибка при создании администратора";
       }
       
+      // Если ошибка 409 (Conflict), обновляем список админов
+      if (errorStatus === 409) {
+        refetch();
+      }
+      
       // Всегда показываем toast с ошибкой
       toast.error(errorMessage);
       
