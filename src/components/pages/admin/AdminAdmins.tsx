@@ -68,18 +68,18 @@ const AdminAdmins = () => {
   // Фильтруем супер-админа из списка (он управляется через настройки)
   const filteredAdmins = adminsLocal.filter(admin => admin.role !== "super_admin");
   
-  const createAdminMutation = useCreateAdmin({
+  const { mutateAsync: createAdmin, isPending: isCreating } = useCreateAdmin({
     onSuccess: async (newAdmin) => {
+      // Принудительно обновляем список админов
+      await refetch();
+      
       // Закрываем модальное окно и очищаем форму
       setIsDialogOpen(false);
       setCreateAdmin({ name: "", email: "", password: "", confirmPassword: "" });
       setShowPassword(false);
       setShowConfirmPassword(false);
       
-      // Принудительно обновляем список админов
-      await refetch();
-      
-      toast.success(t("common.success"));
+      toast.success(t("admin.adminCreated") || t("common.success") || "Администратор создан");
     },
     onError: async (error: any) => {
       // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
@@ -228,7 +228,7 @@ const AdminAdmins = () => {
     setAdminToDelete(null);
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     const { name, email, password, confirmPassword } = createAdmin;
 
     // Проверка заполненности полей
@@ -260,10 +260,17 @@ const AdminAdmins = () => {
     }
 
     // Создаем админа через API (пароль не передается, бэкенд создаст дефолтный)
-    createAdminMutation.mutate({
+    // Используем mutateAsync - ошибка будет обработана в onError
+    await createAdmin({
       email,
       name,
       role: "admin",
+    }).catch((error) => {
+      // Дополнительная обработка, если onError не сработал
+      // onError должен обработать, но на всякий случай показываем общую ошибку
+      if (!error?.handled) {
+        toast.error(error?.message || t("common.error"));
+      }
     });
   };
 
@@ -517,8 +524,9 @@ const AdminAdmins = () => {
                     <Button
                       type="submit"
                       className="w-full"
+                      disabled={isCreating}
                     >
-                      {t("common.create")}
+                      {isCreating ? t("common.loading") : t("common.create")}
                     </Button>
                   </form>
                 </Dialog.Panel>
