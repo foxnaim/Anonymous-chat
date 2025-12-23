@@ -228,10 +228,8 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
   
   return useMutation({
     mutationFn: (data: { email: string; name: string; role?: 'admin' | 'super_admin' }) => adminService.createAdmin(data),
-    onSuccess: (newAdmin) => {
-      // Инвалидируем кэш для обновления списка
-      queryClient.invalidateQueries({ queryKey: queryKeys.admins });
-      // Также обновляем кэш оптимистично
+    onSuccess: (newAdmin, variables, context) => {
+      // Сначала обновляем кэш оптимистично для мгновенного отображения
       queryClient.setQueryData<AdminUser[]>(queryKeys.admins, (old = []) => {
         // Проверяем, нет ли уже такого админа
         const exists = old.some(admin => admin.id === newAdmin.id || admin.email === newAdmin.email);
@@ -242,6 +240,18 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
         }
         return [newAdmin, ...old];
       });
+      
+      // Затем инвалидируем и принудительно обновляем для гарантированного обновления UI
+      queryClient.invalidateQueries({ queryKey: queryKeys.admins });
+      queryClient.refetchQueries({ 
+        queryKey: queryKeys.admins,
+        type: 'active',
+      });
+      
+      // Вызываем пользовательский onSuccess если он есть
+      if (options?.onSuccess) {
+        options.onSuccess(newAdmin, variables, context);
+      }
     },
     ...options,
   });

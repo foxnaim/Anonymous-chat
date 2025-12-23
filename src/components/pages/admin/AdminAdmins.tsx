@@ -69,19 +69,19 @@ const AdminAdmins = () => {
   const filteredAdmins = adminsLocal.filter(admin => admin.role !== "super_admin");
   
   const createAdminMutation = useCreateAdmin({
-    onSuccess: (newAdmin) => {
-      toast.success(t("common.success"));
+    onSuccess: async (newAdmin) => {
+      // Закрываем модальное окно и очищаем форму
+      setIsDialogOpen(false);
       setCreateAdmin({ name: "", email: "", password: "", confirmPassword: "" });
       setShowPassword(false);
       setShowConfirmPassword(false);
-      setIsDialogOpen(false);
-      // Явно обновляем список админов
-      refetch().then(() => {
-        // После обновления данных синхронизируем локальное состояние
-        // Это гарантирует, что новый админ появится сразу
-      });
+      
+      // Принудительно обновляем список админов
+      await refetch();
+      
+      toast.success(t("common.success"));
     },
-    onError: (error: any) => {
+    onError: async (error: any) => {
       // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
       const backendMessage = String(error?.message || "").trim();
       const errorStatus = error?.status || 0;
@@ -126,6 +126,11 @@ const AdminAdmins = () => {
       }
       else {
         errorMessage = t("admin.createError") || t("common.error");
+      }
+      
+      // Если ошибка 409 (Conflict), обновляем список чтобы показать существующего админа
+      if (errorStatus === 409) {
+        await refetch();
       }
       
       toast.error(errorMessage);
