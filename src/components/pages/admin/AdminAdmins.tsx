@@ -83,10 +83,10 @@ const AdminAdmins = () => {
     },
     onError: async (error: any) => {
       // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
-      // Также может быть error.response?.data?.error?.message для некоторых случаев
+      // Формат ошибки: { code: "CONFLICT", message: "Admin with this email already exists", status: 409 }
       let backendMessage = "";
       
-      // Пытаемся извлечь сообщение из разных мест
+      // Пытаемся извлечь сообщение из разных мест (в порядке приоритета)
       if (error?.message) {
         backendMessage = String(error.message).trim();
       } else if (error?.response?.data?.error?.message) {
@@ -96,6 +96,7 @@ const AdminAdmins = () => {
       }
       
       const errorStatus = error?.status || error?.response?.status || 0;
+      const errorCode = error?.code || error?.response?.data?.error?.code || "";
       const msgLower = backendMessage.toLowerCase();
       
       // Маппинг сообщений об ошибках - проверяем в строгом порядке приоритета
@@ -136,8 +137,8 @@ const AdminAdmins = () => {
                msgLower.includes("доступ запрещен")) {
         errorMessage = t("auth.accessDenied");
       }
-      // 6. Если статус 409, но сообщение не распознано - показываем общее сообщение
-      else if (errorStatus === 409) {
+      // 6. Если статус 409 или код CONFLICT, но сообщение не распознано - показываем общее сообщение
+      else if (errorStatus === 409 || errorCode === "CONFLICT") {
         // Пытаемся показать оригинальное сообщение, если оно есть
         if (backendMessage && !backendMessage.includes("HTTP error") && !backendMessage.includes("Conflict")) {
           errorMessage = backendMessage;
@@ -155,9 +156,8 @@ const AdminAdmins = () => {
       }
       
       // Если ошибка 409 (Conflict), обновляем список чтобы показать существующего админа
-      // Хук useCreateAdmin уже делает invalidateQueries, поэтому refetch не нужен
-      // Но можно вызвать для немедленного обновления
-      if (errorStatus === 409) {
+      if (errorStatus === 409 || errorCode === "CONFLICT") {
+        // Обновляем список админов, чтобы показать существующего
         refetch();
       }
       
@@ -275,8 +275,9 @@ const AdminAdmins = () => {
         role: "admin",
       });
     } catch (error) {
-      // Ошибка уже обработана в onError, здесь просто логируем для отладки
-      console.error("Error creating admin:", error);
+      // Ошибка уже обработана в onError колбэке хука useCreateAdmin
+      // Не нужно логировать или показывать ошибку здесь, чтобы избежать дублирования
+      // Просто игнорируем ошибку, так как она уже обработана
     }
   };
 
