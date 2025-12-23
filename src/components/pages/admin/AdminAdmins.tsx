@@ -69,14 +69,14 @@ const AdminAdmins = () => {
 
   const { mutateAsync: createAdminMutation, isPending: isCreating } = useCreateAdmin({
     onSuccess: async () => {
-      // Обновляем список админов для немедленного отображения (как в создании компании)
-      await refetch();
-      
-      // Закрываем модальное окно
+      // Закрываем модальное окно сразу
       setIsDialogOpen(false);
       
       // Очищаем форму
       resetCreateAdminForm();
+      
+      // Обновляем список админов для немедленного отображения
+      await refetch();
       
       // Показываем успешное сообщение
       toast.success(t("admin.adminCreated") || t("common.success") || "Администратор создан");
