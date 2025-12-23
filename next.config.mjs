@@ -88,6 +88,15 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   async headers() {
+    // Получаем URL бэкенда из переменной окружения
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    // Преобразуем http:// в ws:// и https:// в wss:// для WebSocket
+    const wsUrl = apiUrl.replace(/^http:/, 'ws:').replace(/^https:/, 'wss:');
+    // Извлекаем домен из URL
+    const apiDomain = wsUrl.replace(/^wss?:\/\//, '').split('/')[0];
+    // Извлекаем домен для HTTP/HTTPS
+    const httpDomain = apiUrl.replace(/^https?:\/\//, '').split('/')[0];
+    
     return [
       {
         source: '/:path*',
@@ -114,7 +123,7 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:;"
+            value: `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://${httpDomain} wss://${apiDomain} https:;`
           }
         ]
       }
