@@ -206,13 +206,14 @@ const AdminAdmins = () => {
   });
 
   const deleteAdminMutation = useDeleteAdmin({
-    onSuccess: (_, adminId) => {
-      // Список уже обновлен оптимистично и через refetchQueries в хуке, закрываем диалог сразу
+    onSuccess: async (_, adminId) => {
+      // Обновляем список админов перед закрытием диалога
+      await refetch();
       setIsDeleteDialogOpen(false);
       setAdminToDelete(null);
       toast.success(t("admin.adminDeleted") || "Администратор удален");
     },
-    onError: (error: any) => {
+    onError: async (error: any) => {
       // Получаем сообщение об ошибке с бэкенда
       const backendMessage = error?.message || error?.response?.data?.error?.message || "";
       const errorStatus = error?.status || error?.response?.status || 0;
@@ -222,8 +223,8 @@ const AdminAdmins = () => {
       
       if (errorStatus === 404 || backendMessage.includes("not found") || backendMessage.includes("не найден")) {
         errorMessage = t("admin.adminNotFound") || "Администратор не найден. Возможно, он уже был удален.";
-        // Обновляем список в фоне, если админ не найден (возможно, уже удален)
-        refetch();
+        // Обновляем список перед закрытием диалога, если админ не найден (возможно, уже удален)
+        await refetch();
         setIsDeleteDialogOpen(false);
         setAdminToDelete(null);
       } else if (errorStatus === 403 || backendMessage.includes("Access denied") || backendMessage.includes("доступ запрещен")) {
