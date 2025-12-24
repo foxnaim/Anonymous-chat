@@ -206,12 +206,14 @@ const AdminAdmins = () => {
   });
 
   const deleteAdminMutation = useDeleteAdmin({
-    onSuccess: async (_, adminId) => {
-      // Обновляем список админов перед закрытием диалога
-      await refetch();
+    onSuccess: (_, adminId) => {
+      // Закрываем диалог и показываем уведомление сразу
+      // Список уже обновлен оптимистично в хуке useDeleteAdmin
       setIsDeleteDialogOpen(false);
       setAdminToDelete(null);
       toast.success(t("admin.adminDeleted") || "Администратор удален");
+      // Фоновое обновление для гарантии актуальности данных (не блокируем UI)
+      refetch();
     },
     onError: async (error: any) => {
       // Получаем сообщение об ошибке с бэкенда

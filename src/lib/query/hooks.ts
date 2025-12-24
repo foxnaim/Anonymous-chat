@@ -276,13 +276,23 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
   
   return useMutation({
     mutationFn: (id: string) => adminService.deleteAdmin(id),
-    onSuccess: () => {
-      // Инвалидируем кэш - компонент сам сделает refetch (как в useCreateAdmin)
+    onSuccess: (_, deletedId) => {
+      // Оптимистично удаляем админа из кэша сразу для мгновенного обновления UI
+      const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
+      allQueries.forEach(([queryKey, oldData]) => {
+        if (oldData && Array.isArray(oldData)) {
+          queryClient.setQueryData<AdminUser[]>(queryKey, oldData.filter(admin => admin.id !== deletedId));
+        }
+      });
+      // Инвалидируем и сразу обновляем кэш для гарантии актуальности данных
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
+      // Немедленно обновляем все запросы
+      queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
     },
     onError: () => {
-      // При ошибке инвалидируем кэш, чтобы убедиться, что данные актуальны
+      // При ошибке инвалидируем и обновляем кэш, чтобы убедиться, что данные актуальны
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
+      queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
     },
     ...options,
   });
