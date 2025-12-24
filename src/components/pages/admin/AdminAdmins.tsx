@@ -80,6 +80,26 @@ const AdminAdmins = () => {
       const backendMessage = String(error?.message || "").trim();
       const errorStatus = error?.status || 0;
       
+      // Сохраняем email для проверки после refetch
+      const normalizedEmail = createAdminForm.email.trim().toLowerCase();
+      
+      // Сначала обновляем список, чтобы проверить, не был ли админ создан (race condition)
+      const refetchedData = await refetch();
+      const updatedAdmins = refetchedData.data || [];
+      
+      // Проверяем, не появился ли админ в списке (возможно, он был создан, но пришла ошибка)
+      const adminExists = updatedAdmins.some(admin => admin.email.toLowerCase() === normalizedEmail);
+      
+      // Если админ существует в списке, считаем это успехом (race condition)
+      if (adminExists) {
+        setIsDialogOpen(false);
+        resetCreateAdminForm();
+        toast.success(t("admin.adminCreated") || "Администратор создан");
+        return;
+      }
+      
+      // Если админ не найден, показываем ошибку
+      
       // Маппинг сообщений об ошибках - проверяем в строгом порядке приоритета
       let errorMessage = "";
       const msgLower = backendMessage.toLowerCase();
@@ -89,8 +109,6 @@ const AdminAdmins = () => {
           (msgLower.includes("admin") && msgLower.includes("email") && msgLower.includes("already exists"))) {
         const translated = t("auth.adminEmailAlreadyExists");
         errorMessage = translated !== "auth.adminEmailAlreadyExists" ? translated : "Администратор с таким email уже существует. Пожалуйста, используйте другой email.";
-        // При ошибке дубликата обновляем список, чтобы показать, что админ уже существует
-        await refetch();
       }
       // 2. Проверка имени админа
       else if (backendMessage.includes("Admin with this name already exists") || 
@@ -148,8 +166,6 @@ const AdminAdmins = () => {
       // 7. Если статус 409, но сообщение не распознано
       else if (errorStatus === 409) {
         errorMessage = "Данные уже существуют. Проверьте уникальность имени и email администратора.";
-        // При ошибке 409 обновляем список, чтобы показать актуальные данные
-        await refetch();
       }
       // 8. Если есть сообщение, показываем его
       else if (backendMessage && !backendMessage.includes("HTTP error")) {
