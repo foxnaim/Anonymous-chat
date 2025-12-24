@@ -228,9 +228,21 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
   
   return useMutation({
     mutationFn: (data: { email: string; name: string; role?: 'admin' | 'super_admin' }) => adminService.createAdmin(data),
-    onSuccess: () => {
-      // Инвалидируем кэш - компонент сам сделает refetch (как в useCreateCompany)
-      queryClient.invalidateQueries({ queryKey: queryKeys.admins });
+    onSuccess: (newAdmin) => {
+      // Оптимистично обновляем кэш для всех вариантов ключа (с page и limit)
+      queryClient.setQueriesData<AdminUser[]>(
+        { queryKey: queryKeys.admins, exact: false },
+        (old = []) => {
+          // Проверяем, что админ еще не в списке (избегаем дубликатов)
+          const exists = old.some(admin => admin.id === newAdmin.id || admin.email === newAdmin.email);
+          if (exists) {
+            return old;
+          }
+          return [...old, newAdmin];
+        }
+      );
+      // Инвалидируем кэш для гарантии актуальности данных
+      queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
     },
     ...options,
   });
@@ -245,12 +257,13 @@ export const useUpdateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: { name?: string; role?: 'admin' | 'super_admin' } }) => adminService.updateAdmin(id, data),
     onSuccess: (updatedAdmin) => {
-      // Инвалидируем кэш для обновления списка
-      queryClient.invalidateQueries({ queryKey: queryKeys.admins });
-      // Также обновляем кэш оптимистично
-      queryClient.setQueryData<AdminUser[]>(queryKeys.admins, (old = []) => {
-        return old.map(admin => admin.id === updatedAdmin.id ? updatedAdmin : admin);
-      });
+      // Оптимистично обновляем кэш для всех вариантов ключа (с page и limit)
+      queryClient.setQueriesData<AdminUser[]>(
+        { queryKey: queryKeys.admins, exact: false },
+        (old = []) => old.map(admin => admin.id === updatedAdmin.id ? updatedAdmin : admin)
+      );
+      // Инвалидируем кэш для гарантии актуальности данных
+      queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
     },
     ...options,
   });
@@ -264,8 +277,14 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
   
   return useMutation({
     mutationFn: (id: string) => adminService.deleteAdmin(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.admins });
+    onSuccess: (_, deletedId) => {
+      // Оптимистично обновляем кэш для всех вариантов ключа (с page и limit)
+      queryClient.setQueriesData<AdminUser[]>(
+        { queryKey: queryKeys.admins, exact: false },
+        (old = []) => old.filter(admin => admin.id !== deletedId)
+      );
+      // Инвалидируем кэш для гарантии актуальности данных
+      queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
     },
     ...options,
   });

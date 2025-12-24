@@ -68,11 +68,13 @@ const AdminAdmins = () => {
   const filteredAdmins = admins.filter(admin => admin.role !== "super_admin");
 
   const { mutateAsync: createAdminMutation, isPending: isCreating } = useCreateAdmin({
-    onSuccess: async () => {
-      await refetch();
+    onSuccess: () => {
+      // Список уже обновлен оптимистично в хуке, закрываем модальное окно сразу
       setIsDialogOpen(false);
       resetCreateAdminForm();
       toast.success(t("admin.adminCreated") || t("common.success") || "Администратор создан");
+      // Обновляем данные в фоне для гарантии актуальности (не блокируем UI)
+      refetch();
     },
     onError: (error: any) => {
       // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
@@ -86,23 +88,27 @@ const AdminAdmins = () => {
       // 1. Проверка email админа (самая частая ошибка)
       if (backendMessage.includes("Admin with this email already exists") || 
           (msgLower.includes("admin") && msgLower.includes("email") && msgLower.includes("already exists"))) {
-        errorMessage = t("auth.adminEmailAlreadyExists");
+        const translated = t("auth.adminEmailAlreadyExists");
+        errorMessage = translated !== "auth.adminEmailAlreadyExists" ? translated : "Администратор с таким email уже существует. Пожалуйста, используйте другой email.";
       }
       // 2. Проверка имени админа
       else if (backendMessage.includes("Admin with this name already exists") || 
                (msgLower.includes("admin") && msgLower.includes("name") && msgLower.includes("already exists"))) {
-        errorMessage = t("auth.adminNameAlreadyExists");
+        const translated = t("auth.adminNameAlreadyExists");
+        errorMessage = translated !== "auth.adminNameAlreadyExists" ? translated : "Администратор с таким именем уже существует. Пожалуйста, используйте другое имя.";
       }
       // 3. Проверка email компании
       else if (backendMessage.includes("Company with this email already exists") || 
                (msgLower.includes("company") && msgLower.includes("email") && msgLower.includes("already exists"))) {
-        errorMessage = t("auth.companyEmailAlreadyExists");
+        const translated = t("auth.companyEmailAlreadyExists");
+        errorMessage = translated !== "auth.companyEmailAlreadyExists" ? translated : "Компания с таким email уже существует. Пожалуйста, используйте другой email.";
       }
       // 4. Проверка email пользователя
       else if (backendMessage.includes("User with this email already exists") || 
                (msgLower.includes("user") && msgLower.includes("already exists")) ||
                (msgLower.includes("email") && msgLower.includes("already exists") && !msgLower.includes("company") && !msgLower.includes("admin"))) {
-        errorMessage = t("auth.userEmailAlreadyExists");
+        const translated = t("auth.userEmailAlreadyExists");
+        errorMessage = translated !== "auth.userEmailAlreadyExists" ? translated : "Пользователь с таким email уже существует. Попробуйте войти или использовать другой email.";
       }
       // 5. Обработка ошибок валидации
       else if (backendMessage.includes("Validation error") || errorStatus === 400) {
@@ -127,13 +133,16 @@ const AdminAdmins = () => {
       // 6. Остальные ошибки
       else if (backendMessage.includes("Email is required") || 
                msgLower.includes("required")) {
-        errorMessage = t("auth.emailAndPasswordRequired");
+        const translated = t("auth.emailAndPasswordRequired");
+        errorMessage = translated !== "auth.emailAndPasswordRequired" ? translated : "Email и пароль обязательны. Пожалуйста, заполните все поля.";
       }
       else if (backendMessage.includes("Password must be at least")) {
-        errorMessage = t("auth.passwordMinLength", { length: 8 });
+        const translated = t("auth.passwordMinLength", { length: 8 });
+        errorMessage = translated && !translated.includes("auth.passwordMinLength") ? translated : "Пароль должен содержать минимум 8 символов. Пожалуйста, выберите более длинный пароль.";
       }
       else if (backendMessage.includes("Access denied")) {
-        errorMessage = t("auth.accessDenied");
+        const translated = t("auth.accessDenied");
+        errorMessage = translated !== "auth.accessDenied" ? translated : "Доступ запрещен. У вас нет прав для выполнения этого действия.";
       }
       // 7. Если статус 409, но сообщение не распознано
       else if (errorStatus === 409) {
@@ -194,17 +203,15 @@ const AdminAdmins = () => {
   });
 
   const deleteAdminMutation = useDeleteAdmin({
-    onSuccess: async (_, adminId) => {
-      // Сначала обновляем список админов для немедленного отображения
-      await refetch();
-      
-      // Затем закрываем диалог удаления
+    onSuccess: (_, adminId) => {
+      // Список уже обновлен оптимистично в хуке, закрываем диалог сразу
       setIsDeleteDialogOpen(false);
       setAdminToDelete(null);
-      
       toast.success(t("admin.adminDeleted") || "Администратор удален");
+      // Обновляем данные в фоне для гарантии актуальности (не блокируем UI)
+      refetch();
     },
-    onError: async (error: any) => {
+    onError: (error: any) => {
       // Получаем сообщение об ошибке с бэкенда
       const backendMessage = error?.message || error?.response?.data?.error?.message || "";
       const errorStatus = error?.status || error?.response?.status || 0;
@@ -214,8 +221,8 @@ const AdminAdmins = () => {
       
       if (errorStatus === 404 || backendMessage.includes("not found") || backendMessage.includes("не найден")) {
         errorMessage = t("admin.adminNotFound") || "Администратор не найден. Возможно, он уже был удален.";
-        // Закрываем диалог и обновляем список, если админ не найден (возможно, уже удален)
-        await refetch();
+        // Обновляем список в фоне, если админ не найден (возможно, уже удален)
+        refetch();
         setIsDeleteDialogOpen(false);
         setAdminToDelete(null);
       } else if (errorStatus === 403 || backendMessage.includes("Access denied") || backendMessage.includes("доступ запрещен")) {
