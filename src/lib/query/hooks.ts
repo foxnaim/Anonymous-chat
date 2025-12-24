@@ -229,12 +229,15 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
   return useMutation({
     mutationFn: (data: { email: string; name: string; role?: 'admin' | 'super_admin' }) => adminService.createAdmin(data),
     onSuccess: () => {
-      // Инвалидируем кэш - компонент сам сделает refetch (как в useCreateCompany)
+      // Инвалидируем и сразу обновляем кэш для гарантии актуальности данных
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
+      // Немедленно обновляем все запросы
+      queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
     },
     onError: () => {
-      // При ошибке инвалидируем кэш, чтобы убедиться, что данные актуальны
+      // При ошибке инвалидируем и обновляем кэш, чтобы убедиться, что данные актуальны
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
+      queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
     },
     ...options,
   });

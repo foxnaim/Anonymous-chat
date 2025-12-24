@@ -89,6 +89,8 @@ const AdminAdmins = () => {
           (msgLower.includes("admin") && msgLower.includes("email") && msgLower.includes("already exists"))) {
         const translated = t("auth.adminEmailAlreadyExists");
         errorMessage = translated !== "auth.adminEmailAlreadyExists" ? translated : "Администратор с таким email уже существует. Пожалуйста, используйте другой email.";
+        // При ошибке дубликата обновляем список, чтобы показать, что админ уже существует
+        await refetch();
       }
       // 2. Проверка имени админа
       else if (backendMessage.includes("Admin with this name already exists") || 
@@ -146,6 +148,8 @@ const AdminAdmins = () => {
       // 7. Если статус 409, но сообщение не распознано
       else if (errorStatus === 409) {
         errorMessage = "Данные уже существуют. Проверьте уникальность имени и email администратора.";
+        // При ошибке 409 обновляем список, чтобы показать актуальные данные
+        await refetch();
       }
       // 8. Если есть сообщение, показываем его
       else if (backendMessage && !backendMessage.includes("HTTP error")) {
@@ -158,10 +162,6 @@ const AdminAdmins = () => {
       
       // Всегда показываем toast с ошибкой
       toast.error(errorMessage);
-      
-      // При ошибке обновляем список, чтобы убедиться, что данные актуальны
-      // Это важно, если админ не был создан на бэкенде
-      await refetch();
       
       // Форма остается открытой с данными, чтобы пользователь мог исправить
       // Очищаем только пароли для безопасности
