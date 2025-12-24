@@ -68,13 +68,14 @@ const AdminAdmins = () => {
   const filteredAdmins = admins.filter(admin => admin.role !== "super_admin");
 
   const { mutateAsync: createAdminMutation, isPending: isCreating } = useCreateAdmin({
-    onSuccess: () => {
-      // Список уже обновлен оптимистично и через refetchQueries в хуке, закрываем модальное окно сразу
+    onSuccess: async () => {
+      // Обновляем список админов перед закрытием модального окна
+      await refetch();
       setIsDialogOpen(false);
       resetCreateAdminForm();
       toast.success(t("admin.adminCreated") || t("common.success") || "Администратор создан");
     },
-    onError: (error: any) => {
+    onError: async (error: any) => {
       // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
       const backendMessage = String(error?.message || "").trim();
       const errorStatus = error?.status || 0;
@@ -158,9 +159,9 @@ const AdminAdmins = () => {
       // Всегда показываем toast с ошибкой
       toast.error(errorMessage);
       
-      // При ошибке инвалидируем кеш, чтобы убедиться, что данные актуальны
+      // При ошибке обновляем список, чтобы убедиться, что данные актуальны
       // Это важно, если админ не был создан на бэкенде
-      refetch();
+      await refetch();
       
       // Форма остается открытой с данными, чтобы пользователь мог исправить
       // Очищаем только пароли для безопасности
