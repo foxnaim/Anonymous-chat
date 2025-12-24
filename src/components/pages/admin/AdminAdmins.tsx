@@ -69,16 +69,9 @@ const AdminAdmins = () => {
 
   const { mutateAsync: createAdminMutation, isPending: isCreating } = useCreateAdmin({
     onSuccess: async () => {
-      // Сначала обновляем список админов
       await refetch();
-      
-      // Затем закрываем модальное окно
       setIsDialogOpen(false);
-      
-      // Очищаем форму
       resetCreateAdminForm();
-      
-      // Показываем успешное сообщение
       toast.success(t("admin.adminCreated") || t("common.success") || "Администратор создан");
     },
     onError: (error: any) => {
@@ -155,15 +148,9 @@ const AdminAdmins = () => {
         errorMessage = t("common.error") || "Произошла ошибка при создании администратора";
       }
       
-      // Если ошибка 409 (Conflict), обновляем список админов
-      if (errorStatus === 409) {
-        refetch();
-      }
-      
       // Всегда показываем toast с ошибкой
       toast.error(errorMessage);
       
-      // ВАЖНО: Модальное окно НЕ закрывается при ошибке
       // Форма остается открытой с данными, чтобы пользователь мог исправить
       // Очищаем только пароли для безопасности
       setCreateAdminForm(prev => ({
@@ -171,8 +158,6 @@ const AdminAdmins = () => {
         password: "",
         confirmPassword: "",
       }));
-      
-      // Модальное окно остается открытым (isDialogOpen не меняется)
     },
   });
 
@@ -219,7 +204,7 @@ const AdminAdmins = () => {
       
       toast.success(t("admin.adminDeleted") || "Администратор удален");
     },
-    onError: (error: any) => {
+    onError: async (error: any) => {
       // Получаем сообщение об ошибке с бэкенда
       const backendMessage = error?.message || error?.response?.data?.error?.message || "";
       const errorStatus = error?.status || error?.response?.status || 0;
@@ -230,9 +215,9 @@ const AdminAdmins = () => {
       if (errorStatus === 404 || backendMessage.includes("not found") || backendMessage.includes("не найден")) {
         errorMessage = t("admin.adminNotFound") || "Администратор не найден. Возможно, он уже был удален.";
         // Закрываем диалог и обновляем список, если админ не найден (возможно, уже удален)
+        await refetch();
         setIsDeleteDialogOpen(false);
         setAdminToDelete(null);
-        refetch();
       } else if (errorStatus === 403 || backendMessage.includes("Access denied") || backendMessage.includes("доступ запрещен")) {
         errorMessage = t("auth.accessDenied") || "Доступ запрещен";
       } else if (backendMessage.includes("Cannot delete yourself") || backendMessage.includes("нельзя удалить себя")) {
@@ -317,10 +302,17 @@ const AdminAdmins = () => {
     // Создаем админа через API (пароль не передается, бэкенд создаст дефолтный)
     // Используем уже нормализованные данные
     // Проверка на дубликаты выполняется на сервере - ошибка будет обработана в onError колбэке
+    // Используем mutateAsync - ошибка будет обработана в onError
     await createAdminMutation({
       email: normalizedEmail,
       name: normalizedName,
       role: "admin",
+    }).catch((error) => {
+      // Дополнительная обработка, если onError не сработал
+      // onError должен обработать, но на всякий случай показываем общую ошибку
+      if (!error?.handled) {
+        toast.error(error?.message || t("common.error"));
+      }
     });
   };
 
