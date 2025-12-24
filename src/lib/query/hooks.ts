@@ -244,6 +244,12 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
       // Немедленно обновляем все запросы
       queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
     },
+    onError: () => {
+      // При ошибке инвалидируем кэш, чтобы убедиться, что данные актуальны
+      // Это важно, если админ не был создан на бэкенде, но оптимистичное обновление произошло
+      queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
+      queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
+    },
     ...options,
   });
 };
