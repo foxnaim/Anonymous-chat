@@ -229,20 +229,20 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
   return useMutation({
     mutationFn: (data: { email: string; name: string; role?: 'admin' | 'super_admin' }) => adminService.createAdmin(data),
     onSuccess: (newAdmin) => {
-      // Оптимистично обновляем кэш для всех вариантов ключа (с page и limit)
-      queryClient.setQueriesData<AdminUser[]>(
-        { queryKey: queryKeys.admins, exact: false },
-        (old = []) => {
-          // Проверяем, что админ еще не в списке (избегаем дубликатов)
-          const exists = old.some(admin => admin.id === newAdmin.id || admin.email === newAdmin.email);
-          if (exists) {
-            return old;
+      // Оптимистично обновляем кэш - добавляем нового админа сразу
+      const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
+      allQueries.forEach(([queryKey, oldData]) => {
+        if (oldData) {
+          const exists = oldData.some(admin => admin.id === newAdmin.id || admin.email === newAdmin.email);
+          if (!exists) {
+            queryClient.setQueryData<AdminUser[]>(queryKey, [...oldData, newAdmin]);
           }
-          return [...old, newAdmin];
         }
-      );
-      // Инвалидируем кэш для гарантии актуальности данных
+      });
+      // Инвалидируем и сразу обновляем кэш для гарантии актуальности данных
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
+      // Немедленно обновляем все запросы
+      queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
     },
     ...options,
   });
@@ -257,13 +257,17 @@ export const useUpdateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: { name?: string; role?: 'admin' | 'super_admin' } }) => adminService.updateAdmin(id, data),
     onSuccess: (updatedAdmin) => {
-      // Оптимистично обновляем кэш для всех вариантов ключа (с page и limit)
-      queryClient.setQueriesData<AdminUser[]>(
-        { queryKey: queryKeys.admins, exact: false },
-        (old = []) => old.map(admin => admin.id === updatedAdmin.id ? updatedAdmin : admin)
-      );
-      // Инвалидируем кэш для гарантии актуальности данных
+      // Оптимистично обновляем кэш - обновляем админа сразу
+      const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
+      allQueries.forEach(([queryKey, oldData]) => {
+        if (oldData) {
+          queryClient.setQueryData<AdminUser[]>(queryKey, oldData.map(admin => admin.id === updatedAdmin.id ? updatedAdmin : admin));
+        }
+      });
+      // Инвалидируем и сразу обновляем кэш для гарантии актуальности данных
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
+      // Немедленно обновляем все запросы
+      queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
     },
     ...options,
   });
@@ -278,13 +282,17 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
   return useMutation({
     mutationFn: (id: string) => adminService.deleteAdmin(id),
     onSuccess: (_, deletedId) => {
-      // Оптимистично обновляем кэш для всех вариантов ключа (с page и limit)
-      queryClient.setQueriesData<AdminUser[]>(
-        { queryKey: queryKeys.admins, exact: false },
-        (old = []) => old.filter(admin => admin.id !== deletedId)
-      );
-      // Инвалидируем кэш для гарантии актуальности данных
+      // Оптимистично обновляем кэш - удаляем админа сразу
+      const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
+      allQueries.forEach(([queryKey, oldData]) => {
+        if (oldData) {
+          queryClient.setQueryData<AdminUser[]>(queryKey, oldData.filter(admin => admin.id !== deletedId));
+        }
+      });
+      // Инвалидируем и сразу обновляем кэш для гарантии актуальности данных
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
+      // Немедленно обновляем все запросы
+      queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
     },
     ...options,
   });

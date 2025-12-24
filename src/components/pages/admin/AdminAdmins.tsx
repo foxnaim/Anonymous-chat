@@ -69,12 +69,10 @@ const AdminAdmins = () => {
 
   const { mutateAsync: createAdminMutation, isPending: isCreating } = useCreateAdmin({
     onSuccess: () => {
-      // Список уже обновлен оптимистично в хуке, закрываем модальное окно сразу
+      // Список уже обновлен оптимистично и через refetchQueries в хуке, закрываем модальное окно сразу
       setIsDialogOpen(false);
       resetCreateAdminForm();
       toast.success(t("admin.adminCreated") || t("common.success") || "Администратор создан");
-      // Обновляем данные в фоне для гарантии актуальности (не блокируем UI)
-      refetch();
     },
     onError: (error: any) => {
       // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
@@ -204,12 +202,10 @@ const AdminAdmins = () => {
 
   const deleteAdminMutation = useDeleteAdmin({
     onSuccess: (_, adminId) => {
-      // Список уже обновлен оптимистично в хуке, закрываем диалог сразу
+      // Список уже обновлен оптимистично и через refetchQueries в хуке, закрываем диалог сразу
       setIsDeleteDialogOpen(false);
       setAdminToDelete(null);
       toast.success(t("admin.adminDeleted") || "Администратор удален");
-      // Обновляем данные в фоне для гарантии актуальности (не блокируем UI)
-      refetch();
     },
     onError: (error: any) => {
       // Получаем сообщение об ошибке с бэкенда
