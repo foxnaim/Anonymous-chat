@@ -57,6 +57,7 @@ export const useSocketMessages = (companyCode?: string | null) => {
   const { t } = useTranslation();
   const notificationPermissionRef = useRef<boolean>(false);
   const tRef = useRef(t);
+  const roomRef = useRef<string | null>(null);
   
   // Обновляем ref при изменении функции перевода
   useEffect(() => {
@@ -270,6 +271,18 @@ export const useSocketMessages = (companyCode?: string | null) => {
       return;
     }
     
+    const joinRoom = (code?: string | null) => {
+      if (!socket) return;
+      const nextRoom = code || null;
+      if (roomRef.current && roomRef.current !== nextRoom) {
+        socket.emit('leave', roomRef.current);
+      }
+      if (nextRoom && roomRef.current !== nextRoom) {
+        socket.emit('join', nextRoom);
+        roomRef.current = nextRoom;
+      }
+    };
+
     // Функция для подписки на события
     const subscribeToEvents = () => {
       if (!socket) return;
@@ -282,6 +295,9 @@ export const useSocketMessages = (companyCode?: string | null) => {
       socket.on('message:new', onNewMessage);
       socket.on('message:updated', handleMessageUpdate);
       socket.on('message:deleted', handleMessageDelete);
+      
+      // Входим в комнату компании для получения только своих сообщений
+      joinRoom(companyCode);
       
       // Сохраняем обработчик для очистки
       (socket as any)._onNewMessage = onNewMessage;
@@ -302,6 +318,10 @@ export const useSocketMessages = (companyCode?: string | null) => {
     // Очистка при размонтировании
     return () => {
       if (socket) {
+        if (roomRef.current) {
+          socket.emit('leave', roomRef.current);
+          roomRef.current = null;
+        }
         const onNewMessage = (socket as any)._onNewMessage;
         if (onNewMessage) {
           socket.off('message:new', onNewMessage);
