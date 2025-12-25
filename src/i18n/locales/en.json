@@ -545,6 +545,7 @@
     "resolutionRate": "Resolution Rate",
     "noData": "No data available",
     "adminDeleted": "Administrator deleted",
+    "adminNotFound": "Administrator not found. They may have already been deleted.",
     "addAdmin": "Add Administrator",
     "createError": "Error creating administrator",
     "updateError": "Error updating administrator",
