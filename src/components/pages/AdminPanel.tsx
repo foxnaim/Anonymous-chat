@@ -116,7 +116,8 @@ const AdminPanel = () => {
         errorMessage = t("auth.adminEmailAlreadyExists");
       }
       // 5. Проверка email пользователя
-      else if (backendMessage.includes("User with this email already exists") || 
+      else if (backendMessage.includes("User already exists") ||
+               backendMessage.includes("User with this email already exists") || 
                (msgLower.includes("user") && msgLower.includes("already exists")) ||
                (msgLower.includes("email") && msgLower.includes("already exists") && !msgLower.includes("company") && !msgLower.includes("admin"))) {
         errorMessage = t("auth.userEmailAlreadyExists");
@@ -136,9 +137,9 @@ const AdminPanel = () => {
       else if (errorStatus === 409) {
         errorMessage = t("auth.companyConflictError") || "Данные уже существуют. Проверьте уникальность имени, email и кода компании.";
       }
-      // 8. Если есть сообщение, показываем его
+      // 8. Если есть сообщение, показываем общую ошибку на выбранном языке
       else if (backendMessage && !backendMessage.includes("HTTP error")) {
-        errorMessage = backendMessage;
+        errorMessage = t("common.error");
       }
       // 9. Общая ошибка
       else {

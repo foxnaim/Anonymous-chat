@@ -131,14 +131,14 @@ class AuthService {
    * Запрос на восстановление пароля
    */
   async forgotPassword(data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
-    return apiClient.post<ForgotPasswordResponse>('/auth/forgot-password', data);
+    return apiClient.post<ForgotPasswordResponse>('/v1/auth/forgot-password', data);
   }
 
   /**
    * Сброс пароля по токену
    */
   async resetPassword(data: ResetPasswordRequest): Promise<ResetPasswordResponse> {
-    return apiClient.post<ResetPasswordResponse>('/auth/reset-password', data);
+    return apiClient.post<ResetPasswordResponse>('/v1/auth/reset-password', data);
   }
 
   /**

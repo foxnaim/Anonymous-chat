@@ -4,7 +4,7 @@
 
 export const API_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
-  TIMEOUT: 2000, // Уменьшено с 10000 до 2000ms для быстрой работы моковых данных
+  TIMEOUT: 30000, // 30 секунд для операций, которые могут занимать время (отправка email и т.д.)
   RETRY_ATTEMPTS: 3,
 } as const;
 

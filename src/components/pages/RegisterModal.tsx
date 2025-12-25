@@ -148,7 +148,7 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
                backendMessage.includes("User with this email already exists") ||
                (msgLower.includes("user") && msgLower.includes("already exists")) ||
                (msgLower.includes("email") && msgLower.includes("already exists") && !msgLower.includes("company") && !msgLower.includes("admin"))) {
-        errorMessage = t("auth.userAlreadyExists");
+        errorMessage = t("auth.userEmailAlreadyExists");
       }
       // 6. Остальные ошибки
       else if (backendMessage.includes("Email and password are required") || msgLower.includes("required")) {
@@ -158,10 +158,11 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
         errorMessage = t("auth.passwordMinLength", { length: 8 });
       }
       else if (errorStatus === 409) {
-        errorMessage = "Данные уже существуют. Проверьте уникальность имени, email и кода компании.";
+        errorMessage = t("auth.companyConflictError") || "Данные уже существуют. Проверьте уникальность имени, email и кода компании.";
       }
       else if (backendMessage && !backendMessage.includes("HTTP error")) {
-        errorMessage = backendMessage;
+        // Если сообщение не распознано, показываем общую ошибку на выбранном языке
+        errorMessage = t("common.error");
       }
       else {
         errorMessage = t("common.error");

@@ -71,9 +71,9 @@ const Login = () => {
                errorStatus === 401) {
         errorMessage = t("auth.loginError");
       }
-      // 4. Если есть сообщение, показываем его
+      // 4. Если есть сообщение, показываем общую ошибку на выбранном языке
       else if (backendMessage && !backendMessage.includes("HTTP error")) {
-        errorMessage = backendMessage;
+        errorMessage = t("auth.loginError");
       }
       // 5. Общая ошибка
       else {

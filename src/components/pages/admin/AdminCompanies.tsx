@@ -159,7 +159,8 @@ const AdminCompanies = () => {
         errorMessage = t("auth.adminEmailAlreadyExists");
       }
       // 5. Проверка email пользователя
-      else if (backendMessage.includes("User with this email already exists") || 
+      else if (backendMessage.includes("User already exists") ||
+               backendMessage.includes("User with this email already exists") || 
                (msgLower.includes("user") && msgLower.includes("already exists")) ||
                (msgLower.includes("email") && msgLower.includes("already exists") && !msgLower.includes("company") && !msgLower.includes("admin"))) {
         errorMessage = t("auth.userEmailAlreadyExists");
@@ -177,11 +178,11 @@ const AdminCompanies = () => {
       }
       // 7. Если статус 409, но сообщение не распознано
       else if (errorStatus === 409) {
-        errorMessage = "Данные уже существуют. Проверьте уникальность имени, email и кода компании.";
+        errorMessage = t("auth.companyConflictError") || "Данные уже существуют. Проверьте уникальность имени, email и кода компании.";
       }
-      // 8. Если есть сообщение, показываем его
+      // 8. Если есть сообщение, показываем общую ошибку на выбранном языке
       else if (backendMessage && !backendMessage.includes("HTTP error")) {
-        errorMessage = backendMessage;
+        errorMessage = t("common.error");
       }
       // 9. Общая ошибка
       else {
@@ -212,7 +213,9 @@ const AdminCompanies = () => {
       
       if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
         translationKey = "auth.companyCodeAlreadyExists";
-      } else if (backendMessage.includes("User with this email already exists") || backendMessage.includes("user already exists")) {
+      } else if (backendMessage.includes("User already exists") ||
+                 backendMessage.includes("User with this email already exists") || 
+                 backendMessage.includes("user already exists")) {
         translationKey = "auth.userEmailAlreadyExists";
       } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.includes("required")) {
         translationKey = "auth.companyFieldsRequired";
@@ -222,9 +225,9 @@ const AdminCompanies = () => {
         translationKey = "auth.accessDenied";
       }
       
-      // Показываем переведенное сообщение или оригинальное, если перевода нет
+      // Показываем переведенное сообщение или общую ошибку на выбранном языке
       const translatedMessage = t(translationKey);
-      const finalMessage = translatedMessage !== translationKey ? translatedMessage : backendMessage || t("common.error");
+      const finalMessage = translatedMessage !== translationKey ? translatedMessage : t("common.error");
       toast.error(finalMessage);
     },
   });
@@ -244,7 +247,9 @@ const AdminCompanies = () => {
       
       if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
         translationKey = "auth.companyCodeAlreadyExists";
-      } else if (backendMessage.includes("User with this email already exists") || backendMessage.includes("user already exists")) {
+      } else if (backendMessage.includes("User already exists") ||
+                 backendMessage.includes("User with this email already exists") || 
+                 backendMessage.includes("user already exists")) {
         translationKey = "auth.userEmailAlreadyExists";
       } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.includes("required")) {
         translationKey = "auth.companyFieldsRequired";
@@ -254,9 +259,9 @@ const AdminCompanies = () => {
         translationKey = "auth.accessDenied";
       }
       
-      // Показываем переведенное сообщение или оригинальное, если перевода нет
+      // Показываем переведенное сообщение или общую ошибку на выбранном языке
       const translatedMessage = t(translationKey);
-      const finalMessage = translatedMessage !== translationKey ? translatedMessage : backendMessage || t("common.error");
+      const finalMessage = translatedMessage !== translationKey ? translatedMessage : t("common.error");
       toast.error(finalMessage);
     },
   });
@@ -276,7 +281,9 @@ const AdminCompanies = () => {
       
       if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
         translationKey = "auth.companyCodeAlreadyExists";
-      } else if (backendMessage.includes("User with this email already exists") || backendMessage.includes("user already exists")) {
+      } else if (backendMessage.includes("User already exists") ||
+                 backendMessage.includes("User with this email already exists") || 
+                 backendMessage.includes("user already exists")) {
         translationKey = "auth.userEmailAlreadyExists";
       } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.includes("required")) {
         translationKey = "auth.companyFieldsRequired";
@@ -286,9 +293,9 @@ const AdminCompanies = () => {
         translationKey = "auth.accessDenied";
       }
       
-      // Показываем переведенное сообщение или оригинальное, если перевода нет
+      // Показываем переведенное сообщение или общую ошибку на выбранном языке
       const translatedMessage = t(translationKey);
-      const finalMessage = translatedMessage !== translationKey ? translatedMessage : backendMessage || t("common.error");
+      const finalMessage = translatedMessage !== translationKey ? translatedMessage : t("common.error");
       toast.error(finalMessage);
     },
   });

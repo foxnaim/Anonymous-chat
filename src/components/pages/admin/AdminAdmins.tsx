@@ -154,11 +154,11 @@ const AdminAdmins = () => {
         errorMessage = translated !== "auth.companyEmailAlreadyExists" ? translated : "Компания с таким email уже существует. Пожалуйста, используйте другой email.";
       }
       // 4. Проверка email пользователя
-      else if (backendMessage.includes("User with this email already exists") || 
+      else if (backendMessage.includes("User already exists") ||
+               backendMessage.includes("User with this email already exists") || 
                (msgLower.includes("user") && msgLower.includes("already exists")) ||
                (msgLower.includes("email") && msgLower.includes("already exists") && !msgLower.includes("company") && !msgLower.includes("admin"))) {
-        const translated = t("auth.userEmailAlreadyExists");
-        errorMessage = translated !== "auth.userEmailAlreadyExists" ? translated : "Пользователь с таким email уже существует. Попробуйте войти или использовать другой email.";
+        errorMessage = t("auth.userEmailAlreadyExists");
       }
       // 5. Обработка ошибок валидации
       else if (backendMessage.includes("Validation error") || errorStatus === 400) {
@@ -196,11 +196,11 @@ const AdminAdmins = () => {
       }
       // 7. Если статус 409, но сообщение не распознано
       else if (errorStatus === 409) {
-        errorMessage = "Данные уже существуют. Проверьте уникальность имени и email администратора.";
+        errorMessage = t("auth.companyConflictError") || "Данные уже существуют. Проверьте уникальность имени и email администратора.";
       }
-      // 8. Если есть сообщение, показываем его
+      // 8. Если есть сообщение, показываем общую ошибку на выбранном языке
       else if (backendMessage && !backendMessage.includes("HTTP error")) {
-        errorMessage = backendMessage;
+        errorMessage = t("common.error");
       }
       // 9. Общая ошибка
       else {
