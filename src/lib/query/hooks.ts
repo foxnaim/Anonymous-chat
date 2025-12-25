@@ -460,6 +460,10 @@ export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Om
           queryClient.setQueryData<Message[]>(key, [optimistic, ...data]);
         }
       });
+      // Если кэша ещё не было (первое сообщение/пустой список), создаём запись
+      if (previousData.length === 0) {
+        queryClient.setQueryData<Message[]>(queryKeys.messages(variables.companyCode), [optimistic]);
+      }
 
       if (userOnMutate) {
         (userOnMutate as any)(variables);
