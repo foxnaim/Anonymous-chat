@@ -379,7 +379,26 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
       }
     },
     onError: (error, variables, context, mutation) => {
-      // При ошибке инвалидируем и обновляем кэш, чтобы убедиться, что данные актуальны
+      // При ошибке, особенно 404, убираем запись локально по id/email, чтобы не висела карточка
+      const deletedId = variables;
+      const deletedEmail = (context as any)?.email;
+      const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
+      let updatedAny = false;
+      allQueries.forEach(([queryKey, data]) => {
+        if (data && Array.isArray(data)) {
+          const filtered = data.filter(
+            admin =>
+              admin.id !== deletedId &&
+              (!deletedEmail || admin.email.toLowerCase() !== String(deletedEmail).toLowerCase())
+          );
+          queryClient.setQueryData<AdminUser[]>(queryKey, filtered);
+          updatedAny = true;
+        }
+      });
+      if (!updatedAny) {
+        queryClient.setQueryData<AdminUser[]>(queryKeys.admins, []);
+      }
+      // Инвалидируем и обновляем кэш, чтобы убедиться, что данные актуальны
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
       queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
       if (userOnError) {
