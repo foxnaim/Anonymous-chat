@@ -77,25 +77,27 @@ const AdminAdmins = () => {
       resetCreateAdminForm();
       toast.success(t("admin.adminCreated") || t("common.success") || "Администратор создан");
     },
-    onError: async (error: any) => {
+    onError: async (error: any, variables) => {
       // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
       const backendMessage = String(error?.message || "").trim();
-      const errorStatus = error?.status || 0;
+      const errorStatus = error?.status || error?.response?.status || 0;
       
-      // Сохраняем email для проверки после refetch
-      const normalizedEmail = createAdminForm.email.trim().toLowerCase();
+      // Email берем из переменных мутации, чтобы не зависеть от текущего состояния формы
+      const normalizedEmail = (variables?.email || "").trim().toLowerCase();
 
       const wait = (ms: number) => new Promise(res => setTimeout(res, ms));
 
       // Вспомогательная проверка после refetch (несколько попыток при 409)
       const checkAfterConflict = async () => {
-        const attempts = [0, 200, 500];
+        const attempts = [0, 200, 500, 900];
         for (const delay of attempts) {
           if (delay) await wait(delay);
           const refetchedData = await refetch();
           const updatedAdmins = refetchedData.data || [];
           const exists = updatedAdmins.some(admin => admin.email.toLowerCase() === normalizedEmail);
           if (exists) {
+            // Помечаем ошибку как обработанную, чтобы внешний catch не показывал тост
+            (error as any).handled = true;
             setIsDialogOpen(false);
             resetCreateAdminForm();
             toast.success(t("admin.adminCreated") || "Администратор создан");
@@ -114,6 +116,7 @@ const AdminAdmins = () => {
       
       // Если админ существует в списке, считаем это успехом (race condition)
       if (adminExists) {
+        (error as any).handled = true;
         setIsDialogOpen(false);
         resetCreateAdminForm();
         toast.success(t("admin.adminCreated") || "Администратор создан");
