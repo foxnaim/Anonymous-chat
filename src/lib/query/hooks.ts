@@ -473,12 +473,15 @@ export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Om
     },
 
     onSuccess: (data, variables, context, mutation) => {
-      const allQueries = queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(context?.companyCode || data.companyCode), exact: false });
+      const allQueries = queryClient.getQueriesData<Message[]>({
+        queryKey: queryKeys.messages(context?.companyCode || data.companyCode),
+        exact: false,
+      });
       let updatedAny = false;
       allQueries.forEach(([key, list]) => {
         if (list && Array.isArray(list)) {
           const withoutTemp = list.filter(m => m.id !== context?.tempId);
-          const exists = withoutTemp.some(m => m.id === data.id || m.content === data.content);
+          const exists = withoutTemp.some(m => m.id === data.id);
           const next = exists
             ? withoutTemp.map(m => (m.id === data.id ? data : m))
             : [data, ...withoutTemp];
