@@ -229,18 +229,18 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
 
   return useMutation({
     mutationFn: (data: { email: string; name: string; role?: 'admin' | 'super_admin' }) => adminService.createAdmin(data),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutation) => {
       // Базовая логика: инвалидируем и немедленно обновляем список админов
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
       queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
       // Пользовательский обработчик (если передан)
-      onSuccess?.(data, variables, context);
+      onSuccess?.(data, variables, context, mutation);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, context, mutation) => {
       // При ошибке также обновляем список, чтобы данные не были устаревшими
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
       queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
-      onError?.(error, variables, context);
+      onError?.(error, variables, context, mutation);
     },
     ...rest,
   });
@@ -255,7 +255,7 @@ export const useUpdateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
   
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: { name?: string; role?: 'admin' | 'super_admin' } }) => adminService.updateAdmin(id, data),
-    onSuccess: (updatedAdmin, variables, context) => {
+    onSuccess: (updatedAdmin, variables, context, mutation) => {
       // Оптимистично обновляем кэш - обновляем админа сразу
       const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
       allQueries.forEach(([queryKey, oldData]) => {
@@ -266,7 +266,7 @@ export const useUpdateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
       // Инвалидируем и сразу обновляем кэш для гарантии актуальности данных
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
       queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
-      onSuccess?.(updatedAdmin, variables, context);
+      onSuccess?.(updatedAdmin, variables, context, mutation);
     },
     ...rest,
   });
@@ -281,7 +281,7 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
   
   return useMutation({
     mutationFn: (id: string) => adminService.deleteAdmin(id),
-    onSuccess: (_, deletedId, context) => {
+    onSuccess: (_, deletedId, context, mutation) => {
       // Оптимистично удаляем админа из кэша сразу для мгновенного обновления UI
       const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
       allQueries.forEach(([queryKey, oldData]) => {
@@ -292,13 +292,13 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
       // Инвалидируем и сразу обновляем кэш для гарантии актуальности данных
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
       queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
-      onSuccess?.(_, deletedId, context);
+      onSuccess?.(_, deletedId, context, mutation);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, context, mutation) => {
       // При ошибке инвалидируем и обновляем кэш, чтобы убедиться, что данные актуальны
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
       queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
-      onError?.(error, variables, context);
+      onError?.(error, variables, context, mutation);
     },
     ...rest,
   });
