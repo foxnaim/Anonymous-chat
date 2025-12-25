@@ -3,7 +3,7 @@
  * Упрощают использование query keys и добавляют типизацию
  */
 
-import { useQuery, useMutation, useQueryClient, type UseQueryOptions, type UseMutationOptions } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, type UseQueryOptions, type UseMutationOptions, type QueryKey } from "@tanstack/react-query";
 import { queryKeys } from "./index";
 import type { Message, Company, Stats, MessageDistribution, GrowthMetrics, SubscriptionPlan, AdminUser, AchievementProgress, PlanType } from "@/types";
 import type { PlatformStats } from "./types";
@@ -231,7 +231,7 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
   const { onSuccess: _, onError: __, onMutate: ___, ...rest } = options ?? {};
 
   type AdminOptimisticContext = {
-    previousData: Array<[unknown, AdminUser[] | undefined]>;
+    previousData: Array<[QueryKey, AdminUser[] | undefined]>;
     tempId: string;
   };
 
