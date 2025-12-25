@@ -72,12 +72,11 @@ const CompanyMessages = () => {
   });
   const { data: messages = [], isLoading, refetch } = useMessages(company?.code, undefined, undefined, {
     enabled: !!company?.code,
-    staleTime: 0,
-    refetchInterval: 1000, // авто-обновление каждые 1с
-    refetchIntervalInBackground: true,
+    staleTime: 1000 * 30, // считаем свежими 30с
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false, // без лишних повторов
     refetchOnReconnect: true,
+    // без refetchInterval — обновляем через сокет и оптимистичные апдейты
   });
   
   // Подключаемся к WebSocket для real-time обновлений
