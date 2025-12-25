@@ -82,6 +82,26 @@ const AdminAdmins = () => {
       
       // Сохраняем email для проверки после refetch
       const normalizedEmail = createAdminForm.email.trim().toLowerCase();
+
+      const wait = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+      // Вспомогательная проверка после refetch (несколько попыток при 409)
+      const checkAfterConflict = async () => {
+        const attempts = [0, 200, 500];
+        for (const delay of attempts) {
+          if (delay) await wait(delay);
+          const refetchedData = await refetch();
+          const updatedAdmins = refetchedData.data || [];
+          const exists = updatedAdmins.some(admin => admin.email.toLowerCase() === normalizedEmail);
+          if (exists) {
+            setIsDialogOpen(false);
+            resetCreateAdminForm();
+            toast.success(t("admin.adminCreated") || "Администратор создан");
+            return true;
+          }
+        }
+        return false;
+      };
       
       // Сначала обновляем список, чтобы проверить, не был ли админ создан (race condition)
       const refetchedData = await refetch();
@@ -96,6 +116,12 @@ const AdminAdmins = () => {
         resetCreateAdminForm();
         toast.success(t("admin.adminCreated") || "Администратор создан");
         return;
+      }
+
+      // При 409 пробуем подождать и еще раз проверить список — бэкенд мог создать запись, но вернуть конфликт
+      if (errorStatus === 409) {
+        const resolved = await checkAfterConflict();
+        if (resolved) return;
       }
       
       // Если админ не найден, показываем ошибку
