@@ -351,9 +351,11 @@ const AdminAdmins = () => {
     // Нормализуем данные сразу для валидации
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedName = name.trim();
+    const normalizedPassword = password.trim();
+    const normalizedConfirm = confirmPassword.trim();
 
-    // Проверка заполненности полей
-    if (!normalizedName || !normalizedEmail || !password.trim() || !confirmPassword.trim()) {
+    // Проверка заполненности обязательных полей (email + пароли). Имя можно не заполнять.
+    if (!normalizedEmail || !normalizedPassword || !normalizedConfirm) {
       toast.error(t("common.fillAllFields"));
       return;
     }
@@ -380,13 +382,16 @@ const AdminAdmins = () => {
       return;
     }
 
+    // Готовим имя: если не указано, используем часть email до @
+    const nameToSend = normalizedName || normalizedEmail.split("@")[0];
+
     // Создаем админа через API (пароль не передается, бэкенд создаст дефолтный)
     // Используем уже нормализованные данные
     // Проверка на дубликаты выполняется на сервере - ошибка будет обработана в onError колбэке
     // Используем mutateAsync - ошибка будет обработана в onError
     await createAdminMutation({
       email: normalizedEmail,
-      name: normalizedName,
+      name: nameToSend,
       role: "admin",
     }).catch((error) => {
       // Дополнительная обработка, если onError не сработал
