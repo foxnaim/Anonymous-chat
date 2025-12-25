@@ -113,59 +113,72 @@ const CompanyReports = () => {
   };
   const generatePDFReport = () => {
     if (!distribution || !stats || !growthMetrics || !company) return;
+
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 20;
+    const margin = 16;
     let yPos = margin;
-    const lineGap = 8;
+    const lineGap = 7;
     const sectionGap = 12;
-    const labelValue = (label: string, value: string, gap: number = lineGap) => {
+    const valueCol = pageWidth * 0.62;
+
+    const sectionTitle = (title: string) => {
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(title, margin, yPos);
+      yPos += lineGap;
+    };
+
+    const row = (label: string, value: string, gap: number = lineGap) => {
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
       doc.text(label, margin, yPos);
-      doc.text(value, pageWidth / 2, yPos, { align: "left" });
+      doc.text(value, valueCol, yPos);
       yPos += gap;
     };
+
     const divider = () => {
-      doc.setDrawColor(200);
+      doc.setDrawColor(210);
       doc.line(margin, yPos, pageWidth - margin, yPos);
       yPos += 6;
       doc.setDrawColor(0);
     };
+
     // Заголовок
-    doc.setFontSize(20);
+    doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
     doc.text(t("company.reports"), pageWidth / 2, yPos, { align: "center" });
-    yPos += 10;
-    // Период
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text(`${t("company.period")}: ${getSelectedMonthPeriod()}`, margin, yPos);
-    yPos += lineGap;
-    doc.text(`${t("company.companyName")}: ${company.name}`, margin, yPos);
     yPos += sectionGap;
-    // Сводка по типам сообщений
-    doc.setFontSize(16);
-    doc.text(t("company.messageDistribution"), margin, yPos);
-    yPos += lineGap;
-    labelValue(`${t("sendMessage.complaint")}:`, `${distribution.complaints} (${complaintsPercent}%)`);
-    labelValue(`${t("sendMessage.praise")}:`, `${distribution.praises} (${praisesPercent}%)`);
-    labelValue(`${t("sendMessage.suggestion")}:`, `${distribution.suggestions} (${suggestionsPercent}%)`);
-    labelValue(`${t("admin.totalMessages")}:`, `${total}`, sectionGap);
+
+    // Шапка
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    row(`${t("company.period")}:`, getSelectedMonthPeriod());
+    row(`${t("company.companyName")}:`, company.name, sectionGap);
+
+    // Распределение сообщений
+    sectionTitle(t("company.messageDistribution"));
+    row(`${t("sendMessage.complaint")}:`, `${distribution.complaints} (${complaintsPercent}%)`);
+    row(`${t("sendMessage.praise")}:`, `${distribution.praises} (${praisesPercent}%)`);
+    row(`${t("sendMessage.suggestion")}:`, `${distribution.suggestions} (${suggestionsPercent}%)`);
+    row(`${t("admin.totalMessages")}:`, `${total}`, sectionGap);
     divider();
-    // Количество решенных/нерешенных кейсов
-    doc.text(t("company.resolvedCases"), margin, yPos);
-    yPos += lineGap;
+
+    // Решенные / нерешенные
     const resolvedPercent = total > 0 ? Math.round((resolved / total) * 100) : 0;
-    labelValue(`${t("company.resolved")}:`, `${resolved}`);
-    labelValue(`${t("company.unresolved")}:`, `${unresolved}`);
-    labelValue(`${t("company.resolutionRate")}:`, `${resolvedPercent}%`, sectionGap);
+    sectionTitle(t("company.resolvedCases"));
+    row(`${t("company.resolved")}:`, `${resolved}`);
+    row(`${t("company.unresolved")}:`, `${unresolved}`);
+    row(`${t("company.resolutionRate")}:`, `${resolvedPercent}%`, sectionGap);
     divider();
-    // Динамика настроения команды
-    doc.text(t("company.teamMood"), margin, yPos);
-    yPos += lineGap;
-    labelValue(`${t("company.growthRating")}:`, `${growthMetrics.rating}`);
-    labelValue(`${t("company.overallMood")}:`, `${getMoodLabel(growthMetrics.mood)}`);
-    labelValue(`${t("company.trend")}:`, `${getTrendLabel(growthMetrics.trend)}`, sectionGap);
+
+    // Настроение команды
+    sectionTitle(t("company.teamMood"));
+    row(`${t("company.growthRating")}:`, `${growthMetrics.rating}`);
+    row(`${t("company.overallMood")}:`, `${getMoodLabel(growthMetrics.mood)}`);
+    row(`${t("company.trend")}:`, `${getTrendLabel(growthMetrics.trend)}`, sectionGap);
     divider();
+
     // Дата генерации
     doc.setFontSize(10);
     doc.setFont("helvetica", "italic");
@@ -183,7 +196,8 @@ const CompanyReports = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
-    doc.text(`${t("company.generatedAt")}: ${generatedDate}`, margin, yPos);
+    row(`${t("company.generatedAt")}:`, generatedDate, sectionGap);
+
     // Сохранение файла
     const month = parseInt(selectedMonth).toString().padStart(2, "0");
     const year = selectedYear;
