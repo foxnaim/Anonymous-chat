@@ -253,14 +253,26 @@ const AdminAdmins = () => {
   });
 
   const deleteAdminMutation = useDeleteAdmin({
-    onSuccess: (_, adminId) => {
-      // Закрываем диалог и показываем уведомление сразу
-      // Список уже обновлен оптимистично в хуке useDeleteAdmin
+    onSuccess: async (_, adminId) => {
+      // После ответа сервера убеждаемся, что элемент действительно исчез из списка
+      const refreshed = await refetch();
+      const updatedAdmins = refreshed.data || [];
+      const stillExists = updatedAdmins.some(
+        (admin) =>
+          admin.id === adminId ||
+          (adminToDelete?.email &&
+            admin.email.toLowerCase() === adminToDelete.email.toLowerCase())
+      );
+
+      if (stillExists) {
+        toast.error(t("admin.deleteError") || "Не удалось удалить администратора. Попробуйте еще раз.");
+        return;
+      }
+
+      // Закрываем диалог и показываем уведомление
       setIsDeleteDialogOpen(false);
       setAdminToDelete(null);
       toast.success(t("admin.adminDeleted") || "Администратор удален");
-      // Фоновое обновление для гарантии актуальности данных (не блокируем UI)
-      refetch();
     },
     onError: async (error: any) => {
       // Получаем сообщение об ошибке с бэкенда
