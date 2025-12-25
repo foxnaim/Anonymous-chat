@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Fragment } from "react";
+import { useState, Fragment, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useCompany, useMessages, useUpdateMessageStatus } from "@/lib/query";
 import { Dialog, Transition, Listbox } from "@headlessui/react";
@@ -72,11 +72,11 @@ const CompanyMessages = () => {
   });
   const { data: messages = [], isLoading, refetch } = useMessages(company?.code, undefined, undefined, {
     enabled: !!company?.code,
-    staleTime: 1000 * 30, // считаем свежими 30с
+    staleTime: 1000 * 15, // считаем свежими 15с
     refetchOnMount: true,
-    refetchOnWindowFocus: false, // без лишних повторов
+    refetchOnWindowFocus: true, // гарантируем подтяжку при фокусе/новом устройстве
     refetchOnReconnect: true,
-    // без refetchInterval — обновляем через сокет и оптимистичные апдейты
+    // без постоянного интервала — rely на сокет + события видимости
   });
   
   // Подключаемся к WebSocket для real-time обновлений
@@ -119,6 +119,21 @@ const CompanyMessages = () => {
       response: responseText || undefined,
     });
   };
+
+  // При возврате вкладки/окна в фокус — обновляем список, чтобы новые сообщения подтянулись сразу
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && company?.code) {
+        refetch();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [company?.code, refetch]);
   
   // Проверка, было ли сообщение отклонено админом
   const isRejectedByAdmin = (message: Message): boolean => {
