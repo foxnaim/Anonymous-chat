@@ -202,7 +202,7 @@ const AdminMessages = () => {
                         <Badge variant="outline" className="text-xs whitespace-nowrap">{message.companyCode}</Badge>
                         <Badge className="text-xs whitespace-nowrap">{message.status}</Badge>
                       </div>
-                      <p className="text-sm sm:text-base text-foreground line-clamp-2 break-words whitespace-pre-wrap">
+                      <p className="text-sm sm:text-base text-foreground break-words whitespace-pre-wrap">
                         {message.content}
                       </p>
                     </div>

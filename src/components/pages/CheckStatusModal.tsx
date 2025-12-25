@@ -183,7 +183,7 @@ const CheckStatusModal = ({ open, onOpenChange }: CheckStatusModalProps) => {
               {message.content && (
                 <Card className="bg-muted p-6">
                   <h3 className="font-semibold mb-3">{t("sendMessage.message")}</h3>
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words">
                     {message.content}
                   </p>
                 </Card>
@@ -192,7 +192,7 @@ const CheckStatusModal = ({ open, onOpenChange }: CheckStatusModalProps) => {
               {message.companyResponse && (
                 <Card className="bg-muted p-6">
                   <h3 className="font-semibold mb-3">{t("checkStatus.companyResponse")}</h3>
-                  <p className="text-sm text-foreground leading-relaxed">
+                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words">
                     {message.companyResponse}
                   </p>
                   {message.lastUpdate && (
