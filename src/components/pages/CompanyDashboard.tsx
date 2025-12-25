@@ -446,14 +446,15 @@ const CompanyDashboard = () => {
                   </div>
                   
                   {/* Button */}
-                  <div className="pt-4 mt-4 border-t border-border/50">
-                    <Button 
+                  <div className="pt-4 mt-4 border-t border-border/50 flex justify-end">
+                    <Button
                       onClick={() => router.push("/company/messages")}
-                      className="w-full h-10 text-base font-medium shadow-sm hover:shadow-md transition-all duration-200"
-                      size="lg"
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 rounded-full shadow-sm hover:shadow-md transition-all duration-200 ml-auto"
+                      aria-label={t("company.toMessages")}
                     >
-                      {t("company.toMessages")}
-                      <FiArrowRight className="ml-2 h-4 w-4" />
+                      <FiArrowRight className="h-4 w-4" />
                     </Button>
                   </div>
                 </Card>
@@ -568,14 +569,15 @@ const CompanyDashboard = () => {
                   </div>
                   
                   {/* Button */}
-                  <div className="pt-4 mt-4 border-t border-border/50">
-                    <Button 
+                  <div className="pt-4 mt-4 border-t border-border/50 flex justify-end">
+                    <Button
                       onClick={() => router.push("/company/growth")}
-                      className="w-full h-10 text-base font-medium shadow-sm hover:shadow-md transition-all duration-200"
-                      size="lg"
+                      variant="outline"
+                      size="icon"
+                      className="h-10 w-10 rounded-full shadow-sm hover:shadow-md transition-all duration-200 ml-auto"
+                      aria-label={t("company.growth")}
                     >
-                      {t("company.growth")}
-                      <FiArrowRight className="ml-2 h-4 w-4" />
+                      <FiArrowRight className="h-4 w-4" />
                     </Button>
                   </div>
                 </Card>

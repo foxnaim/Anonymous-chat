@@ -303,17 +303,17 @@ export const useSocketMessages = (companyCode?: string | null) => {
       (socket as any)._onNewMessage = onNewMessage;
     };
     
-    // Если уже подключен, подписываемся сразу
-    if (socket.connected) {
-      subscribeToEvents();
-    } else {
-      // Если не подключен, ждем подключения
-      const onConnect = () => {
+      // Если уже подключен, подписываемся сразу
+      if (socket.connected) {
         subscribeToEvents();
-      };
-      
-      socket.once('connect', onConnect);
-    }
+      } else {
+        // Если не подключен, ждем подключения
+        const onConnect = () => {
+          subscribeToEvents();
+        };
+        
+        socket.once('connect', onConnect);
+      }
 
     // Очистка при размонтировании
     return () => {
