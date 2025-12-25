@@ -225,21 +225,24 @@ export const useAdmins = (page?: number, limit?: number, options?: Omit<UseQuery
  */
 export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { email: string; name: string; role?: 'admin' | 'super_admin' }>) => {
   const queryClient = useQueryClient();
-  
+  const { onSuccess, onError, ...rest } = options ?? {};
+
   return useMutation({
     mutationFn: (data: { email: string; name: string; role?: 'admin' | 'super_admin' }) => adminService.createAdmin(data),
-    onSuccess: () => {
-      // Инвалидируем и сразу обновляем кэш для гарантии актуальности данных
-      queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
-      // Немедленно обновляем все запросы
-      queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
-    },
-    onError: () => {
-      // При ошибке инвалидируем и обновляем кэш, чтобы убедиться, что данные актуальны
+    onSuccess: (data, variables, context) => {
+      // Базовая логика: инвалидируем и немедленно обновляем список админов
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
       queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
+      // Пользовательский обработчик (если передан)
+      onSuccess?.(data, variables, context);
     },
-    ...options,
+    onError: (error, variables, context) => {
+      // При ошибке также обновляем список, чтобы данные не были устаревшими
+      queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
+      queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
+      onError?.(error, variables, context);
+    },
+    ...rest,
   });
 };
 
@@ -248,10 +251,11 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
  */
 export const useUpdateAdmin = (options?: UseMutationOptions<AdminUser, Error, { id: string; data: { name?: string; role?: 'admin' | 'super_admin' } }>) => {
   const queryClient = useQueryClient();
+  const { onSuccess, ...rest } = options ?? {};
   
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: { name?: string; role?: 'admin' | 'super_admin' } }) => adminService.updateAdmin(id, data),
-    onSuccess: (updatedAdmin) => {
+    onSuccess: (updatedAdmin, variables, context) => {
       // Оптимистично обновляем кэш - обновляем админа сразу
       const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
       allQueries.forEach(([queryKey, oldData]) => {
@@ -261,10 +265,10 @@ export const useUpdateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
       });
       // Инвалидируем и сразу обновляем кэш для гарантии актуальности данных
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
-      // Немедленно обновляем все запросы
       queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
+      onSuccess?.(updatedAdmin, variables, context);
     },
-    ...options,
+    ...rest,
   });
 };
 
@@ -273,10 +277,11 @@ export const useUpdateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
  */
 export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>) => {
   const queryClient = useQueryClient();
+  const { onSuccess, onError, ...rest } = options ?? {};
   
   return useMutation({
     mutationFn: (id: string) => adminService.deleteAdmin(id),
-    onSuccess: (_, deletedId) => {
+    onSuccess: (_, deletedId, context) => {
       // Оптимистично удаляем админа из кэша сразу для мгновенного обновления UI
       const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
       allQueries.forEach(([queryKey, oldData]) => {
@@ -286,15 +291,16 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
       });
       // Инвалидируем и сразу обновляем кэш для гарантии актуальности данных
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
-      // Немедленно обновляем все запросы
       queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
+      onSuccess?.(_, deletedId, context);
     },
-    onError: () => {
+    onError: (error, variables, context) => {
       // При ошибке инвалидируем и обновляем кэш, чтобы убедиться, что данные актуальны
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
       queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
+      onError?.(error, variables, context);
     },
-    ...options,
+    ...rest,
   });
 };
 
