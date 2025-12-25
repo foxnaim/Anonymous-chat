@@ -117,6 +117,19 @@ const CompanyReports = () => {
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 20;
     let yPos = margin;
+    const lineGap = 8;
+    const sectionGap = 12;
+    const labelValue = (label: string, value: string, gap: number = lineGap) => {
+      doc.text(label, margin, yPos);
+      doc.text(value, pageWidth / 2, yPos, { align: "left" });
+      yPos += gap;
+    };
+    const divider = () => {
+      doc.setDrawColor(200);
+      doc.line(margin, yPos, pageWidth - margin, yPos);
+      yPos += 6;
+      doc.setDrawColor(0);
+    };
     // Заголовок
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
@@ -126,28 +139,33 @@ const CompanyReports = () => {
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     doc.text(`${t("company.period")}: ${getSelectedMonthPeriod()}`, margin, yPos);
-    // Название компании
+    yPos += lineGap;
     doc.text(`${t("company.companyName")}: ${company.name}`, margin, yPos);
-    yPos += 15;
+    yPos += sectionGap;
     // Сводка по типам сообщений
     doc.setFontSize(16);
     doc.text(t("company.messageDistribution"), margin, yPos);
-    doc.text(`${t("sendMessage.complaint")}: ${distribution.complaints} (${complaintsPercent}%)`, margin, yPos);
-    yPos += 7;
-    doc.text(`${t("sendMessage.praise")}: ${distribution.praises} (${praisesPercent}%)`, margin, yPos);
-    doc.text(`${t("sendMessage.suggestion")}: ${distribution.suggestions} (${suggestionsPercent}%)`, margin, yPos);
-    doc.text(`${t("admin.totalMessages")}: ${total}`, margin, yPos);
+    yPos += lineGap;
+    labelValue(`${t("sendMessage.complaint")}:`, `${distribution.complaints} (${complaintsPercent}%)`);
+    labelValue(`${t("sendMessage.praise")}:`, `${distribution.praises} (${praisesPercent}%)`);
+    labelValue(`${t("sendMessage.suggestion")}:`, `${distribution.suggestions} (${suggestionsPercent}%)`);
+    labelValue(`${t("admin.totalMessages")}:`, `${total}`, sectionGap);
+    divider();
     // Количество решенных/нерешенных кейсов
     doc.text(t("company.resolvedCases"), margin, yPos);
-    doc.text(`${t("company.resolved")}: ${resolved}`, margin, yPos);
-    doc.text(`${t("company.unresolved")}: ${unresolved}`, margin, yPos);
+    yPos += lineGap;
     const resolvedPercent = total > 0 ? Math.round((resolved / total) * 100) : 0;
-    doc.text(`${t("company.resolutionRate")}: ${resolvedPercent}%`, margin, yPos);
+    labelValue(`${t("company.resolved")}:`, `${resolved}`);
+    labelValue(`${t("company.unresolved")}:`, `${unresolved}`);
+    labelValue(`${t("company.resolutionRate")}:`, `${resolvedPercent}%`, sectionGap);
+    divider();
     // Динамика настроения команды
     doc.text(t("company.teamMood"), margin, yPos);
-    doc.text(`${t("company.growthRating")}: ${growthMetrics.rating}`, margin, yPos);
-    doc.text(`${t("company.overallMood")}: ${getMoodLabel(growthMetrics.mood)}`, margin, yPos);
-    doc.text(`${t("company.trend")}: ${getTrendLabel(growthMetrics.trend)}`, margin, yPos);
+    yPos += lineGap;
+    labelValue(`${t("company.growthRating")}:`, `${growthMetrics.rating}`);
+    labelValue(`${t("company.overallMood")}:`, `${getMoodLabel(growthMetrics.mood)}`);
+    labelValue(`${t("company.trend")}:`, `${getTrendLabel(growthMetrics.trend)}`, sectionGap);
+    divider();
     // Дата генерации
     doc.setFontSize(10);
     doc.setFont("helvetica", "italic");
