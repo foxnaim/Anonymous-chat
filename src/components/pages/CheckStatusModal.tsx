@@ -157,12 +157,12 @@ const CheckStatusModal = ({ open, onOpenChange }: CheckStatusModalProps) => {
 
           {!isLoading && message && (
             <div className="pt-6 border-t border-border space-y-6">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <code className="text-lg font-mono font-bold text-primary">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-1 flex-1 min-w-0">
+                  <code className="text-lg font-mono font-bold text-primary break-all">
                     {message.id}
                   </code>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="outline" className="text-accent border-accent">
                       {getTypeLabel(message.type)}
                     </Badge>
@@ -174,7 +174,7 @@ const CheckStatusModal = ({ open, onOpenChange }: CheckStatusModalProps) => {
                     </span>
                   </div>
                 </div>
-                <Badge className={getStatusColor(message.status)}>
+                <Badge className={`${getStatusColor(message.status)} flex-shrink-0`}>
                   <span className="mr-2">{getStatusIcon(message.status)}</span>
                   {message.status}
                 </Badge>
@@ -183,7 +183,7 @@ const CheckStatusModal = ({ open, onOpenChange }: CheckStatusModalProps) => {
               {message.content && (
                 <Card className="bg-muted p-6">
                   <h3 className="font-semibold mb-3">{t("sendMessage.message")}</h3>
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words">
+                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
                     {message.content}
                   </p>
                 </Card>
@@ -192,7 +192,7 @@ const CheckStatusModal = ({ open, onOpenChange }: CheckStatusModalProps) => {
               {message.companyResponse && (
                 <Card className="bg-muted p-6">
                   <h3 className="font-semibold mb-3">{t("checkStatus.companyResponse")}</h3>
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words">
+                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
                     {message.companyResponse}
                   </p>
                   {message.lastUpdate && (

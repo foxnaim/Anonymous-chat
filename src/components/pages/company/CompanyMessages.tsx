@@ -283,8 +283,8 @@ const CompanyMessages = () => {
                 const rejected = isRejectedByAdmin(message);
                 return (
                   <Card key={message.id} className="p-4 sm:p-6 border-border shadow-lg hover:shadow-xl transition-shadow">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-                      <div className="flex-1 space-y-2 sm:space-y-3 w-full">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-4">
+                      <div className="flex-1 space-y-2 sm:space-y-3 w-full min-w-0">
                         {rejected && (
                           <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-2 sm:p-3">
                             <p className="text-xs sm:text-sm font-semibold text-destructive">
@@ -304,13 +304,13 @@ const CompanyMessages = () => {
                             {new Date(message.createdAt).toLocaleDateString("ru-RU")}
                           </span>
                         </div>
-                        <p className="text-sm sm:text-base text-foreground break-words whitespace-pre-wrap">
+                        <p className="text-sm sm:text-base text-foreground break-words whitespace-pre-wrap overflow-wrap-anywhere">
                           {message.content}
                         </p>
                         {message.companyResponse && (
                           <div className="bg-muted p-2 sm:p-3 rounded-lg">
                             <p className="text-xs sm:text-sm font-semibold mb-1">{t("messages.yourResponse")}:</p>
-                            <p className="text-xs sm:text-sm text-foreground">{message.companyResponse}</p>
+                            <p className="text-xs sm:text-sm text-foreground break-words overflow-wrap-anywhere">{message.companyResponse}</p>
                           </div>
                         )}
                       </div>
@@ -318,7 +318,7 @@ const CompanyMessages = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleViewMessage(message)}
-                        className="w-full sm:w-auto ml-0 sm:ml-4"
+                        className="w-full sm:w-auto sm:flex-shrink-0 ml-0 sm:ml-4"
                       >
                         <FiEye className="h-4 w-4 mr-2" />
                         {t("messages.open")}

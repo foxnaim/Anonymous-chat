@@ -195,14 +195,14 @@ const AdminMessages = () => {
                 ) : (
                   filteredMessages.map((message) => (
                 <Card key={message.id} className="p-4 sm:p-6">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-4">
                     <div className="flex-1 space-y-2 sm:space-y-3 w-full min-w-0">
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                         <code className="text-xs sm:text-sm font-mono text-primary break-all">{message.id}</code>
                         <Badge variant="outline" className="text-xs whitespace-nowrap">{message.companyCode}</Badge>
                         <Badge className="text-xs whitespace-nowrap">{message.status}</Badge>
                       </div>
-                      <p className="text-sm sm:text-base text-foreground break-words whitespace-pre-wrap">
+                      <p className="text-sm sm:text-base text-foreground break-words whitespace-pre-wrap overflow-wrap-anywhere">
                         {message.content}
                       </p>
                     </div>
@@ -210,7 +210,7 @@ const AdminMessages = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleViewMessage(message)}
-                      className="w-full sm:w-auto ml-0 sm:ml-4 flex-shrink-0"
+                      className="w-full sm:w-auto sm:flex-shrink-0 ml-0 sm:ml-4"
                     >
                       <FiEye className="h-4 w-4 mr-2" />
                       <span className="hidden sm:inline">{t("messages.view")}</span>
