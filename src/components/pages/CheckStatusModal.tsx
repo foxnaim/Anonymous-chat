@@ -166,12 +166,12 @@ const CheckStatusModal = ({ open, onOpenChange }: CheckStatusModalProps) => {
                     <Badge variant="outline" className="text-accent border-accent">
                       {getTypeLabel(message.type)}
                     </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      {t("checkStatus.sentOn")}{" "}
-                      {message.createdAt
-                        ? new Date(message.createdAt).toLocaleDateString("ru-RU")
-                        : t("checkStatus.unknownDate")}
-                    </span>
+                    {message.createdAt && (
+                      <span className="text-sm text-muted-foreground">
+                        {t("checkStatus.sentOn")}{" "}
+                        {new Date(message.createdAt).toLocaleDateString("ru-RU")}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <Badge className={`${getStatusColor(message.status)} flex-shrink-0`}>
@@ -181,18 +181,24 @@ const CheckStatusModal = ({ open, onOpenChange }: CheckStatusModalProps) => {
               </div>
 
               {message.content && (
-                <Card className="bg-muted p-6">
+                <Card className="bg-muted p-6 w-full">
                   <h3 className="font-semibold mb-3">{t("sendMessage.message")}</h3>
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                  <p 
+                    className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere"
+                    style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}
+                  >
                     {message.content}
                   </p>
                 </Card>
               )}
 
               {message.companyResponse && (
-                <Card className="bg-muted p-6">
+                <Card className="bg-muted p-6 w-full">
                   <h3 className="font-semibold mb-3">{t("checkStatus.companyResponse")}</h3>
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                  <p 
+                    className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere"
+                    style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}
+                  >
                     {message.companyResponse}
                   </p>
                   {message.lastUpdate && (
