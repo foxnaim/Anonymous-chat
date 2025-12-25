@@ -292,7 +292,8 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
       // Откат кэша, если был оптимистичный апдейт
       if (context?.previousData) {
         context.previousData.forEach(([key, old]) => {
-          queryClient.setQueryData<AdminUser[] | undefined>(key, old);
+          // key может быть приведён к QueryKey, т.к. вернулся из getQueriesData
+          queryClient.setQueryData<AdminUser[] | undefined>(key as QueryKey, old);
         });
       }
 
