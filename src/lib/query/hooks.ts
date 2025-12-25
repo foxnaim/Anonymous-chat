@@ -270,14 +270,21 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
     onSuccess: (data, variables, context, mutation) => {
       // Заменяем временную запись на реальную (или добавляем, если не нашли)
       const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
+      let updatedAny = false;
       allQueries.forEach(([key, admins]) => {
         if (admins && Array.isArray(admins)) {
           const withoutTemp = admins.filter(a => a.id !== context?.tempId);
           const alreadyExists = withoutTemp.some(a => a.id === data.id || a.email.toLowerCase() === data.email.toLowerCase());
           const next = alreadyExists ? withoutTemp.map(a => (a.id === data.id ? data : a)) : [...withoutTemp, data];
           queryClient.setQueryData<AdminUser[]>(key, next);
+          updatedAny = true;
         }
       });
+
+      // Если кэша не было (первый запрос), заполняем базовый key
+      if (!updatedAny) {
+        queryClient.setQueryData<AdminUser[]>(queryKeys.admins, [data]);
+      }
 
       // Инвалидируем + refetch для гарантии
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
@@ -353,11 +360,17 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
     onSuccess: (_, deletedId, context, mutation) => {
       // Оптимистично удаляем админа из кэша сразу для мгновенного обновления UI
       const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
+      let updatedAny = false;
       allQueries.forEach(([queryKey, oldData]) => {
         if (oldData && Array.isArray(oldData)) {
           queryClient.setQueryData<AdminUser[]>(queryKey, oldData.filter(admin => admin.id !== deletedId));
+          updatedAny = true;
         }
       });
+      // Если кэша не было, явно ставим пустой массив по базовому ключу
+      if (!updatedAny) {
+        queryClient.setQueryData<AdminUser[]>(queryKeys.admins, []);
+      }
       // Инвалидируем и сразу обновляем кэш для гарантии актуальности данных
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
       queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
