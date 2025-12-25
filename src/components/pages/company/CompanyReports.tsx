@@ -85,18 +85,6 @@ const CompanyReports = () => {
     }
     return months;
   };
-  // Генерация списка лет (последние 5 лет + текущий + следующие 2 года)
-  const getYearOptions = () => {
-    const currentYear = now.getFullYear();
-    const years = [];
-    for (let i = currentYear - 5; i <= currentYear + 2; i++) {
-      years.push({
-        value: i.toString(),
-        label: i.toString(),
-      });
-    }
-    return years;
-  };
   const getMoodLabel = (mood: string) => {
     if (mood === "Позитивный" || mood === "Positive" || mood.toLowerCase().includes("positive")) {
       return t("company.positive");
@@ -230,23 +218,29 @@ const CompanyReports = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <label className="text-sm text-muted-foreground">{t("company.selectYear")}:</label>
-                  <Select value={selectedYear} onValueChange={setSelectedYear}>
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getYearOptions().map((year) => (
-                        <SelectItem key={year.value} value={year.value}>
-                          {year.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="relative w-[140px]">
+                    <input
+                      type="number"
+                      min="1900"
+                      max="2100"
+                      step="1"
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(e.target.value || new Date().getFullYear().toString())}
+                      className="w-full rounded-md border border-input bg-background py-2 pl-10 pr-3 text-sm shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                    <FiBarChart2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  </div>
                 </div>
               </div>
-              <Button onClick={generatePDFReport} disabled={isLoading}>
-                <FiDownload className="h-4 w-4 mr-2" />
-                {t("company.downloadMonthlyReport")}
+              <Button
+                onClick={generatePDFReport}
+                disabled={isLoading}
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-full"
+                aria-label={t("company.downloadMonthlyReport")}
+              >
+                <FiDownload className="h-4 w-4" />
               </Button>
             </div>
           </div>
