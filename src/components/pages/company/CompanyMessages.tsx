@@ -73,7 +73,8 @@ const CompanyMessages = () => {
   const { data: messages = [], isLoading, refetch } = useMessages(company?.code, undefined, undefined, {
     enabled: !!company?.code,
     staleTime: 0,
-    refetchInterval: 2000, // авто-обновление каждые 2с
+    refetchInterval: 1000, // авто-обновление каждые 1с
+    refetchIntervalInBackground: true,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,

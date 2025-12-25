@@ -6,7 +6,9 @@
 import type { Socket } from 'socket.io-client';
 import { getToken } from '../utils/cookies';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001');
 
 let socket: Socket | null = null;
 let socketIOModule: typeof import('socket.io-client') | null = null;
