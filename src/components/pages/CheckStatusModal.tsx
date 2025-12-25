@@ -167,7 +167,10 @@ const CheckStatusModal = ({ open, onOpenChange }: CheckStatusModalProps) => {
                       {getTypeLabel(message.type)}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
-                      {t("checkStatus.sentOn")} {new Date(message.createdAt).toLocaleDateString("ru-RU")}
+                      {t("checkStatus.sentOn")}{" "}
+                      {message.createdAt
+                        ? new Date(message.createdAt).toLocaleDateString("ru-RU")
+                        : t("checkStatus.unknownDate")}
                     </span>
                   </div>
                 </div>

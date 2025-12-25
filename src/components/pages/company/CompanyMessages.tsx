@@ -304,7 +304,9 @@ const CompanyMessages = () => {
                             {new Date(message.createdAt).toLocaleDateString("ru-RU")}
                           </span>
                         </div>
-                        <p className="text-sm sm:text-base text-foreground line-clamp-2">{message.content}</p>
+                        <p className="text-sm sm:text-base text-foreground line-clamp-2 break-words whitespace-pre-wrap">
+                          {message.content}
+                        </p>
                         {message.companyResponse && (
                           <div className="bg-muted p-2 sm:p-3 rounded-lg">
                             <p className="text-xs sm:text-sm font-semibold mb-1">{t("messages.yourResponse")}:</p>
