@@ -15,7 +15,7 @@ import {
 import { FiDownload, FiMessageSquare, FiAlertCircle, FiAward, FiZap, FiBarChart2, FiCheckCircle, FiX, FiTrendingUp } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
-import { jsPDF } from "jspdf";
+// Excel экспорт
 const CompanyReports = () => {
   const { t, i18n: i18nInstance } = useTranslation();
   const { user } = useAuth();
@@ -99,77 +99,15 @@ const CompanyReports = () => {
     if (trend === "down") return t("company.declining");
     return t("company.stable");
   };
-  const generatePDFReport = () => {
+  const generateExcelReport = async () => {
     if (!distribution || !stats || !growthMetrics || !company) return;
+    const XLSX = await import("xlsx");
 
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 16;
-    let yPos = margin;
-    const lineGap = 7;
-    const sectionGap = 12;
-    const valueCol = pageWidth * 0.62;
+    const totalMessages = total;
+    const resolvedPercent = totalMessages > 0 ? Math.round((resolved / totalMessages) * 100) : 0;
+    const month = parseInt(selectedMonth).toString().padStart(2, "0");
+    const year = selectedYear;
 
-    const sectionTitle = (title: string) => {
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text(title, margin, yPos);
-      yPos += lineGap;
-    };
-
-    const row = (label: string, value: string, gap: number = lineGap) => {
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "normal");
-      doc.text(label, margin, yPos);
-      doc.text(value, valueCol, yPos);
-      yPos += gap;
-    };
-
-    const divider = () => {
-      doc.setDrawColor(210);
-      doc.line(margin, yPos, pageWidth - margin, yPos);
-      yPos += 6;
-      doc.setDrawColor(0);
-    };
-
-    // Заголовок
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text(t("company.reports"), pageWidth / 2, yPos, { align: "center" });
-    yPos += sectionGap;
-
-    // Шапка
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-    row(`${t("company.period")}:`, getSelectedMonthPeriod());
-    row(`${t("company.companyName")}:`, company.name, sectionGap);
-
-    // Распределение сообщений
-    sectionTitle(t("company.messageDistribution"));
-    row(`${t("sendMessage.complaint")}:`, `${distribution.complaints} (${complaintsPercent}%)`);
-    row(`${t("sendMessage.praise")}:`, `${distribution.praises} (${praisesPercent}%)`);
-    row(`${t("sendMessage.suggestion")}:`, `${distribution.suggestions} (${suggestionsPercent}%)`);
-    row(`${t("admin.totalMessages")}:`, `${total}`, sectionGap);
-    divider();
-
-    // Решенные / нерешенные
-    const resolvedPercent = total > 0 ? Math.round((resolved / total) * 100) : 0;
-    sectionTitle(t("company.resolvedCases"));
-    row(`${t("company.resolved")}:`, `${resolved}`);
-    row(`${t("company.unresolved")}:`, `${unresolved}`);
-    row(`${t("company.resolutionRate")}:`, `${resolvedPercent}%`, sectionGap);
-    divider();
-
-    // Настроение команды
-    sectionTitle(t("company.teamMood"));
-    row(`${t("company.growthRating")}:`, `${growthMetrics.rating}`);
-    row(`${t("company.overallMood")}:`, `${getMoodLabel(growthMetrics.mood)}`);
-    row(`${t("company.trend")}:`, `${getTrendLabel(growthMetrics.trend)}`, sectionGap);
-    divider();
-
-    // Дата генерации
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "italic");
     const currentLang = i18nInstance.language || "ru";
     const localeMap: Record<string, string> = {
       ru: "ru-RU",
@@ -184,13 +122,39 @@ const CompanyReports = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
-    row(`${t("company.generatedAt")}:`, generatedDate, sectionGap);
 
-    // Сохранение файла
-    const month = parseInt(selectedMonth).toString().padStart(2, "0");
-    const year = selectedYear;
-    const fileName = `report_${company.code}_${year}-${month}.pdf`;
-    doc.save(fileName);
+    const rows: (string | number)[][] = [
+      [t("company.reports") || "Отчёт"],
+      [],
+      [t("company.period") || "Период", getSelectedMonthPeriod()],
+      [t("company.companyName") || "Компания", company.name],
+      [t("company.codeForEmployees") || "Код компании", company.code],
+      [],
+      [t("company.messageDistribution") || "Распределение сообщений"],
+      [t("sendMessage.complaint") || "Жалоба", distribution.complaints, `${complaintsPercent}%`],
+      [t("sendMessage.praise") || "Похвала", distribution.praises, `${praisesPercent}%`],
+      [t("sendMessage.suggestion") || "Предложение", distribution.suggestions, `${suggestionsPercent}%`],
+      [t("admin.totalMessages") || "Всего", totalMessages],
+      [],
+      [t("company.resolvedCases") || "Решённые кейсы"],
+      [t("company.resolved") || "Решено", resolved],
+      [t("company.unresolved") || "Нерешено", unresolved],
+      [t("company.resolutionRate") || "Процент решения", `${resolvedPercent}%`],
+      [],
+      [t("company.teamMood") || "Настроение команды"],
+      [t("company.growthRating") || "Рейтинг роста", growthMetrics.rating],
+      [t("company.overallMood") || "Общий настрой", getMoodLabel(growthMetrics.mood)],
+      [t("company.trend") || "Тренд", getTrendLabel(growthMetrics.trend)],
+      [],
+      [t("company.generatedAt") || "Сформировано", generatedDate],
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+
+    const fileName = `report_${company.code}_${year}-${month}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
   };
   
   return (
@@ -233,7 +197,7 @@ const CompanyReports = () => {
                 </div>
               </div>
               <Button
-                onClick={generatePDFReport}
+                onClick={generateExcelReport}
                 disabled={isLoading}
                 variant="outline"
                 size="icon"
