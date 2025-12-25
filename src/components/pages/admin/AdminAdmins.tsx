@@ -10,14 +10,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FiPlus, FiShield, FiTrash2, FiEdit2, FiEye, FiEyeOff, FiAlertTriangle } from "react-icons/fi";
 import { AdminHeader } from "@/components/AdminHeader";
-import { useAdmins, useDeleteAdmin, useCreateAdmin, useUpdateAdmin } from "@/lib/query";
+import { useAdmins, useDeleteAdmin, useCreateAdmin, useUpdateAdmin, queryKeys } from "@/lib/query";
 import type { AdminUser } from "@/types";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/redux";
 import { validatePasswordStrength } from "@/lib/utils/validation";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AdminAdmins = () => {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -261,14 +263,25 @@ const AdminAdmins = () => {
       // Получаем сообщение об ошибке с бэкенда
       const backendMessage = error?.message || error?.response?.data?.error?.message || "";
       const errorStatus = error?.status || error?.response?.status || 0;
+      const failedId = adminToDelete?.id;
+
+      const removeFromCache = (id?: string) => {
+        if (!id) return;
+        const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
+        allQueries.forEach(([key, data]) => {
+          if (data && Array.isArray(data)) {
+            queryClient.setQueryData<AdminUser[]>(key, data.filter(admin => admin.id !== id));
+          }
+        });
+      };
       
       // Маппинг сообщений об ошибках
       let errorMessage = "";
       
       if (errorStatus === 404 || backendMessage.includes("not found") || backendMessage.includes("не найден")) {
         errorMessage = t("admin.adminNotFound") || "Администратор не найден. Возможно, он уже был удален.";
-        // Обновляем список перед закрытием диалога, если админ не найден (возможно, уже удален)
-        await refetch();
+        // Удаляем из кэша и закрываем диалог без повторного рефетча, чтобы не вернуть элемент обратно
+        removeFromCache(failedId);
         setIsDeleteDialogOpen(false);
         setAdminToDelete(null);
       } else if (errorStatus === 403 || backendMessage.includes("Access denied") || backendMessage.includes("доступ запрещен")) {
