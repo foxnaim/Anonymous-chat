@@ -227,27 +227,85 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
   const queryClient = useQueryClient();
   const userOnSuccess = options?.onSuccess;
   const userOnError = options?.onError;
-  const { onSuccess: _, onError: __, ...rest } = options ?? {};
+  const userOnMutate = options?.onMutate;
+  const { onSuccess: _, onError: __, onMutate: ___, ...rest } = options ?? {};
 
-  return useMutation({
-    mutationFn: (data: { email: string; name: string; role?: 'admin' | 'super_admin' }) => adminService.createAdmin(data),
+  type AdminOptimisticContext = {
+    previousData: Array<[unknown, AdminUser[] | undefined]>;
+    tempId: string;
+  };
+
+  return useMutation<AdminUser, Error, { email: string; name: string; role?: 'admin' | 'super_admin' }, AdminOptimisticContext>({
+    mutationFn: (data) => adminService.createAdmin(data),
+
+    // Оптимистично добавляем админа в кэш сразу
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.admins, exact: false });
+      const previousData = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
+
+      const tempId = `temp-${Date.now()}`;
+      const optimisticAdmin: AdminUser = {
+        id: tempId,
+        email: variables.email,
+        name: variables.name,
+        role: variables.role ?? 'admin',
+        createdAt: new Date().toISOString(),
+        lastLogin: null,
+      };
+
+      previousData.forEach(([key, data]) => {
+        if (data && Array.isArray(data)) {
+          queryClient.setQueryData<AdminUser[]>(key, [...data, optimisticAdmin]);
+        }
+      });
+
+      // Пользовательский onMutate (если был)
+      if (userOnMutate) {
+        (userOnMutate as any)(variables);
+      }
+
+      return { previousData, tempId };
+    },
+
     onSuccess: (data, variables, context, mutation) => {
-      // Базовая логика: инвалидируем и немедленно обновляем список админов
+      // Заменяем временную запись на реальную (или добавляем, если не нашли)
+      const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
+      allQueries.forEach(([key, admins]) => {
+        if (admins && Array.isArray(admins)) {
+          const existsTemp = admins.some(a => a.id === context?.tempId);
+          const withoutTemp = admins.filter(a => a.id !== context?.tempId);
+          const alreadyExists = withoutTemp.some(a => a.id === data.id || a.email.toLowerCase() === data.email.toLowerCase());
+          const next = alreadyExists ? withoutTemp.map(a => (a.id === data.id ? data : a)) : [...withoutTemp, data];
+          queryClient.setQueryData<AdminUser[]>(key, next);
+        }
+      });
+
+      // Инвалидируем + refetch для гарантии
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
       queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
-      // Пользовательский обработчик (если передан) - передаем полный набор аргументов
+
       if (userOnSuccess) {
         (userOnSuccess as any)(data, variables, context, mutation);
       }
     },
+
     onError: (error, variables, context, mutation) => {
-      // При ошибке также обновляем список, чтобы данные не были устаревшими
+      // Откат кэша, если был оптимистичный апдейт
+      if (context?.previousData) {
+        context.previousData.forEach(([key, old]) => {
+          queryClient.setQueryData<AdminUser[] | undefined>(key, old);
+        });
+      }
+
+      // При ошибке всё равно обновим список, чтобы не оставить мусор
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
       queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
+
       if (userOnError) {
         (userOnError as any)(error, variables, context, mutation);
       }
     },
+
     ...rest,
   });
 };
