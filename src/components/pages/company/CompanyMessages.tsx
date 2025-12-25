@@ -72,6 +72,11 @@ const CompanyMessages = () => {
   });
   const { data: messages = [], isLoading, refetch } = useMessages(company?.code, undefined, undefined, {
     enabled: !!company?.code,
+    staleTime: 0,
+    refetchInterval: 2000, // авто-обновление каждые 2с
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
   
   // Подключаемся к WebSocket для real-time обновлений
