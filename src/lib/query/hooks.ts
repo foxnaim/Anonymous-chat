@@ -235,7 +235,7 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
       // Базовая логика: инвалидируем и немедленно обновляем список админов
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
       queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
-      // Пользовательский обработчик (если передан) - вызываем с 3 аргументами для совместимости
+      // Пользовательский обработчик (если передан) - передаем полный набор аргументов
       if (userOnSuccess) {
         (userOnSuccess as any)(data, variables, context, mutation);
       }
@@ -499,4 +499,3 @@ export const useUpdateAdminSettings = (options?: UseMutationOptions<AdminSetting
     ...options,
   });
 };
-
