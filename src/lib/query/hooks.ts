@@ -425,19 +425,95 @@ export const usePlatformStats = (options?: Omit<UseQueryOptions<PlatformStats>, 
  */
 export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Omit<Message, "id" | "createdAt" | "updatedAt" | "lastUpdate">>) => {
   const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess;
+  const userOnError = options?.onError;
+  const userOnMutate = options?.onMutate;
+  const { onSuccess: _, onError: __, onMutate: ___, ...rest } = options ?? {};
+
+  type MessageOptimisticContext = {
+    previousData: Array<[QueryKey, Message[] | undefined]>;
+    tempId: string;
+    companyCode: string;
+  };
   
-  return useMutation({
+  return useMutation<Message, Error, Omit<Message, "id" | "createdAt" | "updatedAt" | "lastUpdate">, MessageOptimisticContext>({
     mutationFn: messageService.create,
-    onSuccess: (data) => {
-      // Инвалидируем кэш сообщений
+
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.messages(variables.companyCode), exact: false });
+      const previousData = queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(variables.companyCode), exact: false });
+
+      const tempId = `temp-${Date.now()}`;
+      const now = new Date().toISOString();
+      const optimistic: Message = {
+        id: tempId,
+        companyCode: variables.companyCode,
+        type: variables.type,
+        content: variables.content,
+        status: variables.status,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      previousData.forEach(([key, data]) => {
+        if (data && Array.isArray(data)) {
+          queryClient.setQueryData<Message[]>(key, [optimistic, ...data]);
+        }
+      });
+
+      if (userOnMutate) {
+        (userOnMutate as any)(variables);
+      }
+
+      return { previousData, tempId, companyCode: variables.companyCode };
+    },
+
+    onSuccess: (data, variables, context, mutation) => {
+      const allQueries = queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(context?.companyCode || data.companyCode), exact: false });
+      let updatedAny = false;
+      allQueries.forEach(([key, list]) => {
+        if (list && Array.isArray(list)) {
+          const withoutTemp = list.filter(m => m.id !== context?.tempId);
+          const exists = withoutTemp.some(m => m.id === data.id || m.content === data.content);
+          const next = exists
+            ? withoutTemp.map(m => (m.id === data.id ? data : m))
+            : [data, ...withoutTemp];
+          queryClient.setQueryData<Message[]>(key, next);
+          updatedAny = true;
+        }
+      });
+      if (!updatedAny) {
+        queryClient.setQueryData<Message[]>(queryKeys.messages(data.companyCode), [data]);
+      }
+
+      // Инвалидируем кэш сообщений и статистику/достижения
       queryClient.invalidateQueries({ queryKey: queryKeys.messages(data.companyCode) });
-      // Инвалидируем статистику и достижения для всех компаний (они будут пересчитаны при следующем запросе)
-      // Используем более широкую инвалидацию, так как мы не знаем companyId из companyCode напрямую
       queryClient.invalidateQueries({ queryKey: ['stats'] });
       queryClient.invalidateQueries({ queryKey: ['growth-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['achievements'] });
+
+      if (userOnSuccess) {
+        (userOnSuccess as any)(data, variables, context, mutation);
+      }
     },
-    ...options,
+
+    onError: (error, variables, context, mutation) => {
+      if (context?.previousData) {
+        context.previousData.forEach(([key, old]) => {
+          queryClient.setQueryData<Message[] | undefined>(key, old);
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: queryKeys.messages(variables.companyCode) });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+      queryClient.invalidateQueries({ queryKey: ['growth-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['achievements'] });
+
+      if (userOnError) {
+        (userOnError as any)(error, variables, context, mutation);
+      }
+    },
+
+    ...rest,
   });
 };
 
