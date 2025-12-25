@@ -272,7 +272,6 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
       const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
       allQueries.forEach(([key, admins]) => {
         if (admins && Array.isArray(admins)) {
-          const existsTemp = admins.some(a => a.id === context?.tempId);
           const withoutTemp = admins.filter(a => a.id !== context?.tempId);
           const alreadyExists = withoutTemp.some(a => a.id === data.id || a.email.toLowerCase() === data.email.toLowerCase());
           const next = alreadyExists ? withoutTemp.map(a => (a.id === data.id ? data : a)) : [...withoutTemp, data];
