@@ -71,6 +71,9 @@ export const AdminHeader = ({}: AdminHeaderProps = {}) => {
     { name: t("admin.analytics"), path: "/admin/analytics", icon: FiBarChart2 },
     { name: t("admin.admins"), path: "/admin/admins", icon: FiUsers },
   ];
+  const visibleNavigation = user?.role === "super_admin" 
+    ? navigation 
+    : navigation.filter((item) => item.path !== "/admin/admins");
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
@@ -95,7 +98,7 @@ export const AdminHeader = ({}: AdminHeaderProps = {}) => {
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-1">
-          {navigation.map((item, index) => {
+          {visibleNavigation.map((item, index) => {
             // Для /admin проверяем точное совпадение или что это корневой путь админки
             const isActive = item.path === '/admin' 
               ? pathname === '/admin' || pathname === '/admin/'
@@ -215,7 +218,7 @@ export const AdminHeader = ({}: AdminHeaderProps = {}) => {
             className="lg:hidden border-t border-border bg-card"
           >
             <nav className="container px-4 py-3 space-y-1">
-              {navigation.map((item) => {
+              {visibleNavigation.map((item) => {
                 // Для /admin проверяем точное совпадение или что это корневой путь админки
                 const isActive = item.path === '/admin' 
                   ? pathname === '/admin' || pathname === '/admin/'
@@ -245,4 +248,3 @@ export const AdminHeader = ({}: AdminHeaderProps = {}) => {
     </header>
   );
 };
-
