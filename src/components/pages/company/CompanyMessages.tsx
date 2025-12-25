@@ -394,8 +394,10 @@ const CompanyMessages = () => {
                         </div>
                         <div className="space-y-2">
                           <Label>{t("sendMessage.message")}</Label>
-                          <div className="bg-muted p-4 rounded-lg">
-                            <p className="text-foreground whitespace-pre-wrap">{selectedMessage.content}</p>
+                          <div className="bg-muted p-4 rounded-lg overflow-auto max-h-64">
+                            <p className="text-foreground whitespace-pre-wrap break-words">
+                              {selectedMessage.content}
+                            </p>
                           </div>
                         </div>
                         <div className="space-y-2">
