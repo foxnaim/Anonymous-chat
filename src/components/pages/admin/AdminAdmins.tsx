@@ -15,11 +15,9 @@ import type { AdminUser } from "@/types";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/redux";
 import { validatePasswordStrength } from "@/lib/utils/validation";
-import { useQueryClient } from "@tanstack/react-query";
 
 const AdminAdmins = () => {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
