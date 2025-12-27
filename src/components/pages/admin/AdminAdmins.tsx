@@ -254,22 +254,7 @@ const AdminAdmins = () => {
 
   const deleteAdminMutation = useDeleteAdmin({
     onSuccess: async (_, adminId) => {
-      // После ответа сервера убеждаемся, что элемент действительно исчез из списка
-      const refreshed = await refetch();
-      const updatedAdmins = refreshed.data || [];
-      const stillExists = updatedAdmins.some(
-        (admin) =>
-          admin.id === adminId ||
-          (adminToDelete?.email &&
-            admin.email.toLowerCase() === adminToDelete.email.toLowerCase())
-      );
-
-      if (stillExists) {
-        toast.error(t("admin.deleteError") || "Не удалось удалить администратора. Попробуйте еще раз.");
-        return;
-      }
-
-      // Закрываем диалог и показываем уведомление
+      // Закрываем диалог сразу, так как оптимистичное обновление уже убрало элемент из списка
       setIsDeleteDialogOpen(false);
       setAdminToDelete(null);
       toast.success(t("admin.adminDeleted") || "Администратор удален");
@@ -278,27 +263,19 @@ const AdminAdmins = () => {
       // Получаем сообщение об ошибке с бэкенда
       const backendMessage = error?.message || error?.response?.data?.error?.message || "";
       const errorStatus = error?.status || error?.response?.status || 0;
-      const failedId = adminToDelete?.id;
-
-      const removeFromCache = (id?: string) => {
-        if (!id) return;
-        const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
-        allQueries.forEach(([key, data]) => {
-          if (data && Array.isArray(data)) {
-            queryClient.setQueryData<AdminUser[]>(key, data.filter(admin => admin.id !== id));
-          }
-        });
-      };
       
       // Маппинг сообщений об ошибках
       let errorMessage = "";
       
       if (errorStatus === 404 || backendMessage.includes("not found") || backendMessage.includes("не найден")) {
-        errorMessage = t("admin.adminNotFound") || "Администратор не найден. Возможно, он уже был удален.";
-        // Удаляем из кэша и закрываем диалог без повторного рефетча, чтобы не вернуть элемент обратно
-        removeFromCache(failedId);
+        // Если 404, считаем, что задача выполнена (админ удален)
+        errorMessage = t("admin.adminNotFound") || "Администратор уже был удален.";
+        // Закрываем диалог
         setIsDeleteDialogOpen(false);
         setAdminToDelete(null);
+        // Показываем как info, а не ошибку
+        toast.info(errorMessage);
+        return;
       } else if (errorStatus === 403 || backendMessage.includes("Access denied") || backendMessage.includes("доступ запрещен")) {
         errorMessage = t("auth.accessDenied") || "Доступ запрещен";
       } else if (backendMessage.includes("Cannot delete yourself") || backendMessage.includes("нельзя удалить себя")) {

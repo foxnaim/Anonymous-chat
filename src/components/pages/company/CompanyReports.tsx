@@ -123,7 +123,7 @@ const CompanyReports = () => {
       minute: "2-digit",
     });
 
-    const rows: (string | number)[][] = [
+    const rows: string[][] = [
       [t("company.reports") || "Отчёт"],
       [],
       [t("company.period") || "Период", getSelectedMonthPeriod()],
@@ -131,18 +131,18 @@ const CompanyReports = () => {
       [t("company.codeForEmployees") || "Код компании", company.code],
       [],
       [t("company.messageDistribution") || "Распределение сообщений"],
-      [t("sendMessage.complaint") || "Жалоба", distribution.complaints, `${complaintsPercent}%`],
-      [t("sendMessage.praise") || "Похвала", distribution.praises, `${praisesPercent}%`],
-      [t("sendMessage.suggestion") || "Предложение", distribution.suggestions, `${suggestionsPercent}%`],
-      [t("admin.totalMessages") || "Всего", totalMessages],
+      [t("sendMessage.complaint") || "Жалоба", String(distribution.complaints), `${complaintsPercent}%`],
+      [t("sendMessage.praise") || "Похвала", String(distribution.praises), `${praisesPercent}%`],
+      [t("sendMessage.suggestion") || "Предложение", String(distribution.suggestions), `${suggestionsPercent}%`],
+      [t("admin.totalMessages") || "Всего", String(totalMessages)],
       [],
       [t("company.resolvedCases") || "Решённые кейсы"],
-      [t("company.resolved") || "Решено", resolved],
-      [t("company.unresolved") || "Нерешено", unresolved],
+      [t("company.resolved") || "Решено", String(resolved)],
+      [t("company.unresolved") || "Нерешено", String(unresolved)],
       [t("company.resolutionRate") || "Процент решения", `${resolvedPercent}%`],
       [],
       [t("company.teamMood") || "Настроение команды"],
-      [t("company.growthRating") || "Рейтинг роста", growthMetrics.rating],
+      [t("company.growthRating") || "Рейтинг роста", String(growthMetrics.rating)],
       [t("company.overallMood") || "Общий настрой", getMoodLabel(growthMetrics.mood)],
       [t("company.trend") || "Тренд", getTrendLabel(growthMetrics.trend)],
       [],
@@ -154,7 +154,7 @@ const CompanyReports = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
 
     const fileName = `report_${company.code}_${year}-${month}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
+    XLSX.writeFileXLSX(workbook, fileName, { compression: true });
   };
   
   return (

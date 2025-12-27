@@ -353,54 +353,64 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
   const queryClient = useQueryClient();
   const userOnSuccess = options?.onSuccess;
   const userOnError = options?.onError;
-  const { onSuccess: _, onError: __, ...rest } = options ?? {};
+  const userOnMutate = options?.onMutate;
+  const { onSuccess: _, onError: __, onMutate: ___, ...rest } = options ?? {};
   
-  return useMutation({
+  return useMutation<void, Error, string, { previousData: Array<[QueryKey, AdminUser[] | undefined]> }>({
     mutationFn: (id: string) => adminService.deleteAdmin(id),
-    onSuccess: (_, deletedId, context, mutation) => {
-      // Оптимистично удаляем админа из кэша сразу для мгновенного обновления UI
-      const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
+
+    onMutate: async (deletedId) => {
+      // Отменяем исходящие запросы, чтобы они не перезаписали наш оптимистичный апдейт
+      await queryClient.cancelQueries({ queryKey: queryKeys.admins, exact: false });
+
+      // Сохраняем предыдущее состояние
+      const previousData = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
+
+      // Оптимистично удаляем админа из кэша сразу
       let updatedAny = false;
-      allQueries.forEach(([queryKey, oldData]) => {
+      previousData.forEach(([key, oldData]) => {
         if (oldData && Array.isArray(oldData)) {
-          queryClient.setQueryData<AdminUser[]>(queryKey, oldData.filter(admin => admin.id !== deletedId));
+          queryClient.setQueryData<AdminUser[]>(key, oldData.filter(admin => admin.id !== deletedId));
           updatedAny = true;
         }
       });
-      // Если кэша не было, явно ставим пустой массив по базовому ключу
+      // Если кэша не было, ставим пустой (хотя это маловероятно при удалении)
       if (!updatedAny) {
         queryClient.setQueryData<AdminUser[]>(queryKeys.admins, []);
       }
-      // Инвалидируем и сразу обновляем кэш для гарантии актуальности данных
+
+      if (userOnMutate) {
+        (userOnMutate as any)(deletedId);
+      }
+
+      return { previousData };
+    },
+
+    onSuccess: (_, deletedId, context, mutation) => {
+      // Инвалидируем и обновляем кэш для гарантии актуальности данных
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
-      queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
+      
       if (userOnSuccess) {
         (userOnSuccess as any)(_, deletedId, context, mutation);
       }
     },
+
     onError: (error, variables, context, mutation) => {
-      // При ошибке, особенно 404, убираем запись локально по id/email, чтобы не висела карточка
-      const deletedId = variables;
-      const deletedEmail = (context as any)?.email;
-      const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
-      let updatedAny = false;
-      allQueries.forEach(([queryKey, data]) => {
-        if (data && Array.isArray(data)) {
-          const filtered = data.filter(
-            admin =>
-              admin.id !== deletedId &&
-              (!deletedEmail || admin.email.toLowerCase() !== String(deletedEmail).toLowerCase())
-          );
-          queryClient.setQueryData<AdminUser[]>(queryKey, filtered);
-          updatedAny = true;
-        }
-      });
-      if (!updatedAny) {
-        queryClient.setQueryData<AdminUser[]>(queryKeys.admins, []);
+      const errorStatus = (error as any)?.status || (error as any)?.response?.status;
+
+      // Если ошибка 404, значит админ уже удален. НЕ откатываем кэш.
+      if (errorStatus === 404) {
+         // Убедимся, что данные обновлены
+         queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
+      } else {
+         // Для других ошибок откатываем изменения
+         if (context?.previousData) {
+           context.previousData.forEach(([key, old]) => {
+             queryClient.setQueryData<AdminUser[] | undefined>(key, old);
+           });
+         }
       }
-      // Инвалидируем и обновляем кэш, чтобы убедиться, что данные актуальны
-      queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
-      queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
+
       if (userOnError) {
         (userOnError as any)(error, variables, context, mutation);
       }
