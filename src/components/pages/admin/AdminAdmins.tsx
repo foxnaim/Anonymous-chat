@@ -251,10 +251,13 @@ const AdminAdmins = () => {
   });
 
   const deleteAdminMutation = useDeleteAdmin({
-    onSuccess: async (_, adminId) => {
-      // Закрываем диалог сразу, так как оптимистичное обновление уже убрало элемент из списка
+    onMutate: () => {
+      // Закрываем диалог сразу при оптимистичном обновлении для мгновенного UI
       setIsDeleteDialogOpen(false);
       setAdminToDelete(null);
+    },
+    onSuccess: async (_, adminId) => {
+      // Показываем успешное уведомление
       toast.success(t("admin.adminDeleted") || "Администратор удален");
     },
     onError: async (error: any) => {

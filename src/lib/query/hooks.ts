@@ -364,16 +364,19 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
       // Сохраняем предыдущее состояние
       const previousData = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
 
-      // Оптимистично удаляем админа из кэша сразу
-      let updatedAny = false;
+      // Оптимистично удаляем админа из кэша сразу - обновляем ВСЕ запросы
       previousData.forEach(([key, oldData]) => {
         if (oldData && Array.isArray(oldData)) {
-          queryClient.setQueryData<AdminUser[]>(key, oldData.filter(admin => admin.id !== deletedId));
-          updatedAny = true;
+          const filtered = oldData.filter(admin => {
+            // Проверяем и id, и _id на случай разных форматов данных
+            return admin.id !== deletedId && (admin as any)._id !== deletedId;
+          });
+          queryClient.setQueryData<AdminUser[]>(key, filtered);
         }
       });
-      // Если кэша не было, ставим пустой (хотя это маловероятно при удалении)
-      if (!updatedAny) {
+      
+      // Если кэша не было, ставим пустой массив
+      if (previousData.length === 0) {
         queryClient.setQueryData<AdminUser[]>(queryKeys.admins, []);
       }
 
@@ -385,12 +388,15 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
     },
 
     onSuccess: (_, deletedId, context, mutation) => {
-      // Явно обновляем кэш, удаляя админа из всех запросов
-      // НЕ инвалидируем, чтобы избежать автоматического refetch, который может вернуть админа
+      // Убеждаемся, что админ удален из всех запросов (на случай, если что-то пропустили)
       const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
       allQueries.forEach(([key, data]) => {
         if (data && Array.isArray(data)) {
-          queryClient.setQueryData<AdminUser[]>(key, data.filter(admin => admin.id !== deletedId));
+          const filtered = data.filter(admin => {
+            // Проверяем и id, и _id на случай разных форматов данных
+            return admin.id !== deletedId && (admin as any)._id !== deletedId;
+          });
+          queryClient.setQueryData<AdminUser[]>(key, filtered);
         }
       });
       
@@ -408,7 +414,11 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
          const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
          allQueries.forEach(([key, data]) => {
            if (data && Array.isArray(data)) {
-             queryClient.setQueryData<AdminUser[]>(key, data.filter(admin => admin.id !== variables));
+             const filtered = data.filter(admin => {
+               // Проверяем и id, и _id на случай разных форматов данных
+               return admin.id !== variables && (admin as any)._id !== variables;
+             });
+             queryClient.setQueryData<AdminUser[]>(key, filtered);
            }
          });
       } else {
