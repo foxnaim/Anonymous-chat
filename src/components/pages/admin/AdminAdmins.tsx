@@ -10,14 +10,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FiPlus, FiShield, FiTrash2, FiEdit2, FiEye, FiEyeOff, FiAlertTriangle } from "react-icons/fi";
 import { AdminHeader } from "@/components/AdminHeader";
-import { useAdmins, useDeleteAdmin, useCreateAdmin, useUpdateAdmin } from "@/lib/query";
+import { useAdmins, useDeleteAdmin, useCreateAdmin, useUpdateAdmin, queryKeys } from "@/lib/query";
 import type { AdminUser } from "@/types";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/redux";
 import { validatePasswordStrength } from "@/lib/utils/validation";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AdminAdmins = () => {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -69,8 +71,7 @@ const AdminAdmins = () => {
 
   const { mutateAsync: createAdminMutation, isPending: isCreating } = useCreateAdmin({
     onSuccess: async () => {
-      // Обновляем список админов перед закрытием модального окна
-      await refetch();
+      // Закрываем модальное окно сразу, список обновится через React Query
       setIsDialogOpen(false);
       resetCreateAdminForm();
       toast.success(t("admin.adminCreated") || t("common.success") || "Администратор создан");
@@ -85,13 +86,13 @@ const AdminAdmins = () => {
 
       const wait = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-      // Вспомогательная проверка после refetch (несколько попыток при 409)
+      // Вспомогательная проверка (несколько попыток при 409)
       const checkAfterConflict = async () => {
         const attempts = [0, 200, 500, 900];
         for (const delay of attempts) {
           if (delay) await wait(delay);
-          const refetchedData = await refetch();
-          const updatedAdmins = refetchedData.data || [];
+          // Берем данные из кэша, а не делаем запрос
+          const updatedAdmins = queryClient.getQueryData<AdminUser[]>(queryKeys.admins) || [];
           const exists = updatedAdmins.some(admin => admin.email.toLowerCase() === normalizedEmail);
           if (exists) {
             // Помечаем ошибку как обработанную, чтобы внешний catch не показывал тост
@@ -105,9 +106,8 @@ const AdminAdmins = () => {
         return false;
       };
       
-      // Сначала обновляем список, чтобы проверить, не был ли админ создан (race condition)
-      const refetchedData = await refetch();
-      const updatedAdmins = refetchedData.data || [];
+      // Сначала проверяем список (race condition)
+      const updatedAdmins = queryClient.getQueryData<AdminUser[]>(queryKeys.admins) || [];
       
       // Проверяем, не появился ли админ в списке (возможно, он был создан, но пришла ошибка)
       const adminExists = updatedAdmins.some(admin => admin.email.toLowerCase() === normalizedEmail);
