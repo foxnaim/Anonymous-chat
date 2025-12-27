@@ -213,9 +213,10 @@ export const useAdmins = (page?: number, limit?: number, options?: Omit<UseQuery
       const result = await adminService.getAdmins(page, limit);
       return result.data;
     },
-    staleTime: 1000 * 60 * 2, // 2 минуты - админы не меняются часто
-    gcTime: 1000 * 60 * 10, // 10 минут в кэше
+    staleTime: 1000 * 60 * 5, // 5 минут - админы меняются очень редко
+    gcTime: 1000 * 60 * 15, // 15 минут в кэше
     refetchOnMount: false, // Используем кэш для быстрого старта
+    refetchOnWindowFocus: false, // Не обновляем при фокусе окна
     ...options,
   });
 };
@@ -286,9 +287,8 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
         queryClient.setQueryData<AdminUser[]>(queryKeys.admins, [data]);
       }
 
-      // Инвалидируем + refetch для гарантии
+      // Инвалидируем кэш - React Query обновит данные при следующем использовании
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
-      queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
 
       if (userOnSuccess) {
         (userOnSuccess as any)(data, variables, context, mutation);
@@ -304,9 +304,8 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
         });
       }
 
-      // При ошибке всё равно обновим список, чтобы не оставить мусор
+      // При ошибке инвалидируем кэш
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
-      queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
 
       if (userOnError) {
         (userOnError as any)(error, variables, context, mutation);
@@ -335,9 +334,8 @@ export const useUpdateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
           queryClient.setQueryData<AdminUser[]>(queryKey, oldData.map(admin => admin.id === updatedAdmin.id ? updatedAdmin : admin));
         }
       });
-      // Инвалидируем и сразу обновляем кэш для гарантии актуальности данных
+      // Инвалидируем кэш - React Query обновит данные при следующем использовании
       queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
-      queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
       if (userOnSuccess) {
         (userOnSuccess as any)(updatedAdmin, variables, context, mutation);
       }
@@ -387,8 +385,14 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
     },
 
     onSuccess: (_, deletedId, context, mutation) => {
-      // Инвалидируем и обновляем кэш для гарантии актуальности данных
-      queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
+      // Явно обновляем кэш, удаляя админа из всех запросов
+      // НЕ инвалидируем, чтобы избежать автоматического refetch, который может вернуть админа
+      const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
+      allQueries.forEach(([key, data]) => {
+        if (data && Array.isArray(data)) {
+          queryClient.setQueryData<AdminUser[]>(key, data.filter(admin => admin.id !== deletedId));
+        }
+      });
       
       if (userOnSuccess) {
         (userOnSuccess as any)(_, deletedId, context, mutation);
@@ -400,8 +404,13 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
 
       // Если ошибка 404, значит админ уже удален. НЕ откатываем кэш.
       if (errorStatus === 404) {
-         // Убедимся, что данные обновлены
-         queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
+         // Явно удаляем админа из кэша, если он там еще есть
+         const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
+         allQueries.forEach(([key, data]) => {
+           if (data && Array.isArray(data)) {
+             queryClient.setQueryData<AdminUser[]>(key, data.filter(admin => admin.id !== variables));
+           }
+         });
       } else {
          // Для других ошибок откатываем изменения
          if (context?.previousData) {
