@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { FiSearch, FiEye, FiCheckCircle, FiX, FiChevronDown, FiCheck, FiTrash2 } from "react-icons/fi";
 import { AdminHeader } from "@/components/AdminHeader";
-import { useMessages } from "@/lib/query";
+import { useMessages, useDeleteMessage } from "@/lib/query";
 import { messageService } from "@/lib/query/services";
 import { Message, MessageStatus } from "@/types";
 import { toast } from "sonner";
@@ -38,6 +38,27 @@ const AdminMessages = () => {
   
   // Подключаемся к WebSocket для real-time обновлений
   useSocketMessages();
+
+  // Хук для удаления сообщения с оптимистичными обновлениями
+  const deleteMessageMutation = useDeleteMessage({
+    onMutate: () => {
+      // Закрываем диалог сразу при оптимистичном обновлении
+      setIsDeleteDialogOpen(false);
+      setIsDialogOpen(false);
+    },
+    onSuccess: () => {
+      toast.success(t("admin.messageDeleted"));
+    },
+    onError: (error) => {
+      const errorStatus = (error as any)?.status || (error as any)?.response?.status;
+      if (errorStatus === 404) {
+        // Если 404, значит сообщение уже удалено - считаем успехом
+        toast.info(t("admin.messageNotFound") || "Сообщение уже было удалено");
+      } else {
+        toast.error(t("admin.deleteMessageError"));
+      }
+    },
+  });
   
   // Функция для нормализации статуса: переводит переведенное значение в значение из БД
   const normalizeStatus = (status: string): string => {
@@ -83,17 +104,13 @@ const AdminMessages = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = () => {
     if (!selectedMessage) return;
-    try {
-      await messageService.delete(selectedMessage.id);
-      toast.success(t("admin.messageDeleted"));
-      setIsDialogOpen(false);
-      setIsDeleteDialogOpen(false);
-      refetch();
-    } catch (error) {
-      toast.error(t("admin.deleteMessageError"));
-    }
+    // Используем хук с оптимистичными обновлениями
+    deleteMessageMutation.mutate({
+      id: selectedMessage.id,
+      companyCode: selectedMessage.companyCode,
+    });
   };
 
   const getStatusColor = (status: MessageStatus) => {

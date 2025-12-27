@@ -577,6 +577,125 @@ export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Err
 };
 
 /**
+ * Хук для удаления сообщения
+ */
+export const useDeleteMessage = (options?: UseMutationOptions<void, Error, { id: string; companyCode?: string }>) => {
+  const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess;
+  const userOnError = options?.onError;
+  const userOnMutate = options?.onMutate;
+  const { onSuccess: _, onError: __, onMutate: ___, ...rest } = options ?? {};
+
+  type DeleteMessageContext = {
+    previousData: Array<[QueryKey, Message[] | undefined]>;
+    companyCode?: string;
+  };
+
+  return useMutation<void, Error, { id: string; companyCode?: string }, DeleteMessageContext>({
+    mutationFn: ({ id }) => messageService.delete(id),
+
+    onMutate: async (variables) => {
+      // Отменяем исходящие запросы
+      await queryClient.cancelQueries({ queryKey: queryKeys.messages(variables.companyCode), exact: false });
+      await queryClient.cancelQueries({ queryKey: queryKeys.messages(undefined), exact: false });
+
+      // Сохраняем предыдущее состояние для всех запросов сообщений
+      const previousData = [
+        ...queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(variables.companyCode), exact: false }),
+        ...queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(undefined), exact: false }),
+      ];
+
+      // Оптимистично удаляем сообщение из всех запросов
+      const allQueries = [
+        ...queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(variables.companyCode), exact: false }),
+        ...queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(undefined), exact: false }),
+      ];
+
+      allQueries.forEach(([key, data]) => {
+        if (data && Array.isArray(data)) {
+          queryClient.setQueryData<Message[]>(key, data.filter(m => m.id !== variables.id));
+        }
+      });
+
+      // Удаляем отдельное сообщение из кэша
+      queryClient.removeQueries({ queryKey: queryKeys.message(variables.id) });
+
+      if (userOnMutate) {
+        (userOnMutate as any)(variables);
+      }
+
+      return { previousData, companyCode: variables.companyCode };
+    },
+
+    onSuccess: (_, variables, context, mutation) => {
+      // Убеждаемся, что сообщение удалено из всех запросов
+      const allQueries = [
+        ...queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(context?.companyCode), exact: false }),
+        ...queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(undefined), exact: false }),
+      ];
+
+      allQueries.forEach(([key, data]) => {
+        if (data && Array.isArray(data)) {
+          queryClient.setQueryData<Message[]>(key, data.filter(m => m.id !== variables.id));
+        }
+      });
+
+      // Удаляем отдельное сообщение из кэша
+      queryClient.removeQueries({ queryKey: queryKeys.message(variables.id) });
+
+      // Инвалидируем статистику
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+      queryClient.invalidateQueries({ queryKey: ['message-distribution'] });
+      queryClient.invalidateQueries({ queryKey: ['growth-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['achievements'] });
+
+      if (userOnSuccess) {
+        (userOnSuccess as any)(_, variables, context, mutation);
+      }
+    },
+
+    onError: (error, variables, context, mutation) => {
+      const errorStatus = (error as any)?.status || (error as any)?.response?.status;
+
+      // Если ошибка 404, значит сообщение уже удалено. НЕ откатываем кэш.
+      if (errorStatus === 404) {
+        // Убеждаемся, что сообщение удалено из кэша
+        const allQueries = [
+          ...queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(variables.companyCode), exact: false }),
+          ...queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(undefined), exact: false }),
+        ];
+
+        allQueries.forEach(([key, data]) => {
+          if (data && Array.isArray(data)) {
+            queryClient.setQueryData<Message[]>(key, data.filter(m => m.id !== variables.id));
+          }
+        });
+
+        // Удаляем отдельное сообщение из кэша
+        queryClient.removeQueries({ queryKey: queryKeys.message(variables.id) });
+      } else {
+        // Для других ошибок откатываем изменения
+        if (context?.previousData) {
+          context.previousData.forEach(([key, old]) => {
+            queryClient.setQueryData<Message[] | undefined>(key, old);
+          });
+        }
+
+        // Инвалидируем кэш для получения актуальных данных
+        queryClient.invalidateQueries({ queryKey: queryKeys.messages(variables.companyCode) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.messages(undefined) });
+      }
+
+      if (userOnError) {
+        (userOnError as any)(error, variables, context, mutation);
+      }
+    },
+
+    ...rest,
+  });
+};
+
+/**
  * Хук для создания компании
  */
 export const useCreateCompany = (options?: UseMutationOptions<Company, Error, Omit<Company, "id" | "registered" | "messages">>) => {
