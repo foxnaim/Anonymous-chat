@@ -447,7 +447,7 @@ const CompanyDashboard = () => {
                   
                   {/* Button */}
                   <div className="pt-4 mt-4 border-t border-border/50 flex justify-end">
-                    <Button
+                    <Button 
                       onClick={() => router.push("/company/messages")}
                       variant="outline"
                       size="icon"
@@ -570,7 +570,7 @@ const CompanyDashboard = () => {
                   
                   {/* Button */}
                   <div className="pt-4 mt-4 border-t border-border/50 flex justify-end">
-                    <Button
+                    <Button 
                       onClick={() => router.push("/company/growth")}
                       variant="outline"
                       size="icon"
