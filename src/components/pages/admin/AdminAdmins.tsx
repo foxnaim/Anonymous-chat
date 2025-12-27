@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FiPlus, FiShield, FiTrash2, FiEdit2, FiEye, FiEyeOff, FiAlertTriangle } from "react-icons/fi";
 import { AdminHeader } from "@/components/AdminHeader";
-import { useAdmins, useDeleteAdmin, useCreateAdmin, useUpdateAdmin, queryKeys } from "@/lib/query";
+import { useAdmins, useDeleteAdmin, useCreateAdmin, useUpdateAdmin } from "@/lib/query";
 import type { AdminUser } from "@/types";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/redux";
