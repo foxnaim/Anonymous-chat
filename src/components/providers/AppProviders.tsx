@@ -12,6 +12,8 @@ import "@/i18n/config";
 // Подавление ошибок Chrome-расширений
 import "@/lib/utils/suppressExtensionErrors";
 
+import { FullscreenProvider } from "./FullscreenProvider";
+
 // Компонент для принудительной установки светлой темы при первой загрузке
 const ThemeInitializer = ({ children }: { children: ReactNode }) => {
   const { theme, setTheme } = useTheme();
@@ -49,10 +51,12 @@ const AppProviders = ({ children }: AppProvidersProps) => (
     <ThemeInitializer>
       <ReduxProvider>
         <QueryProvider>
+          <FullscreenProvider>
             <TooltipProvider>
               {children}
               <Toaster />
             </TooltipProvider>
+          </FullscreenProvider>
         </QueryProvider>
       </ReduxProvider>
     </ThemeInitializer>

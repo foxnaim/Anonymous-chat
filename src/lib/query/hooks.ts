@@ -715,15 +715,24 @@ export const useCreateCompany = (options?: UseMutationOptions<Company, Error, Om
  */
 export const useUpdateCompany = (options?: UseMutationOptions<Company, Error, { id: string | number; updates: Partial<Company> }>) => {
   const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess;
+  const { onSuccess: _, ...rest } = options ?? {};
   
   return useMutation({
     mutationFn: ({ id, updates }) => companyService.update(id, updates),
-    onSuccess: (data) => {
+    onSuccess: (data, variables, context, mutation) => {
+      // Обновляем кэш компании с новыми данными
+      queryClient.setQueryData(queryKeys.company(data.id), data);
+      // Инвалидируем запросы для обновления всех компонентов
       queryClient.invalidateQueries({ queryKey: queryKeys.companies });
       queryClient.invalidateQueries({ queryKey: queryKeys.company(data.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.companyByCode(data.code) });
+      
+      if (userOnSuccess) {
+        (userOnSuccess as any)(data, variables, context, mutation);
+      }
     },
-    ...options,
+    ...rest,
   });
 };
 
@@ -808,13 +817,12 @@ export const useUpdateAdminSettings = (options?: UseMutationOptions<AdminSetting
     },
     onSuccess: (data) => {
       // Обновляем кэш с новыми данными и помечаем как свежие
-      queryClient.setQueryData(queryKeys.adminSettings, data, {
-        updatedAt: Date.now(), // Помечаем данные как только что обновленные
-      });
-      // Инвалидируем запрос, чтобы обновить статус
+      queryClient.setQueryData(queryKeys.adminSettings, data);
+      // Инвалидируем запрос, чтобы обновить статус и заставить все компоненты перечитать данные
       queryClient.invalidateQueries({ 
         queryKey: queryKeys.adminSettings,
-        exact: true,
+        exact: false, // Инвалидируем все запросы с этим ключом
+        refetchType: 'active', // Принудительно обновляем активные запросы
       });
     },
     ...options,

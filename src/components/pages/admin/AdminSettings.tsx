@@ -17,9 +17,12 @@ import { authService } from "@/lib/api/auth";
 import { useDispatch } from "react-redux";
 import { validatePasswordStrength } from "@/lib/utils/validation";
 
+import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
+
 const AdminSettings = () => {
   const { t, i18n: i18nInstance } = useTranslation();
   const { user } = useAuth();
+  const { isFullscreen, setFullscreen } = useFullscreenContext();
   const dispatch = useDispatch();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -49,8 +52,7 @@ const AdminSettings = () => {
   });
 
   // Используем настройки из API для полноэкранного режима
-  // Примечание: полноэкранный режим применяется глобально через AdminHeader
-  const isFullscreen = settings?.fullscreenMode ?? false;
+  // Примечание: полноэкранный режим применяется глобально через FullscreenProvider
 
   // Синхронизируем язык с API только при первой загрузке настроек или когда настройки обновляются
   useEffect(() => {
@@ -141,11 +143,18 @@ const AdminSettings = () => {
   };
 
   const handleFullscreenToggle = async (checked: boolean) => {
-    // Сохраняем в API сразу при изменении
+    // Сразу применяем изменения в UI для мгновенной обратной связи
+    setFullscreen(checked);
+    
+    // Сохраняем в API
     try {
       await updateSettings({ fullscreenMode: checked });
+      // Принудительно обновляем настройки, чтобы FullscreenProvider подхватил изменения
+      await refetchSettings();
+      toast.success(t("admin.settingsSaved") || "Настройки сохранены");
     } catch (error) {
-      // В случае ошибки показываем уведомление, но не меняем состояние
+      // В случае ошибки откатываем изменения в UI
+      setFullscreen(!checked);
       toast.error(t("common.error") || "Ошибка при сохранении настроек");
     }
   };

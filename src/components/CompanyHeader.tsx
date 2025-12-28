@@ -32,36 +32,10 @@ export const CompanyHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showBackButton, setShowBackButton] = useState(false);
   
-  // Загружаем настройки компании для применения полноэкранного режима
+  // Полноэкранный режим обрабатывается глобально через FullscreenProvider
   const { data: company } = useCompany(user?.companyId || 0, {
     enabled: !!user?.companyId,
   });
-  const isFullscreen = company?.fullscreenMode ?? false;
-  
-  // Применяем полноэкранный режим к DOM на всех страницах компании
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    
-    // Используем requestAnimationFrame для батчинга изменений DOM
-    const rafId = requestAnimationFrame(() => {
-      if (isFullscreen) {
-        document.documentElement.classList.add("fullscreen-mode");
-        document.body.classList.add("fullscreen-mode");
-      } else {
-        document.documentElement.classList.remove("fullscreen-mode");
-        document.body.classList.remove("fullscreen-mode");
-      }
-    });
-    
-    return () => {
-      cancelAnimationFrame(rafId);
-      // Cleanup при размонтировании
-      requestAnimationFrame(() => {
-        document.documentElement.classList.remove("fullscreen-mode");
-        document.body.classList.remove("fullscreen-mode");
-      });
-    };
-  }, [isFullscreen]);
 
   // Проверяем, был ли вход выполнен под админом
   useEffect(() => {

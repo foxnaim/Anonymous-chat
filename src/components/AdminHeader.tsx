@@ -31,35 +31,8 @@ export const AdminHeader = ({}: AdminHeaderProps = {}) => {
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
-  // Загружаем настройки для применения полноэкранного режима на всех страницах
-  const { data: settings } = useAdminSettings();
-  const isFullscreen = settings?.fullscreenMode ?? false;
+  // Полноэкранный режим обрабатывается глобально через FullscreenProvider
   
-  // Применяем полноэкранный режим к DOM на всех страницах админки
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    
-    // Используем requestAnimationFrame для батчинга изменений DOM
-    const rafId = requestAnimationFrame(() => {
-      if (isFullscreen) {
-        document.documentElement.classList.add("fullscreen-mode");
-        document.body.classList.add("fullscreen-mode");
-      } else {
-        document.documentElement.classList.remove("fullscreen-mode");
-        document.body.classList.remove("fullscreen-mode");
-      }
-    });
-    
-    return () => {
-      cancelAnimationFrame(rafId);
-      // Cleanup при размонтировании - используем requestAnimationFrame для избежания forced reflow
-      requestAnimationFrame(() => {
-        document.documentElement.classList.remove("fullscreen-mode");
-        document.body.classList.remove("fullscreen-mode");
-      });
-    };
-  }, [isFullscreen]);
-
   const navigation = [
     { 
       name: t("admin.companies"), 

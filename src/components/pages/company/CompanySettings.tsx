@@ -21,9 +21,12 @@ import type { UserRole } from "@/types";
 import { validatePasswordStrength } from "@/lib/utils/validation";
 import { compressImage, validateFileSize, validateImageType } from "@/lib/utils/imageCompression";
 
+import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
+
 const CompanySettings = () => {
   const { t, i18n: i18nInstance } = useTranslation();
   const { user } = useAuth();
+  const { isFullscreen, setFullscreen } = useFullscreenContext();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -42,7 +45,7 @@ const CompanySettings = () => {
   const { data: company, isLoading, refetch: refetchCompany } = useCompany(user?.companyId || 0, {
     enabled: !!user?.companyId,
   });
-  const { mutate: updateCompany } = useUpdateCompany({
+  const { mutateAsync: updateCompany } = useUpdateCompany({
     onSuccess: () => {
       toast.success(t("company.settingsSaved"));
       refetchCompany();
@@ -573,13 +576,25 @@ const CompanySettings = () => {
                   </p>
                 </div>
                 <Switch 
-                  checked={company?.fullscreenMode ?? false} 
-                  onCheckedChange={(checked) => {
+                  checked={isFullscreen} 
+                  onCheckedChange={async (checked) => {
                     if (user?.companyId) {
-                      updateCompany({
-                        id: user.companyId,
-                        updates: { fullscreenMode: checked },
-                      });
+                      // Сразу применяем изменения в UI для мгновенной обратной связи
+                      setFullscreen(checked);
+                      
+                      try {
+                        await updateCompany({
+                          id: user.companyId,
+                          updates: { fullscreenMode: checked },
+                        });
+                        // Принудительно обновляем компанию, чтобы FullscreenProvider подхватил изменения
+                        await refetchCompany();
+                        toast.success(t("company.settingsSaved") || "Настройки сохранены");
+                      } catch (error) {
+                        // В случае ошибки откатываем изменения в UI
+                        setFullscreen(!checked);
+                        toast.error(t("common.error") || "Ошибка при сохранении настроек");
+                      }
                     }
                   }} 
                 />
