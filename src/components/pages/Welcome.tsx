@@ -260,7 +260,7 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1 flex items-start md:items-center justify-center px-4 sm:px-6 pt-6 sm:pt-10 pb-10 sm:pb-16 overflow-y-auto overflow-x-hidden scrollbar-hide">
+      <main className="flex-1 flex items-start lg:items-center justify-center px-4 sm:px-6 pt-6 sm:pt-10 pb-10 sm:pb-16 overflow-y-auto overflow-x-hidden scrollbar-hide">
         <div className="max-w-7xl w-full space-y-10 sm:space-y-12 md:space-y-16 lg:space-y-20 min-w-0">
           <div className="text-center space-y-3 sm:space-y-4 min-w-0">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight px-2 break-words">
@@ -272,7 +272,7 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
           </div>
 
           {/* Main Content: Form and Steps */}
-          <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-20 sm:gap-24 md:gap-28 lg:gap-12 items-start min-w-0">
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-20 sm:gap-24 md:gap-28 lg:gap-12 items-start lg:items-center min-w-0">
             {/* Company Code Input - Left Side - Form should be first on mobile */}
             <motion.div
               initial={{ y: 120 }}
