@@ -261,7 +261,7 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
 
       {/* Hero Section */}
       <main className="flex-1 flex items-start md:items-center justify-center px-4 sm:px-6 pt-6 sm:pt-10 pb-10 sm:pb-16 overflow-y-auto overflow-x-hidden scrollbar-hide">
-        <div className="max-w-7xl w-full space-y-6 sm:space-y-8 md:space-y-10 min-w-0">
+        <div className="max-w-7xl w-full space-y-10 sm:space-y-12 md:space-y-16 lg:space-y-20 min-w-0">
           <div className="text-center space-y-3 sm:space-y-4 min-w-0">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight px-2 break-words">
               {t("welcome.title")}
