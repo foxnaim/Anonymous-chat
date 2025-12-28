@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,19 +29,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import type { Company } from "@/types";
-
-interface WelcomeProps {
-  initialCompanyCode?: string;
-  initialCompany?: Company | null;
-}
-
-const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
+const Welcome = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAuth();
-  const [companyCode, setCompanyCode] = useState(initialCompanyCode || "");
+  const [companyCode, setCompanyCode] = useState("");
   const [validatedCode, setValidatedCode] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -50,7 +43,7 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
   const [isCheckStatusModalOpen, setIsCheckStatusModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-  const [codeFromUrlLoaded, setCodeFromUrlLoaded] = useState(!!initialCompanyCode);
+  const [codeFromUrlLoaded, setCodeFromUrlLoaded] = useState(false);
 
   // Читаем код из URL при загрузке страницы (только один раз)
   useEffect(() => {
@@ -69,37 +62,10 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
   // Передаем код в хук только если он готов (8 символов), иначе пустую строку
   const codeForQuery = debouncedCode.length === 8 ? debouncedCode : "";
 
-  // Используем серверные данные как initialData для React Query
   const { data: company, isLoading: isValidating } = useCompanyByCode(codeForQuery, {
     enabled: codeForQuery.length === 8,
     retry: false,
-    // Используем серверные данные как начальные, если код совпадает
-    initialData: initialCompany && codeForQuery === initialCompanyCode?.toUpperCase() 
-      ? initialCompany 
-      : undefined,
-    // Не рефетчить сразу, если есть серверные данные
-    refetchOnMount: !initialCompany || codeForQuery !== initialCompanyCode?.toUpperCase(),
   });
-
-  // Используем серверные данные для начального рендера, если они есть
-  const displayCompany = useMemo(() => {
-    return company || (initialCompany && codeForQuery === initialCompanyCode?.toUpperCase() ? initialCompany : null);
-  }, [company, initialCompany, codeForQuery, initialCompanyCode]);
-
-  // Мемоизируем строку статуса "Заблокирована" для сравнения
-  const blockedStatusText = useMemo(() => t("admin.blocked"), [t]);
-
-  // Используем серверные данные для начальной валидации
-  // Оптимизировано: проверяем только при монтировании или изменении кода
-  useEffect(() => {
-    if (initialCompany && initialCompanyCode && initialCompanyCode.toUpperCase() === debouncedCode.toUpperCase()) {
-      if (initialCompany.status === blockedStatusText) {
-        setValidatedCode(null);
-        return;
-      }
-      setValidatedCode(debouncedCode);
-    }
-  }, [initialCompany, initialCompanyCode, debouncedCode, blockedStatusText]);
 
   // Автоматическая проверка кода только после ввода 8 символов
   useEffect(() => {
@@ -111,7 +77,7 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
 
     // Проверяем только когда код равен 8 символам
     if (debouncedCode.length === 8 && company) {
-      if (company?.status === blockedStatusText) {
+      if (company.status === t("admin.blocked")) {
         toast.error(t("admin.blockCompany"));
         setValidatedCode(null);
         return;
@@ -120,15 +86,15 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
     } else if (debouncedCode.length === 8 && !isValidating && !company) {
       setValidatedCode(null);
     }
-  }, [company, debouncedCode, isValidating, blockedStatusText, t]);
+  }, [company, debouncedCode, isValidating, t]);
 
-  const handleCodeChange = useCallback((value: string) => {
+  const handleCodeChange = (value: string) => {
     setCompanyCode(value.toUpperCase().trim());
     setValidatedCode(null);
     setPassword("");
-  }, []);
+  };
 
-  const handleSendMessage = useCallback(async () => {
+  const handleSendMessage = async () => {
     if (!validatedCode) {
       toast.error(t("welcome.enterCode"));
       return;
@@ -164,7 +130,7 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
       toast.error(t("welcome.passwordError"));
       setIsVerifyingPassword(false);
     }
-  }, [validatedCode, password, t]);
+  };
 
   const steps = [
     { number: "1", title: t("sendMessage.step1Title"), icon: FiKey },
@@ -184,7 +150,7 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
       />
       <WebsiteStructuredData />
       <OrganizationStructuredData />
-      <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
+      <div className="h-screen bg-background flex flex-col overflow-hidden">
         {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
@@ -200,7 +166,7 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
               />
             </Link>
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="min-w-[140px]">
+              <div className="hidden sm:block min-w-[140px]">
                 <LanguageSwitcher />
               </div>
               {(() => {
@@ -241,7 +207,7 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
                         <FiChevronDown className="ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 sm:w-48">
+                    <DropdownMenuContent align="end" className="w-48">
                       <DropdownMenuItem onClick={() => setIsLoginModalOpen(true)}>
                         <FiLogIn className="mr-2 h-4 w-4" />
                         <span>{t("welcome.login")}</span>
@@ -260,46 +226,40 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 pt-6 sm:pt-10 pb-10 sm:pb-16 overflow-y-auto overflow-x-hidden scrollbar-hide">
-        <div className="max-w-7xl w-full space-y-10 sm:space-y-12 md:space-y-16 lg:space-y-20 min-w-0">
-          <div className="text-center space-y-3 sm:space-y-4 min-w-0">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight px-2 break-words">
+      <main className="flex-1 flex items-center justify-center px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 overflow-y-auto overflow-x-hidden scrollbar-hide">
+        <div className="max-w-7xl w-full space-y-3 sm:space-y-4 md:space-y-6 min-w-0">
+          <div className="text-center space-y-1.5 sm:space-y-2 md:space-y-3 min-w-0">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-foreground leading-tight px-2 break-words">
               {t("welcome.title")}
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-2 break-words">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto px-2 break-words">
               {t("welcome.subtitle")}
             </p>
           </div>
 
           {/* Main Content: Form and Steps */}
-          <div className="flex flex-col lg:flex-row gap-20 sm:gap-24 md:gap-28 lg:gap-12 items-center justify-center min-w-0">
-            {/* Company Code Input - Centered */}
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 sm:gap-5 md:gap-6 lg:gap-8 items-start min-w-0">
+            {/* Company Code Input - Left Side - Form should be first on mobile */}
             <motion.div
               initial={{ y: 120 }}
               animate={{ y: validatedCode ? 0 : 120 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className="w-full max-w-2xl order-1 lg:order-1 min-w-0"
+              className="order-1 lg:order-1 min-w-0"
             >
-            <Card className="w-full p-4 sm:p-6 md:p-8 min-w-0 overflow-hidden shadow-lg border-muted/40">
-            <form
-              className="space-y-6 min-w-0"
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSendMessage();
-              }}
-            >
-              <div className="text-center space-y-2 min-w-0">
-                <h2 className="text-2xl sm:text-3xl font-bold text-foreground break-words">{t("welcome.enterCode")}</h2>
+            <Card className="w-full p-3 sm:p-4 md:p-5 lg:p-6 min-w-0 overflow-hidden">
+            <div className="space-y-3 sm:space-y-4 min-w-0">
+              <div className="text-center space-y-1 min-w-0">
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground break-words">{t("welcome.enterCode")}</h2>
               </div>
 
-              <div className="space-y-4 min-w-0">
+              <div className="space-y-3 sm:space-y-4 min-w-0">
                 <div className="space-y-2 min-w-0">
                   <Input
                     id="company-code"
                     placeholder={t("welcome.companyCode")}
                     value={companyCode}
                     onChange={(e) => handleCodeChange(e.target.value)}
-                    className="text-lg sm:text-xl md:text-2xl font-mono tracking-wider text-center uppercase h-12 sm:h-14 w-full max-w-full"
+                    className="text-sm sm:text-base md:text-lg font-mono tracking-wider text-center uppercase h-10 sm:h-11 md:h-12 w-full max-w-full"
                     maxLength={8}
                     autoComplete="off"
                   />
@@ -317,7 +277,7 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
                   )}
                 </div>
 
-                {displayCompany && validatedCode && (
+                {company && validatedCode && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -325,25 +285,11 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
                   >
                     <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 sm:p-4 min-w-0 overflow-hidden">
                       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                          {displayCompany?.logoUrl ? (
-                            <Image
-                              src={displayCompany.logoUrl}
-                              alt={displayCompany.name || "Company logo"}
-                              width={40}
-                              height={40}
-                              loading="lazy"
-                              placeholder="blur"
-                              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZGRkIi8+PC9zdmc+"
-                              className="w-full h-full object-cover"
-                              unoptimized
-                            />
-                          ) : (
-                            <FiHome className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                          )}
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                          <FiHome className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-foreground text-sm sm:text-base truncate">{displayCompany?.name || ""}</p>
+                          <p className="font-semibold text-foreground text-sm sm:text-base truncate">{company.name}</p>
                           <p className="text-xs sm:text-sm text-muted-foreground">{t("welcome.codeValid")}</p>
                         </div>
                         <Button
@@ -404,7 +350,7 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
                   </motion.div>
                 )}
 
-                {companyCode && !displayCompany && !isValidating && debouncedCode.length === 8 && (
+                {companyCode && !company && !isValidating && debouncedCode.length === 8 && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -417,9 +363,9 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
 
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 min-w-0">
                 <Button
-                  type="submit"
                   size="lg"
                   className="text-sm sm:text-base px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 md:py-4 h-auto flex-1 min-h-[44px] sm:min-h-[48px] min-w-0"
+                  onClick={handleSendMessage}
                   disabled={!validatedCode || !password || isVerifyingPassword}
                 >
                   <FiSend className="mr-2 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
@@ -428,54 +374,54 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
                   </span>
                 </Button>
                 <Button
-                  type="button"
                   size="lg"
                   variant="outline"
                   className="text-sm sm:text-base px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 md:py-4 h-auto min-h-[44px] sm:min-h-[48px] flex-shrink-0 whitespace-nowrap"
                   onClick={() => setIsCheckStatusModalOpen(true)}
                 >
                   <FiCheckCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                  <span className="text-sm sm:text-base">{t("welcome.checkStatus")}</span>
+                  <span className="text-sm sm:text-base hidden sm:inline">{t("welcome.checkStatus")}</span>
+                  <span className="text-sm sm:text-base sm:hidden">Status</span>
                 </Button>
               </div>
-            </form>
+            </div>
           </Card>
             </motion.div>
 
             {/* Three-Step Guide Section - Right Side */}
-            <div className="w-full max-w-md p-5 sm:p-6 md:p-8 order-2 lg:order-2 lg:sticky lg:top-8 flex flex-col h-full min-w-0 overflow-hidden pt-12 sm:pt-16 md:pt-20 lg:pt-0 lg:mt-0 bg-card rounded-xl border-2 border-border shadow-lg">
-              <div className="space-y-4 flex-1 min-w-0">
+            <div className="w-full p-3 sm:p-4 md:p-5 order-2 lg:order-2 lg:sticky lg:top-8 flex flex-col h-full min-w-0 overflow-hidden">
+              <div className="space-y-2 sm:space-y-3 flex-1 min-w-0">
                 <div className="text-center lg:text-left min-w-0">
-                  <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 break-words">
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-foreground mb-1 break-words">
                     {t("welcome.howItWorks")}
                   </h3>
-                  <p className="text-sm text-muted-foreground break-words">
+                  <p className="text-xs sm:text-sm text-muted-foreground break-words">
                     {t("welcome.howItWorksDescription")}
                   </p>
                 </div>
                 
-                <div className="space-y-4 min-w-0">
+                <div className="space-y-2.5 sm:space-y-3 lg:space-y-4 min-w-0">
                   {steps.map((step, index) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className="flex items-center gap-4 group min-w-0"
+                      className="flex items-start gap-3 sm:gap-4 group min-w-0"
                     >
                       {/* Icon Circle */}
                       <div className="relative flex-shrink-0">
-                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center shadow-md group-hover:scale-105 transition-all duration-300" style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}>
-                          <step.icon className="h-6 w-6 sm:h-7 sm:w-7 text-primary-foreground" style={{ color: 'hsl(var(--primary-foreground))' }} />
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300" style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}>
+                          <step.icon className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 text-primary-foreground" style={{ color: 'hsl(var(--primary-foreground))' }} />
                         </div>
                         {/* Number Badge */}
-                        <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center border-2 border-background shadow-sm" style={{ backgroundColor: 'hsl(var(--primary))' }}>
-                          <span className="text-xs font-bold text-primary-foreground" style={{ color: 'hsl(var(--primary-foreground))' }}>{step.number}</span>
+                        <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded-full bg-primary flex items-center justify-center border-2 border-background shadow-md" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                          <span className="text-xs sm:text-sm font-bold text-primary-foreground" style={{ color: 'hsl(var(--primary-foreground))' }}>{step.number}</span>
                         </div>
                       </div>
                       {/* Text */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm sm:text-base font-medium text-foreground leading-tight break-words">
+                      <div className="flex-1 pt-1 min-w-0">
+                        <p className="text-xs sm:text-sm md:text-base font-semibold text-foreground leading-tight break-words">
                           {step.title}
                         </p>
                       </div>
@@ -489,9 +435,9 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-card shrink-0 overflow-x-hidden py-4 sm:py-6">
-        <div className="container mx-auto px-4 sm:px-6 max-w-full">
-          <p className="text-xs sm:text-sm text-muted-foreground text-center break-words leading-relaxed">
+      <footer className="border-t border-border bg-card shrink-0 overflow-x-hidden">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 py-2 sm:py-3 max-w-full">
+          <p className="text-xs sm:text-sm text-muted-foreground text-center break-words">
             © 2025 FeedbackHub. {t("welcome.anonymityGuaranteed")}
           </p>
         </div>
@@ -503,8 +449,8 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
         open={isSendMessageModalOpen}
         onOpenChange={setIsSendMessageModalOpen}
         companyCode={validatedCode || ""}
-        companyName={displayCompany?.name || ""}
-        companyPlan={displayCompany?.plan}
+        companyName={company?.name || ""}
+        companyPlan={company?.plan}
         onSuccess={() => {
           // После успешной отправки можно сбросить форму
           setCompanyCode("");
@@ -534,5 +480,4 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
   );
 };
 
-// Мемоизация компонента для предотвращения ненужных ре-рендеров
-export default React.memo(Welcome);
+export default Welcome;
