@@ -80,11 +80,35 @@ const AdminSettings = () => {
       toast.error(firstError || t("auth.passwordWeak"));
       return;
     }
-    // В реальном приложении здесь будет API вызов
-    toast.success(t("admin.passwordChanged"));
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
+    
+    try {
+      await authService.changePassword({
+        currentPassword,
+        newPassword,
+      });
+      toast.success(t("admin.passwordChanged"));
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      // Обработка различных типов ошибок
+      let errorMessage = t("admin.passwordChangeError");
+      
+      if (error?.message) {
+        const message = error.message.toLowerCase();
+        if (message.includes("incorrect") || message.includes("invalid")) {
+          errorMessage = t("auth.passwordInvalid") || "Неверный текущий пароль";
+        } else if (message.includes("same") || message.includes("different")) {
+          errorMessage = t("auth.passwordMustBeDifferent") || "Новый пароль должен отличаться от текущего";
+        } else if (message.includes("required")) {
+          errorMessage = t("common.fillAllFields");
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast.error(errorMessage);
+    }
   };
 
   const handleLanguageChange = async (lang: string) => {
