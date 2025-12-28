@@ -443,7 +443,7 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
             </motion.div>
 
             {/* Three-Step Guide Section - Right Side */}
-            <div className="w-full p-4 sm:p-6 order-2 lg:order-2 lg:sticky lg:top-8 flex flex-col h-full min-w-0 overflow-hidden mt-8 lg:mt-0 bg-card/50 rounded-xl border border-border/50">
+            <div className="w-full p-4 sm:p-6 order-2 lg:order-2 lg:sticky lg:top-8 flex flex-col h-full min-w-0 overflow-hidden mt-12 sm:mt-16 lg:mt-0 bg-card/50 rounded-xl border border-border/50">
               <div className="space-y-4 flex-1 min-w-0">
                 <div className="text-center lg:text-left min-w-0">
                   <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 break-words">
