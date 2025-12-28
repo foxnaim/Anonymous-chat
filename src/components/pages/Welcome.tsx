@@ -260,19 +260,19 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1 flex items-start md:items-center justify-center px-3 sm:px-4 md:px-6 pt-2 sm:pt-4 pb-2 sm:pb-4 overflow-y-auto overflow-x-hidden scrollbar-hide">
-        <div className="max-w-7xl w-full space-y-3 sm:space-y-4 md:space-y-6 min-w-0">
-          <div className="text-center space-y-1.5 sm:space-y-2 md:space-y-3 min-w-0">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-foreground leading-tight px-2 break-words">
+      <main className="flex-1 flex items-start md:items-center justify-center px-4 sm:px-6 pt-6 sm:pt-10 pb-10 sm:pb-16 overflow-y-auto overflow-x-hidden scrollbar-hide">
+        <div className="max-w-7xl w-full space-y-6 sm:space-y-8 md:space-y-10 min-w-0">
+          <div className="text-center space-y-3 sm:space-y-4 min-w-0">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight px-2 break-words">
               {t("welcome.title")}
             </h1>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto px-2 break-words">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-2 break-words">
               {t("welcome.subtitle")}
             </p>
           </div>
 
           {/* Main Content: Form and Steps */}
-          <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 sm:gap-5 md:gap-6 lg:gap-8 items-start min-w-0">
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 sm:gap-10 lg:gap-12 items-start min-w-0">
             {/* Company Code Input - Left Side - Form should be first on mobile */}
             <motion.div
               initial={{ y: 120 }}
@@ -280,26 +280,26 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
               transition={{ duration: 0.4, ease: "easeOut" }}
               className="order-1 lg:order-1 min-w-0"
             >
-            <Card className="w-full p-3 sm:p-4 md:p-5 lg:p-6 min-w-0 overflow-hidden">
+            <Card className="w-full p-4 sm:p-6 md:p-8 min-w-0 overflow-hidden shadow-lg border-muted/40">
             <form
-              className="space-y-3 sm:space-y-4 min-w-0"
+              className="space-y-6 min-w-0"
               onSubmit={(e) => {
                 e.preventDefault();
                 handleSendMessage();
               }}
             >
-              <div className="text-center space-y-1 min-w-0">
-                <h2 className="text-xl sm:text-2xl font-bold text-foreground break-words">{t("welcome.enterCode")}</h2>
+              <div className="text-center space-y-2 min-w-0">
+                <h2 className="text-2xl sm:text-3xl font-bold text-foreground break-words">{t("welcome.enterCode")}</h2>
               </div>
 
-              <div className="space-y-3 sm:space-y-4 min-w-0">
+              <div className="space-y-4 min-w-0">
                 <div className="space-y-2 min-w-0">
                   <Input
                     id="company-code"
                     placeholder={t("welcome.companyCode")}
                     value={companyCode}
                     onChange={(e) => handleCodeChange(e.target.value)}
-                    className="text-sm sm:text-base md:text-lg font-mono tracking-wider text-center uppercase h-10 sm:h-11 md:h-12 w-full max-w-full"
+                    className="text-lg sm:text-xl md:text-2xl font-mono tracking-wider text-center uppercase h-12 sm:h-14 w-full max-w-full"
                     maxLength={8}
                     autoComplete="off"
                   />
@@ -443,39 +443,39 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
             </motion.div>
 
             {/* Three-Step Guide Section - Right Side */}
-            <div className="w-full p-3 sm:p-4 md:p-5 order-2 lg:order-2 lg:sticky lg:top-8 flex flex-col h-full min-w-0 overflow-hidden mt-4 lg:mt-0">
-              <div className="space-y-2 sm:space-y-3 flex-1 min-w-0">
+            <div className="w-full p-4 sm:p-6 order-2 lg:order-2 lg:sticky lg:top-8 flex flex-col h-full min-w-0 overflow-hidden mt-8 lg:mt-0 bg-card/50 rounded-xl border border-border/50">
+              <div className="space-y-4 flex-1 min-w-0">
                 <div className="text-center lg:text-left min-w-0">
-                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-foreground mb-1 break-words">
+                  <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 break-words">
                     {t("welcome.howItWorks")}
                   </h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground break-words">
+                  <p className="text-sm text-muted-foreground break-words">
                     {t("welcome.howItWorksDescription")}
                   </p>
                 </div>
                 
-                <div className="space-y-2.5 sm:space-y-3 lg:space-y-4 min-w-0">
+                <div className="space-y-4 min-w-0">
                   {steps.map((step, index) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className="flex items-start gap-3 sm:gap-4 group min-w-0"
+                      className="flex items-center gap-4 group min-w-0"
                     >
                       {/* Icon Circle */}
                       <div className="relative flex-shrink-0">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300" style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}>
-                          <step.icon className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 text-primary-foreground" style={{ color: 'hsl(var(--primary-foreground))' }} />
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center shadow-md group-hover:scale-105 transition-all duration-300" style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}>
+                          <step.icon className="h-6 w-6 sm:h-7 sm:w-7 text-primary-foreground" style={{ color: 'hsl(var(--primary-foreground))' }} />
                         </div>
                         {/* Number Badge */}
-                        <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded-full bg-primary flex items-center justify-center border-2 border-background shadow-md" style={{ backgroundColor: 'hsl(var(--primary))' }}>
-                          <span className="text-xs sm:text-sm font-bold text-primary-foreground" style={{ color: 'hsl(var(--primary-foreground))' }}>{step.number}</span>
+                        <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center border-2 border-background shadow-sm" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                          <span className="text-xs font-bold text-primary-foreground" style={{ color: 'hsl(var(--primary-foreground))' }}>{step.number}</span>
                         </div>
                       </div>
                       {/* Text */}
-                      <div className="flex-1 pt-1 min-w-0">
-                        <p className="text-xs sm:text-sm md:text-base font-semibold text-foreground leading-tight break-words">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm sm:text-base font-medium text-foreground leading-tight break-words">
                           {step.title}
                         </p>
                       </div>
@@ -489,9 +489,9 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-card shrink-0 overflow-x-hidden">
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 py-2 sm:py-3 max-w-full">
-          <p className="text-xs sm:text-sm text-muted-foreground text-center break-words">
+      <footer className="border-t border-border bg-card shrink-0 overflow-x-hidden py-4 sm:py-6">
+        <div className="container mx-auto px-4 sm:px-6 max-w-full">
+          <p className="text-xs sm:text-sm text-muted-foreground text-center break-words leading-relaxed">
             © 2025 FeedbackHub. {t("welcome.anonymityGuaranteed")}
           </p>
         </div>
