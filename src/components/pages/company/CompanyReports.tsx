@@ -127,9 +127,11 @@ const CompanyReports = () => {
 
     const doc = new jsPDF();
 
-    // Добавляем поддержку кириллицы (обычно требует загрузки шрифта, но используем стандартный пока)
-    // В реальном проекте лучше добавить кастомный шрифт
-    
+    // Добавляем шрифт Roboto с поддержкой кириллицы
+    // Используем CDN ссылку с безопасным шрифтом
+    doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.setFont('Roboto');
+
     // Заголовок
     doc.setFontSize(20);
     doc.text(t("company.reports") || "Отчёт", 105, 20, { align: "center" });
@@ -145,7 +147,7 @@ const CompanyReports = () => {
         [t("company.codeForEmployees") || "Код компании", company.code],
       ],
       theme: 'plain',
-      styles: { fontSize: 12, cellPadding: 2 },
+      styles: { fontSize: 12, cellPadding: 2, font: 'Roboto' },
       columnStyles: { 0: { fontStyle: 'bold', cellWidth: 60 } },
     });
 
@@ -162,9 +164,9 @@ const CompanyReports = () => {
         [t("admin.totalMessages") || "Всего", String(totalMessages), ""],
       ],
       theme: 'grid',
-      headStyles: { fillColor: [47, 45, 162], textColor: 255, fontStyle: 'bold' },
-      bodyStyles: { fontSize: 11 },
-      footStyles: { fontStyle: 'bold', fillColor: [240, 240, 240] },
+      headStyles: { fillColor: [47, 45, 162], textColor: 255, fontStyle: 'bold', font: 'Roboto' },
+      bodyStyles: { fontSize: 11, font: 'Roboto' },
+      footStyles: { fontStyle: 'bold', fillColor: [240, 240, 240], font: 'Roboto' },
       didParseCell: (data: any) => {
         if (data.row.index === data.table.body.length - 1) {
           data.cell.styles.fontStyle = 'bold';
@@ -185,8 +187,8 @@ const CompanyReports = () => {
         [t("company.resolutionRate") || "Процент решения", `${resolvedPercent}%`],
       ],
       theme: 'grid',
-      headStyles: { fillColor: [47, 45, 162], textColor: 255, fontStyle: 'bold' },
-      bodyStyles: { fontSize: 11 },
+      headStyles: { fillColor: [47, 45, 162], textColor: 255, fontStyle: 'bold', font: 'Roboto' },
+      bodyStyles: { fontSize: 11, font: 'Roboto' },
       columnStyles: { 0: { cellWidth: 120 }, 1: { halign: 'right' } },
     });
 
@@ -202,8 +204,8 @@ const CompanyReports = () => {
         [t("company.trend") || "Тренд", getTrendLabel(growthMetrics.trend)],
       ],
       theme: 'grid',
-      headStyles: { fillColor: [47, 45, 162], textColor: 255, fontStyle: 'bold' },
-      bodyStyles: { fontSize: 11 },
+      headStyles: { fillColor: [47, 45, 162], textColor: 255, fontStyle: 'bold', font: 'Roboto' },
+      bodyStyles: { fontSize: 11, font: 'Roboto' },
       columnStyles: { 0: { cellWidth: 120 }, 1: { halign: 'right' } },
     });
 
