@@ -251,10 +251,10 @@ function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
           <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-3 sm:gap-4 md:gap-6 lg:gap-8 items-start min-w-0">
             {/* Company Code Input - Left Side - Form should be first on mobile */}
             <motion.div
-              initial={{ y: 120 }}
-              animate={{ y: validatedCode ? 0 : 120 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className="order-1 min-w-0"
+              className="order-1 min-w-0 relative z-10"
             >
             <Card className="w-full p-3 sm:p-4 md:p-5 lg:p-6 min-w-0 overflow-hidden">
             <div className="space-y-2.5 sm:space-y-3 md:space-y-4 min-w-0">
@@ -398,7 +398,7 @@ function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
             </motion.div>
 
             {/* How It Works Section - Below form on mobile, right side on desktop */}
-            <div className="w-full p-3 sm:p-4 md:p-5 lg:p-5 order-2 lg:sticky lg:top-8 flex flex-col min-w-0 overflow-hidden mt-2 sm:mt-0">
+            <div className="w-full p-3 sm:p-4 md:p-5 lg:p-5 order-2 lg:sticky lg:top-8 flex flex-col min-w-0 overflow-hidden mt-2 sm:mt-0 relative z-0">
               <div className="space-y-3 sm:space-y-3.5 md:space-y-4 flex-1 min-w-0">
                 <div className="text-center lg:text-left min-w-0">
                   <h3 className="text-base sm:text-lg md:text-xl lg:text-xl font-bold text-foreground mb-1 sm:mb-1.5 break-words">
