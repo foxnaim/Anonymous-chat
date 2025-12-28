@@ -150,10 +150,18 @@ const CompanyReports = () => {
     ];
 
     const worksheet = XLSX.utils.aoa_to_sheet(rows);
+
+    // Устанавливаем ширину колонок для лучшего отображения
+    worksheet['!cols'] = [
+      { wch: 35 }, // Первая колонка (метки)
+      { wch: 25 }, // Вторая колонка (значения)
+      { wch: 15 }, // Третья колонка (проценты)
+    ];
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
 
-    const fileName = `report_${company.code}_${year}-${month}.xlsx`;
+    const fileName = `Report_${company.name.replace(/[^a-zA-Z0-9а-яА-Я]/g, '_')}_${year}-${month}.xlsx`;
     XLSX.writeFileXLSX(workbook, fileName, { compression: true });
   };
   
