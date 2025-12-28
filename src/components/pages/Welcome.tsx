@@ -178,7 +178,7 @@ function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
               />
             </Link>
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
-              <div className="hidden sm:block min-w-[120px] sm:min-w-[140px]">
+              <div className="min-w-[100px] sm:min-w-[120px] md:min-w-[140px]">
                 <LanguageSwitcher />
               </div>
               {(() => {
