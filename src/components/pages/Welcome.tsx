@@ -28,8 +28,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { Company } from "@/types";
 
-const Welcome = () => {
+interface WelcomeProps {
+  initialCompanyCode?: string;
+  initialCompany?: Company | null;
+}
+
+const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps) => {
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -45,27 +51,33 @@ const Welcome = () => {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [codeFromUrlLoaded, setCodeFromUrlLoaded] = useState(false);
 
-  // Читаем код из URL при загрузке страницы (только один раз)
+  // Инициализируем код компании из props или URL
   useEffect(() => {
     if (!codeFromUrlLoaded) {
-      const codeFromUrl = searchParams.get("code");
-      if (codeFromUrl && codeFromUrl.length === 8) {
-        const normalizedCode = codeFromUrl.toUpperCase().trim();
+      // Приоритет: initialCompanyCode из props, затем из URL
+      const codeToUse = initialCompanyCode || searchParams.get("code");
+      if (codeToUse && codeToUse.length === 8) {
+        const normalizedCode = codeToUse.toUpperCase().trim();
         setCompanyCode(normalizedCode);
         setCodeFromUrlLoaded(true);
       }
     }
-  }, [searchParams, codeFromUrlLoaded]);
+  }, [searchParams, codeFromUrlLoaded, initialCompanyCode]);
 
   const debouncedCode = useDebounce(companyCode, 500);
 
   // Передаем код в хук только если он готов (8 символов), иначе пустую строку
   const codeForQuery = debouncedCode.length === 8 ? debouncedCode : "";
 
-  const { data: company, isLoading: isValidating } = useCompanyByCode(codeForQuery, {
-    enabled: codeForQuery.length === 8,
+  const { data: companyFromQuery, isLoading: isValidating } = useCompanyByCode(codeForQuery, {
+    enabled: codeForQuery.length === 8 && !initialCompany, // Не запрашиваем, если уже есть initialCompany
     retry: false,
   });
+
+  // Используем initialCompany если он предоставлен и код совпадает, иначе используем данные из запроса
+  const company = initialCompany && initialCompanyCode && debouncedCode === initialCompanyCode.toUpperCase() 
+    ? initialCompany 
+    : companyFromQuery;
 
   // Автоматическая проверка кода только после ввода 8 символов
   useEffect(() => {
