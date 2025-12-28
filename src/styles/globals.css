@@ -173,28 +173,6 @@ All colors MUST be HSL.
     position: relative;
   }
 
-  /* Скрываем хедер в полноэкранном режиме */
-  body.fullscreen-mode header,
-  html.fullscreen-mode header {
-    display: none !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    overflow: hidden !important;
-  }
-
-  /* Убираем отступы сверху, так как хедер скрыт */
-  body.fullscreen-mode main,
-  html.fullscreen-mode main {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-  }
-
-  /* Убираем sticky позиционирование для элементов, которые могут быть видны */
-  body.fullscreen-mode .sticky,
-  html.fullscreen-mode .sticky {
-    position: relative !important;
-  }
-
   /* Гарантируем, что все элементы кликабельны в полноэкранном режиме */
   body.fullscreen-mode * {
     pointer-events: auto !important;
