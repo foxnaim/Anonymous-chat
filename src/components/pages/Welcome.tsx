@@ -30,12 +30,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Company } from "@/types";
 
-interface WelcomeProps {
+export interface WelcomeProps {
   initialCompanyCode?: string;
   initialCompany?: Company | null;
 }
 
-const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps) => {
+function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
