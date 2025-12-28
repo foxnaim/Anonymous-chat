@@ -127,10 +127,37 @@ const CompanyReports = () => {
 
     const doc = new jsPDF();
 
-    // Добавляем шрифт Roboto с поддержкой кириллицы
-    // Используем CDN ссылку с безопасным шрифтом
-    doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
-    doc.setFont('Roboto');
+    // Загружаем шрифт Roboto Regular (Base64) для поддержки кириллицы
+    try {
+      const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf';
+      const response = await fetch(fontUrl);
+      const blob = await response.blob();
+      
+      // Преобразуем Blob в Base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => {
+          if (typeof reader.result === 'string') {
+            const base64 = reader.result.split(',')[1];
+            resolve(base64);
+          } else {
+            reject(new Error('Failed to read font'));
+          }
+        };
+        reader.onerror = reject;
+      });
+      
+      reader.readAsDataURL(blob);
+      const fontBase64 = await base64Promise;
+
+      // Добавляем шрифт в VFS и регистрируем его
+      doc.addFileToVFS('Roboto-Regular.ttf', fontBase64);
+      doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+      doc.setFont('Roboto');
+    } catch (error) {
+      console.error('Error loading font:', error);
+      // Если шрифт не загрузился, используем стандартный (кириллица может не работать)
+    }
 
     // Заголовок
     doc.setFontSize(20);
