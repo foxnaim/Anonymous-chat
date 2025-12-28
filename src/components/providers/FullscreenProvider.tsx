@@ -70,12 +70,24 @@ export const FullscreenProvider = ({ children }: { children: React.ReactNode }) 
     if (isFullscreen) {
       document.documentElement.classList.add('fullscreen-mode');
       document.body.classList.add('fullscreen-mode');
+      
+      // Пытаемся включить нативный полноэкранный режим (скрыть элементы браузера)
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {
+          // Игнорируем ошибку при загрузке страницы без жеста пользователя
+        });
+      }
     } else {
       document.documentElement.classList.remove('fullscreen-mode');
       document.body.classList.remove('fullscreen-mode');
+      
+      // Выходим из нативного полноэкранного режима
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
     }
 
-    // Дополнительно применяем через RAF для гарантии
+    // Дополнительно применяем через RAF для гарантии применения стилей
     const rafId = requestAnimationFrame(() => {
       if (isFullscreen) {
         document.documentElement.classList.add('fullscreen-mode');
