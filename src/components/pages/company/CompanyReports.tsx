@@ -15,7 +15,9 @@ import {
 import { FiDownload, FiMessageSquare, FiAlertCircle, FiAward, FiZap, FiBarChart2, FiCheckCircle, FiX, FiTrendingUp } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
-// Excel экспорт
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
 const CompanyReports = () => {
   const { t, i18n: i18nInstance } = useTranslation();
   const { user } = useAuth();
@@ -99,9 +101,9 @@ const CompanyReports = () => {
     if (trend === "down") return t("company.declining");
     return t("company.stable");
   };
-  const generateExcelReport = async () => {
+
+  const generatePdfReport = async () => {
     if (!distribution || !stats || !growthMetrics || !company) return;
-    const XLSX = await import("xlsx");
 
     const totalMessages = total;
     const resolvedPercent = totalMessages > 0 ? Math.round((resolved / totalMessages) * 100) : 0;
@@ -123,46 +125,98 @@ const CompanyReports = () => {
       minute: "2-digit",
     });
 
-    const rows: string[][] = [
-      [t("company.reports") || "Отчёт"],
-      [],
-      [t("company.period") || "Период", getSelectedMonthPeriod()],
-      [t("company.companyName", "Компания"), company.name],
-      [t("company.codeForEmployees") || "Код компании", company.code],
-      [],
-      [t("company.messageDistribution") || "Распределение сообщений"],
-      [t("sendMessage.complaint") || "Жалоба", String(distribution.complaints), `${complaintsPercent}%`],
-      [t("sendMessage.praise") || "Похвала", String(distribution.praises), `${praisesPercent}%`],
-      [t("sendMessage.suggestion") || "Предложение", String(distribution.suggestions), `${suggestionsPercent}%`],
-      [t("admin.totalMessages") || "Всего", String(totalMessages)],
-      [],
-      [t("company.resolvedCases") || "Решённые кейсы"],
-      [t("company.resolved") || "Решено", String(resolved)],
-      [t("company.unresolved") || "Нерешено", String(unresolved)],
-      [t("company.resolutionRate") || "Процент решения", `${resolvedPercent}%`],
-      [],
-      [t("company.teamMood") || "Настроение команды"],
-      [t("company.growthRating") || "Рейтинг роста", String(growthMetrics.rating)],
-      [t("company.overallMood") || "Общий настрой", getMoodLabel(growthMetrics.mood)],
-      [t("company.trend") || "Тренд", getTrendLabel(growthMetrics.trend)],
-      [],
-      [t("company.generatedAt") || "Сформировано", generatedDate],
-    ];
+    const doc = new jsPDF();
 
-    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+    // Добавляем поддержку кириллицы (обычно требует загрузки шрифта, но используем стандартный пока)
+    // В реальном проекте лучше добавить кастомный шрифт
+    
+    // Заголовок
+    doc.setFontSize(20);
+    doc.text(t("company.reports") || "Отчёт", 105, 20, { align: "center" });
 
-    // Устанавливаем ширину колонок для лучшего отображения
-    worksheet['!cols'] = [
-      { wch: 35 }, // Первая колонка (метки)
-      { wch: 25 }, // Вторая колонка (значения)
-      { wch: 15 }, // Третья колонка (проценты)
-    ];
+    // Основная информация
+    doc.setFontSize(12);
+    autoTable(doc, {
+      startY: 30,
+      head: [],
+      body: [
+        [t("company.period") || "Период", getSelectedMonthPeriod()],
+        [t("company.companyName", "Компания"), company.name],
+        [t("company.codeForEmployees") || "Код компании", company.code],
+      ],
+      theme: 'plain',
+      styles: { fontSize: 12, cellPadding: 2 },
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 60 } },
+    });
 
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+    // Распределение сообщений
+    doc.setFontSize(14);
+    doc.text(t("company.messageDistribution") || "Распределение сообщений", 14, (doc as any).lastAutoTable.finalY + 15);
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 20,
+      head: [[t("messages.type") || "Тип", t("messages.total") || "Количество", "%"]],
+      body: [
+        [t("sendMessage.complaint") || "Жалоба", String(distribution.complaints), `${complaintsPercent}%`],
+        [t("sendMessage.praise") || "Похвала", String(distribution.praises), `${praisesPercent}%`],
+        [t("sendMessage.suggestion") || "Предложение", String(distribution.suggestions), `${suggestionsPercent}%`],
+        [t("admin.totalMessages") || "Всего", String(totalMessages), ""],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [47, 45, 162], textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { fontSize: 11 },
+      footStyles: { fontStyle: 'bold', fillColor: [240, 240, 240] },
+      didParseCell: (data: any) => {
+        if (data.row.index === data.table.body.length - 1) {
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fillColor = [240, 240, 240];
+        }
+      },
+    });
 
-    const fileName = `Report_${company.name.replace(/[^a-zA-Z0-9а-яА-Я]/g, '_')}_${year}-${month}.xlsx`;
-    XLSX.writeFileXLSX(workbook, fileName, { compression: true });
+    // Статус кейсов
+    doc.setFontSize(14);
+    doc.text(t("company.resolvedCases") || "Статус кейсов", 14, (doc as any).lastAutoTable.finalY + 15);
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 20,
+      head: [[t("company.resolvedCases") || "Статус", t("messages.total") || "Количество"]],
+      body: [
+        [t("company.resolved") || "Решено", String(resolved)],
+        [t("company.unresolved") || "Нерешено", String(unresolved)],
+        [t("company.resolutionRate") || "Процент решения", `${resolvedPercent}%`],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [47, 45, 162], textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { fontSize: 11 },
+      columnStyles: { 0: { cellWidth: 120 }, 1: { halign: 'right' } },
+    });
+
+    // Настроение команды
+    doc.setFontSize(14);
+    doc.text(t("company.teamMood") || "Настроение команды", 14, (doc as any).lastAutoTable.finalY + 15);
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 20,
+      head: [[t("company.teamMood") || "Параметр", t("messages.total") || "Значение"]],
+      body: [
+        [t("company.growthRating") || "Рейтинг роста", String(growthMetrics.rating)],
+        [t("company.overallMood") || "Общий настрой", getMoodLabel(growthMetrics.mood)],
+        [t("company.trend") || "Тренд", getTrendLabel(growthMetrics.trend)],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [47, 45, 162], textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { fontSize: 11 },
+      columnStyles: { 0: { cellWidth: 120 }, 1: { halign: 'right' } },
+    });
+
+    // Footer
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.text(`${t("company.generatedAt") || "Сформировано"}: ${generatedDate}`, 195, 285, { align: "right" });
+    }
+
+    const fileName = `Report_${company.name.replace(/[^a-zA-Z0-9а-яА-Я]/g, '_')}_${year}-${month}.pdf`;
+    doc.save(fileName);
   };
   
   return (
@@ -205,7 +259,7 @@ const CompanyReports = () => {
                 </div>
               </div>
               <Button
-                onClick={generateExcelReport}
+                onClick={generatePdfReport}
                 disabled={isLoading}
                 variant="outline"
                 size="icon"
