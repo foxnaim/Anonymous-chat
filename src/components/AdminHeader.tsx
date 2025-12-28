@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Menu as HeadlessMenu, Transition } from "@headlessui/react";
 
+// Fixed imports to remove unused useEffect
 interface AdminHeaderProps {}
 
 export const AdminHeader = ({}: AdminHeaderProps = {}) => {
