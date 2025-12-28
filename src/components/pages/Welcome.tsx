@@ -272,7 +272,7 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
           </div>
 
           {/* Main Content: Form and Steps */}
-          <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-12 sm:gap-16 lg:gap-12 items-start min-w-0">
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-20 sm:gap-24 md:gap-28 lg:gap-12 items-start min-w-0">
             {/* Company Code Input - Left Side - Form should be first on mobile */}
             <motion.div
               initial={{ y: 120 }}
@@ -443,7 +443,7 @@ const Welcome = ({ initialCompanyCode, initialCompany }: WelcomeProps = {}) => {
             </motion.div>
 
             {/* Three-Step Guide Section - Right Side */}
-            <div className="w-full p-5 sm:p-6 md:p-8 order-2 lg:order-2 lg:sticky lg:top-8 flex flex-col h-full min-w-0 overflow-hidden mt-0 lg:mt-0 bg-card rounded-xl border-2 border-border shadow-lg">
+            <div className="w-full p-5 sm:p-6 md:p-8 order-2 lg:order-2 lg:sticky lg:top-8 flex flex-col h-full min-w-0 overflow-hidden pt-12 sm:pt-16 md:pt-20 lg:pt-0 lg:mt-0 bg-card rounded-xl border-2 border-border shadow-lg">
               <div className="space-y-4 flex-1 min-w-0">
                 <div className="text-center lg:text-left min-w-0">
                   <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2 break-words">
