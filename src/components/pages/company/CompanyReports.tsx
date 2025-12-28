@@ -127,7 +127,7 @@ const CompanyReports = () => {
       [t("company.reports") || "Отчёт"],
       [],
       [t("company.period") || "Период", getSelectedMonthPeriod()],
-      [t("company.companyName") || "Компания", company.name],
+      [t("company.companyName", "Компания"), company.name],
       [t("company.codeForEmployees") || "Код компании", company.code],
       [],
       [t("company.messageDistribution") || "Распределение сообщений"],
