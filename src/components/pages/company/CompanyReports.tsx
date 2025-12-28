@@ -127,40 +127,48 @@ const CompanyReports = () => {
 
     const doc = new jsPDF();
 
-    // Загружаем шрифт Roboto Regular (Base64) для поддержки кириллицы
-    try {
-      const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf';
-      const response = await fetch(fontUrl);
+    // Функция для загрузки шрифта
+    const loadFont = async (url: string) => {
+      const response = await fetch(url);
       const blob = await response.blob();
-      
-      // Преобразуем Blob в Base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
         reader.onloadend = () => {
           if (typeof reader.result === 'string') {
-            const base64 = reader.result.split(',')[1];
-            resolve(base64);
+            resolve(reader.result.split(',')[1]);
           } else {
             reject(new Error('Failed to read font'));
           }
         };
         reader.onerror = reject;
+        reader.readAsDataURL(blob);
       });
-      
-      reader.readAsDataURL(blob);
-      const fontBase64 = await base64Promise;
+    };
 
-      // Добавляем шрифт в VFS и регистрируем его
-      doc.addFileToVFS('Roboto-Regular.ttf', fontBase64);
+    try {
+      // Загружаем Regular и Medium (для bold) шрифты
+      const [fontRegular, fontBold] = await Promise.all([
+        loadFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf'),
+        loadFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Medium.ttf')
+      ]);
+
+      // Добавляем шрифты в VFS
+      doc.addFileToVFS('Roboto-Regular.ttf', fontRegular);
+      doc.addFileToVFS('Roboto-Bold.ttf', fontBold);
+
+      // Регистрируем шрифты
       doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+      doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
+
       doc.setFont('Roboto');
     } catch (error) {
-      console.error('Error loading font:', error);
-      // Если шрифт не загрузился, используем стандартный (кириллица может не работать)
+      console.error('Error loading fonts:', error);
     }
 
     // Заголовок
     doc.setFontSize(20);
+    // Явно указываем normal, чтобы не сработало bold по умолчанию, если вдруг
+    doc.setFont('Roboto', 'normal'); 
     doc.text(t("company.reports") || "Отчёт", 105, 20, { align: "center" });
 
     // Основная информация
