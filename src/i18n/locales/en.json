@@ -202,7 +202,8 @@
     "passwordMustBeDifferent": "New password must be different from current password",
     "loginWithEmail": "Sign in with Email",
     "or": "or",
-    "backToOAuth": "Back to OAuth"
+    "backToOAuth": "Back to OAuth",
+    "notRegisteredAsCompany": "Your account is not registered as a company. Please register through the registration form."
   },
   "company": {
     "dashboard": "Dashboard",

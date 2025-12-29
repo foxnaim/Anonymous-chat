@@ -200,7 +200,8 @@
     "passwordMustBeDifferent": "Новый пароль должен отличаться от текущего",
     "loginWithEmail": "Войти через Email",
     "or": "или",
-    "backToOAuth": "Вернуться к OAuth"
+    "backToOAuth": "Вернуться к OAuth",
+    "notRegisteredAsCompany": "Ваш аккаунт не зарегистрирован как компания. Пожалуйста, зарегистрируйтесь через форму регистрации."
   },
   "company": {
     "dashboard": "Панель управления",

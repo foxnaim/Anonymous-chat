@@ -200,7 +200,8 @@
     "passwordMustBeDifferent": "Жаңа құпия сөз ағымдағы құпия сөзден өзгеше болуы керек",
     "loginWithEmail": "Email арқылы кіру",
     "or": "немесе",
-    "backToOAuth": "OAuth-қа оралу"
+    "backToOAuth": "OAuth-қа оралу",
+    "notRegisteredAsCompany": "Сіздің аккаунтыңыз компания ретінде тіркелмеген. Тіркеу формасы арқылы тіркеліңіз."
   },
   "company": {
     "dashboard": "Басқару панелі",
