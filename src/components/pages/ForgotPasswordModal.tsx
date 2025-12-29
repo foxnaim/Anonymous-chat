@@ -18,6 +18,10 @@ interface ForgotPasswordModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+import emailjs from '@emailjs/browser';
+
+import emailjs from '@emailjs/browser';
+
 const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) => {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
@@ -26,7 +30,6 @@ const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) =
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Проверка валидности email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       toast.error(t("auth.invalidEmail"));
@@ -36,28 +39,67 @@ const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) =
     setIsLoading(true);
     
     try {
+      // 1. Получаем токен от бэкенда
       const response = await authService.forgotPassword({ email });
-      setIsLoading(false);
       
-      // Если сервер вернул токен (например, при ошибке SMTP), показываем его
       if (response.resetToken) {
-        // Копируем токен в буфер обмена для удобства
-        if (typeof navigator !== 'undefined' && navigator.clipboard) {
-          navigator.clipboard.writeText(response.resetToken).catch(console.error);
-        }
+        // 2. Формируем ссылку
+        const resetLink = `${window.location.origin}/reset-password?token=${response.resetToken}`;
+        
+        // 3. Отправляем письмо через EmailJS
+        // Проверяем наличие ключей
+        const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+        const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+        const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
 
-        toast.success(
-          <div className="flex flex-col gap-2">
-            <span>{t("auth.resetPasswordSuccess")}</span>
-            <span className="text-xs opacity-80 break-all bg-black/10 p-2 rounded select-all">
-              {t("auth.resetPasswordTokenLabel")}: {response.resetToken}
-            </span>
-            <span className="text-xs italic">(Токен скопирован)</span>
-          </div>,
-          { duration: 20000 } // Показываем 20 секунд
-        );
+        if (serviceId && templateId && publicKey) {
+          try {
+            await emailjs.send(
+              serviceId,
+              templateId,
+              {
+                to_email: email,
+                reset_link: resetLink,
+                // Дополнительные параметры, которые можно использовать в шаблоне EmailJS
+                company_name: "FeedbackHub" 
+              },
+              publicKey
+            );
+            toast.success(t("auth.resetPasswordSuccess")); // "Письмо отправлено"
+          } catch (emailError) {
+            console.error("EmailJS error:", emailError);
+            // Если EmailJS не сработал, показываем токен (фоллбэк)
+             toast.error("Не удалось отправить письмо автоматически. Пожалуйста, скопируйте ссылку вручную.");
+             if (navigator.clipboard) {
+                 navigator.clipboard.writeText(resetLink).catch(console.error);
+             }
+             toast.info(
+               <div className="flex flex-col gap-2">
+                 <span>Ссылка для сброса (скопировано):</span>
+                 <span className="text-xs opacity-80 break-all bg-black/10 p-2 rounded select-all">
+                   {resetLink}
+                 </span>
+               </div>,
+               { duration: 20000 }
+             );
+          }
+        } else {
+           // Если ключи не настроены - показываем токен (для разработки)
+           if (navigator.clipboard) {
+             navigator.clipboard.writeText(resetLink).catch(console.error);
+           }
+           toast.success(
+             <div className="flex flex-col gap-2">
+               <span>{t("auth.resetPasswordSuccess")}</span>
+               <span className="text-xs opacity-80 break-all bg-black/10 p-2 rounded select-all">
+                 {t("auth.resetPasswordTokenLabel")}: {response.resetToken}
+               </span>
+               <span className="text-xs italic">(Токен скопирован)</span>
+             </div>,
+             { duration: 20000 }
+           );
+        }
       } else {
-        // Обычный сценарий успеха
         toast.success(t("auth.resetPasswordSuccess"));
       }
       
