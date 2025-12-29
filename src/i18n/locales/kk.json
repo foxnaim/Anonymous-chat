@@ -199,6 +199,7 @@
     "passwordResetError": "Құпия сөзді қалпына келтіру қатесі",
     "passwordMustBeDifferent": "Жаңа құпия сөз ағымдағы құпия сөзден өзгеше болуы керек",
     "loginWithEmail": "Email арқылы кіру",
+    "loginWithApple": "Apple арқылы кіру",
     "or": "немесе",
     "backToOAuth": "Оралу",
     "notRegisteredAsCompany": "Сіздің аккаунтыңыз компания ретінде тіркелмеген. Тіркеу формасы арқылы тіркеліңіз."

@@ -199,6 +199,7 @@
     "passwordResetError": "Ошибка при сбросе пароля",
     "passwordMustBeDifferent": "Новый пароль должен отличаться от текущего",
     "loginWithEmail": "Войти через Email",
+    "loginWithApple": "Войти через Apple",
     "or": "или",
     "backToOAuth": "Вернуться",
     "notRegisteredAsCompany": "Ваш аккаунт не зарегистрирован как компания. Пожалуйста, зарегистрируйтесь через форму регистрации."

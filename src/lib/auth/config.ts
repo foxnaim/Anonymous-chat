@@ -1,12 +1,12 @@
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import AzureADProvider from "next-auth/providers/azure-ad";
+import AppleProvider from "next-auth/providers/apple";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { API_CONFIG } from "@/lib/query/constants";
 
 /**
  * Конфигурация NextAuth
- * Поддерживает: Google OAuth, Microsoft OAuth, Email/Password (Credentials)
+ * Поддерживает: Google OAuth, Apple OAuth, Email/Password (Credentials)
  */
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -22,11 +22,10 @@ export const authOptions: NextAuthOptions = {
         },
       },
     }),
-    // Microsoft OAuth (Azure AD)
-    AzureADProvider({
-      clientId: process.env.AZURE_AD_CLIENT_ID || "",
-      clientSecret: process.env.AZURE_AD_CLIENT_SECRET || "",
-      tenantId: process.env.AZURE_AD_TENANT_ID || "common",
+    // Apple OAuth
+    AppleProvider({
+      clientId: process.env.APPLE_CLIENT_ID || "",
+      clientSecret: process.env.APPLE_CLIENT_SECRET || "",
     }),
     // Credentials (Email/Password) - для админов и обычных пользователей
     CredentialsProvider({
@@ -81,8 +80,8 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      // Для OAuth провайдеров (Google, Microsoft)
-      if (account?.provider === "google" || account?.provider === "azure-ad") {
+      // Для OAuth провайдеров (Google, Apple)
+      if (account?.provider === "google" || account?.provider === "apple") {
         try {
           // Проверяем/создаем пользователя в БД через API
           const email = user.email;
@@ -109,7 +108,7 @@ export const authOptions: NextAuthOptions = {
         token.companyId = (user as any).companyId;
         
         // Для OAuth создаем/обновляем пользователя в БД
-        if (account.provider === "google" || account.provider === "azure-ad") {
+        if (account.provider === "google" || account.provider === "apple") {
           try {
             // Синхронизируем пользователя с БД через API
             const syncResponse = await fetch(`${API_CONFIG.BASE_URL}/auth/oauth-sync`, {

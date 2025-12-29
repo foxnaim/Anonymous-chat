@@ -201,6 +201,7 @@
     "passwordResetError": "Error resetting password",
     "passwordMustBeDifferent": "New password must be different from current password",
     "loginWithEmail": "Sign in with Email",
+    "loginWithApple": "Sign in with Apple",
     "or": "or",
     "backToOAuth": "Back",
     "notRegisteredAsCompany": "Your account is not registered as a company. Please register through the registration form."
