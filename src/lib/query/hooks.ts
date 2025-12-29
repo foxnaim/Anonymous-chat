@@ -803,26 +803,38 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
     mutationFn: (id: string | number) => companyService.delete(id),
 
     onMutate: async (deletedId) => {
+      console.log('[useDeleteCompany] Mutating delete for:', deletedId);
       // Отменяем исходящие запросы, чтобы они не перезаписали наш оптимистичный апдейт
       await queryClient.cancelQueries({ queryKey: queryKeys.companies, exact: false });
 
       // Сохраняем предыдущее состояние
       const previousData = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
+      console.log('[useDeleteCompany] Previous data found for queries:', previousData.length);
 
       // Нормализуем ID для сравнения
       const deletedIdStr = String(deletedId).trim();
+      console.log('[useDeleteCompany] Normalized ID:', deletedIdStr);
 
       // Оптимистично удаляем компанию из кэша сразу - обновляем ВСЕ запросы
       previousData.forEach(([key, oldData]) => {
+        console.log('[useDeleteCompany] Processing query key:', key);
         if (oldData && Array.isArray(oldData)) {
+          console.log('[useDeleteCompany] Old data length:', oldData.length);
           const filtered = oldData.filter(company => {
             // Проверяем и id, и _id на случай разных форматов данных
             const companyId = company.id ? String(company.id).trim() : null;
             const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
             
-            return companyId !== deletedIdStr && company_id !== deletedIdStr;
+            const shouldKeep = companyId !== deletedIdStr && company_id !== deletedIdStr;
+            if (!shouldKeep) {
+               console.log('[useDeleteCompany] Removing company:', company);
+            }
+            return shouldKeep;
           });
+          console.log('[useDeleteCompany] New data length:', filtered.length);
           queryClient.setQueryData<Company[]>(key, filtered);
+        } else {
+             console.log('[useDeleteCompany] Data is not array or empty:', oldData);
         }
       });
       
@@ -839,6 +851,7 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
     },
 
     onSuccess: (_, deletedId, context, mutation) => {
+      console.log('[useDeleteCompany] Success delete for:', deletedId);
       // Нормализуем ID для сравнения (приводим к строке)
       const deletedIdStr = String(deletedId).trim();
       
@@ -867,11 +880,13 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
     },
 
     onError: (error, variables, context, mutation) => {
+      console.error('[useDeleteCompany] Error deleting:', error);
       const errorStatus = (error as any)?.status || (error as any)?.response?.status;
       const deletedIdStr = String(variables).trim();
 
       // Если ошибка 404, значит компания уже удалена. НЕ откатываем кэш.
       if (errorStatus === 404) {
+         console.log('[useDeleteCompany] 404 error - forcing removal from cache');
          // Явно удаляем компанию из кэша, если она там еще есть
          const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
          allQueries.forEach(([key, data]) => {
@@ -889,6 +904,7 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
          // Обновляем список с сервера, чтобы убедиться, что все синхронизировано
          queryClient.invalidateQueries({ queryKey: queryKeys.companies, exact: false });
       } else {
+         console.log('[useDeleteCompany] Other error - rolling back');
          // Для других ошибок откатываем изменения
          if (context?.previousData) {
            context.previousData.forEach(([key, old]) => {
