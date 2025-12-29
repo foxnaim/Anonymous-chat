@@ -88,16 +88,7 @@ export const authOptions: NextAuthOptions = {
           const email = user.email;
           if (!email) return false;
 
-          // Проверяем, существует ли пользователь
-          const checkResponse = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, {
-            headers: {
-              Authorization: `Bearer ${account.access_token}`,
-            },
-          });
-
-          // Если пользователь не существует, создаем его через API
-          // (это можно сделать через отдельный endpoint или здесь)
-          // Пока просто разрешаем вход, создание пользователя будет в jwt callback
+          // Просто разрешаем вход, создание пользователя будет в jwt callback
           return true;
         } catch (error) {
           console.error("OAuth sign in error:", error);
