@@ -812,7 +812,8 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
       // Нормализуем ID
       const deletedIdStr = String(deletedId).trim();
 
-      // Оптимистично удаляем из кэша
+      // Оптимистично удаляем из кэша - создаем НОВЫЙ массив для триггера перерисовки
+      let foundAny = false;
       previousData.forEach(([key, oldData]) => {
         if (oldData && Array.isArray(oldData)) {
           const filtered = oldData.filter(company => {
@@ -821,13 +822,21 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
             
             return companyId !== deletedIdStr && company_id !== deletedIdStr;
           });
-          queryClient.setQueryData<Company[]>(key, filtered);
+          
+          // Создаем новый массив, чтобы React Query увидел изменение
+          if (filtered.length !== oldData.length) {
+            queryClient.setQueryData<Company[]>(key, [...filtered]);
+            foundAny = true;
+          }
         }
       });
       
-      // Если кэша не было, ставим пустой массив
-      if (previousData.length === 0) {
+      // Если кэша не было или не нашли нужный ключ, обновляем все возможные варианты
+      if (!foundAny) {
+        // Обновляем базовый ключ
         queryClient.setQueryData<Company[]>(queryKeys.companies, []);
+        // Обновляем ключ с undefined параметрами (как используется в компоненте)
+        queryClient.setQueryData<Company[]>([...queryKeys.companies, undefined, undefined], []);
       }
 
       if (userOnMutate) {
@@ -855,15 +864,17 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
           });
           
           if (filtered.length !== beforeLength) {
-            queryClient.setQueryData<Company[]>(key, filtered);
+            // Создаем новый массив для триггера перерисовки
+            queryClient.setQueryData<Company[]>(key, [...filtered]);
             updated = true;
           }
         }
       });
       
-      // Если не нашли в кэше, создаем пустой массив для базового ключа
-      if (!updated && allQueries.length === 0) {
+      // Если не нашли в кэше, создаем пустой массив для всех возможных ключей
+      if (!updated) {
         queryClient.setQueryData<Company[]>(queryKeys.companies, []);
+        queryClient.setQueryData<Company[]>([...queryKeys.companies, undefined, undefined], []);
       }
       
       // НЕ инвалидируем сразу, чтобы избежать возврата удаленного элемента, если бэкенд отстает (eventual consistency)
@@ -902,15 +913,17 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
              });
              
              if (filtered.length !== beforeLength) {
-               queryClient.setQueryData<Company[]>(key, filtered);
+               // Создаем новый массив для триггера перерисовки
+               queryClient.setQueryData<Company[]>(key, [...filtered]);
                removed = true;
              }
            }
          });
          
-         // Если не нашли в кэше, создаем пустой массив для базового ключа
-         if (!removed && allQueries.length === 0) {
+         // Если не нашли в кэше, создаем пустой массив для всех возможных ключей
+         if (!removed) {
            queryClient.setQueryData<Company[]>(queryKeys.companies, []);
+           queryClient.setQueryData<Company[]>([...queryKeys.companies, undefined, undefined], []);
          }
          
          // НЕ инвалидируем сразу - компания уже удалена, не нужно делать refetch
