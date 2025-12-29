@@ -197,7 +197,10 @@
     "resetTokenNotFound": "Токен восстановления не найден. Пожалуйста, используйте ссылку из email.",
     "passwordResetSuccess": "Пароль успешно изменен!",
     "passwordResetError": "Ошибка при сбросе пароля",
-    "passwordMustBeDifferent": "Новый пароль должен отличаться от текущего"
+    "passwordMustBeDifferent": "Новый пароль должен отличаться от текущего",
+    "loginWithEmail": "Войти через Email",
+    "or": "или",
+    "backToOAuth": "Вернуться к OAuth"
   },
   "company": {
     "dashboard": "Панель управления",

@@ -199,7 +199,10 @@
     "resetTokenNotFound": "Reset token not found. Please use the link from the email.",
     "passwordResetSuccess": "Password has been successfully changed!",
     "passwordResetError": "Error resetting password",
-    "passwordMustBeDifferent": "New password must be different from current password"
+    "passwordMustBeDifferent": "New password must be different from current password",
+    "loginWithEmail": "Sign in with Email",
+    "or": "or",
+    "backToOAuth": "Back to OAuth"
   },
   "company": {
     "dashboard": "Dashboard",
