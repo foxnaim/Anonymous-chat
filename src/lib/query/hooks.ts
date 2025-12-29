@@ -213,10 +213,10 @@ export const useAdmins = (page?: number, limit?: number, options?: Omit<UseQuery
       const result = await adminService.getAdmins(page, limit);
       return result.data;
     },
-    staleTime: 1000 * 60 * 5, // 5 минут - админы меняются очень редко
-    gcTime: 1000 * 60 * 15, // 15 минут в кэше
-    refetchOnMount: false, // Используем кэш для быстрого старта
-    refetchOnWindowFocus: false, // Не обновляем при фокусе окна
+    staleTime: 0, // Всегда считаем данные устаревшими для получения свежих данных
+    gcTime: 0, // Не кэшируем данные после unmount
+    refetchOnMount: true, // Всегда обновляем при монтировании
+    refetchOnWindowFocus: true, // Обновляем при фокусе окна
     ...options,
   });
 };
@@ -408,10 +408,10 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
         }
       });
       
-      // НЕ инвалидируем кэш сразу после удаления, чтобы не делать новый запрос
-      // который может вернуть старые данные из кэша базы данных
-      // Кэш уже обновлен оптимистично в onMutate и здесь в onSuccess
-      // Инвалидация произойдет при следующем естественном запросе (например, при перезагрузке страницы)
+      // Инвалидируем и обновляем кэш с сервера для гарантии актуальности данных
+      queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
+      // Принудительно обновляем данные с сервера
+      queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
       
       if (userOnSuccess) {
         (userOnSuccess as any)(_, deletedId, context, mutation);
