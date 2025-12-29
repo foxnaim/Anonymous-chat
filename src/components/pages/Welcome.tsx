@@ -349,7 +349,6 @@ function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
                           }}
                           className="text-xs sm:text-sm md:text-base pr-9 sm:pr-10 h-9 sm:h-10 md:h-11 lg:h-12 w-full max-w-full"
                           maxLength={10}
-                          autoComplete="off"
                         />
                         <Button
                           type="button"
