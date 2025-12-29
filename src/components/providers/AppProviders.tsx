@@ -14,6 +14,7 @@ import "@/i18n/config";
 import "@/lib/utils/suppressExtensionErrors";
 
 import { FullscreenProvider } from "./FullscreenProvider";
+import { NextAuthSync } from "./NextAuthSync";
 
 // Компонент для принудительной установки светлой темы при первой загрузке
 const ThemeInitializer = ({ children }: { children: ReactNode }) => {
@@ -54,6 +55,7 @@ const AppProviders = ({ children }: AppProvidersProps) => (
         <ReduxProvider>
           <QueryProvider>
             <FullscreenProvider>
+              <NextAuthSync />
               <TooltipProvider>
                 {children}
                 <Toaster />

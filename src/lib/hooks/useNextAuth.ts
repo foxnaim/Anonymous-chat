@@ -1,12 +1,13 @@
 'use client';
 
 import { useSession, signIn, signOut } from "next-auth/react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { setUser, logout } from "@/lib/redux/slices/authSlice";
 import { setToken, removeToken } from "@/lib/utils/cookies";
 import type { User } from "@/types";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 /**
  * Хук для интеграции NextAuth с Redux
@@ -16,6 +17,7 @@ export const useNextAuth = () => {
   const { data: session, status } = useSession();
   const dispatch = useDispatch();
   const router = useRouter();
+  const hasSynced = useRef(false);
 
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
@@ -34,12 +36,19 @@ export const useNextAuth = () => {
       if (session.apiToken) {
         setToken(session.apiToken);
       }
+
+      // Показываем уведомление о успешном входе только один раз
+      if (!hasSynced.current) {
+        hasSynced.current = true;
+        toast.success("Вход выполнен успешно");
+      }
     } else if (status === "unauthenticated") {
       // Очищаем состояние при выходе
+      hasSynced.current = false;
       dispatch(logout());
       removeToken();
     }
-  }, [session, status, dispatch]);
+  }, [session, status, dispatch, router]);
 
   const handleSignIn = async (provider: "google" | "azure-ad" | "credentials", credentials?: { email: string; password: string }) => {
     if (provider === "credentials" && credentials) {
