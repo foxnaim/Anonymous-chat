@@ -10,7 +10,6 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FiArrowLeft, FiEye, FiEyeOff } from "react-icons/fi";
-import { useCreateCompany, plansService } from "@/lib/query";
 import { useAuth } from "@/lib/redux";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -18,7 +17,7 @@ import { motion } from "framer-motion";
 const Register = () => {
   const { t } = useTranslation();
   const router = useRouter();
-  const { login } = useAuth();
+  const { register } = useAuth(); // Используем register из useAuth
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -27,80 +26,7 @@ const Register = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const { mutate: registerCompany, isPending } = useCreateCompany({
-    onSuccess: async (company) => {
-      toast.success(t("auth.registerSuccess"));
-      
-      // Автоматически входим в систему
-      const loginSuccess = await login(formData.email, formData.password);
-      
-      if (loginSuccess) {
-        // Перенаправляем в панель компании (используем requestAnimationFrame для неблокирующего редиректа)
-        requestAnimationFrame(() => {
-          router.replace("/company");
-        });
-      } else {
-        router.replace("/company");
-      }
-    },
-    onError: (error: any) => {
-      // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
-      const backendMessage = String(error?.message || "").trim();
-      const errorStatus = error?.status || 0;
-      
-      // Маппинг сообщений об ошибках - проверяем в строгом порядке приоритета
-      let errorMessage = "";
-      const msgLower = backendMessage.toLowerCase();
-      
-      // 1. Проверка кода компании
-      if (backendMessage.includes("Company with this code already exists") || 
-          (msgLower.includes("code") && msgLower.includes("already exists"))) {
-        errorMessage = t("auth.companyCodeAlreadyExists");
-      }
-      // 2. Проверка имени компании
-      else if (backendMessage.includes("Company with this name already exists") || 
-               (msgLower.includes("name") && msgLower.includes("already exists") && msgLower.includes("company"))) {
-        errorMessage = t("auth.companyNameAlreadyExists");
-      }
-      // 3. Проверка email компании
-      else if (backendMessage.includes("Company with this email already exists") || 
-               (msgLower.includes("email") && msgLower.includes("already exists") && msgLower.includes("company"))) {
-        errorMessage = t("auth.companyEmailAlreadyExists");
-      }
-      // 4. Проверка email админа
-      else if (backendMessage.includes("Admin with this email already exists") || 
-               (msgLower.includes("email") && msgLower.includes("already exists") && msgLower.includes("admin"))) {
-        errorMessage = t("auth.adminEmailAlreadyExists");
-      }
-      // 5. Проверка email пользователя
-      else if (backendMessage.includes("User already exists") || 
-               backendMessage.includes("User with this email already exists") ||
-               (msgLower.includes("user") && msgLower.includes("already exists")) ||
-               (msgLower.includes("email") && msgLower.includes("already exists") && !msgLower.includes("company") && !msgLower.includes("admin"))) {
-        errorMessage = t("auth.userEmailAlreadyExists");
-      }
-      // 6. Остальные ошибки
-      else if (backendMessage.includes("Email and password are required") || msgLower.includes("required")) {
-        errorMessage = t("auth.emailAndPasswordRequired");
-      }
-      else if (backendMessage.includes("Password must be at least")) {
-        errorMessage = t("auth.passwordMinLength", { length: 8 });
-      }
-      else if (errorStatus === 409) {
-        errorMessage = t("auth.companyConflictError") || "Данные уже существуют. Проверьте уникальность имени, email и кода компании.";
-      }
-      else if (backendMessage && !backendMessage.includes("HTTP error")) {
-        // Если сообщение не распознано, показываем общую ошибку на выбранном языке
-        errorMessage = t("common.error");
-      }
-      else {
-        errorMessage = t("common.error");
-      }
-      
-      toast.error(errorMessage);
-    },
-  });
+  const [isPending, setIsPending] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,6 +46,8 @@ const Register = () => {
       return;
     }
 
+    setIsPending(true);
+
     // Генерируем уникальный код компании (ровно 8 символов: буквы и цифры)
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';
@@ -127,23 +55,26 @@ const Register = () => {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     
-    // Получаем настройки пробного плана для вычисления даты окончания
-    const freePlanSettings = await plansService.getFreePlanSettings();
-    const freePeriodDays = freePlanSettings.freePeriodDays || 60;
-    
-    // Вычисляем дату окончания пробного периода (из настроек админа)
-    const trialEndDate = new Date();
-    trialEndDate.setDate(trialEndDate.getDate() + freePeriodDays);
+    // Используем register из authSlice который вызывает публичный эндпоинт /auth/register
+    // Бэкенд сам обрабатывает создание компании и пробный период
+    const success = await register(
+      formData.email,
+      formData.password,
+      formData.name, // Имя пользователя (админа)
+      "company", // Роль
+      formData.name, // Имя компании
+      code // Код компании
+    );
 
-    registerCompany({
-      name: formData.name,
-      code,
-      adminEmail: formData.email,
-      status: "Пробная", // Первые 2 месяца - пробный период
-      plan: "Пробный",
-      trialEndDate: trialEndDate.toISOString().split("T")[0],
-      employees: 0,
-    });
+    setIsPending(false);
+
+    if (success) {
+      // Перенаправляем в панель компании
+      requestAnimationFrame(() => {
+        router.replace("/company");
+      });
+    }
+    // Ошибки обрабатываются внутри register (в authSlice) и показываются через toast
   };
 
   return (
