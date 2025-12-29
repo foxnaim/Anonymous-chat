@@ -55,8 +55,8 @@ const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) =
               serviceId,
               templateId,
               {
-                to_email: email,
-                reset_link: resetLink,
+                email: email,        // Переменная для шаблона {{email}}
+                link: resetLink,     // Переменная для шаблона {{link}}
                 // Дополнительные параметры, которые можно использовать в шаблоне EmailJS
                 company_name: "FeedbackHub" 
               },
