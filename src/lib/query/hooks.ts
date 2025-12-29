@@ -809,12 +809,18 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
       // Сохраняем предыдущее состояние
       const previousData = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
 
+      // Нормализуем ID для сравнения
+      const deletedIdStr = String(deletedId).trim();
+
       // Оптимистично удаляем компанию из кэша сразу - обновляем ВСЕ запросы
       previousData.forEach(([key, oldData]) => {
         if (oldData && Array.isArray(oldData)) {
           const filtered = oldData.filter(company => {
             // Проверяем и id, и _id на случай разных форматов данных
-            return company.id !== deletedId && (company as any)._id !== deletedId;
+            const companyId = company.id ? String(company.id).trim() : null;
+            const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
+            
+            return companyId !== deletedIdStr && company_id !== deletedIdStr;
           });
           queryClient.setQueryData<Company[]>(key, filtered);
         }

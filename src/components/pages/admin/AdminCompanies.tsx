@@ -205,9 +205,6 @@ const AdminCompanies = () => {
         setIsViewOpen(false);
       }
       
-      // Обновляем список компаний с сервера
-      await refetch();
-      
       toast.success(t("admin.companyDeleted") || "Компания удалена");
     },
     onError: (error: any) => {
