@@ -39,14 +39,25 @@ const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) =
       const response = await authService.forgotPassword({ email });
       setIsLoading(false);
       
-      // В development режиме показываем токен для тестирования
-      if (response.resetToken && process.env.NODE_ENV === 'development') {
+      // Если сервер вернул токен (например, при ошибке SMTP), показываем его
+      if (response.resetToken) {
+        // Копируем токен в буфер обмена для удобства
+        if (typeof navigator !== 'undefined' && navigator.clipboard) {
+          navigator.clipboard.writeText(response.resetToken).catch(console.error);
+        }
+
         toast.success(
-          `${t("auth.resetPasswordSuccess")}\n${t("auth.resetPasswordTokenLabel")}: ${response.resetToken}`,
-          { duration: 10000 }
+          <div className="flex flex-col gap-2">
+            <span>{t("auth.resetPasswordSuccess")}</span>
+            <span className="text-xs opacity-80 break-all bg-black/10 p-2 rounded select-all">
+              {t("auth.resetPasswordTokenLabel")}: {response.resetToken}
+            </span>
+            <span className="text-xs italic">(Токен скопирован)</span>
+          </div>,
+          { duration: 20000 } // Показываем 20 секунд
         );
       } else {
-        // Всегда используем перевод вместо сообщения из бэкенда
+        // Обычный сценарий успеха
         toast.success(t("auth.resetPasswordSuccess"));
       }
       
