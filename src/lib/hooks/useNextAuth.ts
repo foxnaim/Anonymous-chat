@@ -66,7 +66,7 @@ export const useNextAuth = () => {
     }
   }, [session, status, dispatch, router]);
 
-  const handleSignIn = async (provider: "google" | "apple" | "credentials", credentials?: { email: string; password: string }) => {
+  const handleSignIn = async (provider: "google" | "credentials", credentials?: { email: string; password: string }) => {
     if (provider === "credentials" && credentials) {
       // Для Credentials используем текущую систему (не NextAuth)
       return;
