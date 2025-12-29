@@ -775,11 +775,23 @@ export const useUpdateCompanyPlan = (options?: UseMutationOptions<Company, Error
  */
 export const useDeleteCompany = (options?: UseMutationOptions<void, Error, string | number>) => {
   const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess;
   
   return useMutation({
     mutationFn: (id) => companyService.delete(id),
-    onSuccess: () => {
+    onSuccess: (data, id, context) => {
+      // Оптимистично удаляем компанию из кэша
+      queryClient.setQueryData<Company[]>(queryKeys.companies, (oldData) => {
+        if (!oldData) return [];
+        return oldData.filter((company) => company.id !== id);
+      });
+      
+      // Также инвалидируем запрос для синхронизации с сервером
       queryClient.invalidateQueries({ queryKey: queryKeys.companies });
+      
+      if (userOnSuccess) {
+        (userOnSuccess as any)(data, id, context);
+      }
     },
     ...options,
   });

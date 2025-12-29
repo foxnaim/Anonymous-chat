@@ -152,18 +152,17 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 
-  /* Блокировка скролла для страницы отправки сообщения */
-  body.no-scroll {
-    overflow: hidden !important;
-    position: fixed;
-    width: 100%;
+  /* Fullscreen mode - скрываем элементы браузера без блокировки кликов */
+  html.fullscreen-mode {
+    overflow: hidden;
     height: 100%;
   }
 
-  /* Fullscreen mode - сохраняем стандартное поведение скролла */
-  html.fullscreen-mode,
   body.fullscreen-mode {
-    /* Не переопределяем overflow и размеры, чтобы не ломать верстку страниц (например, сообщения) */
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    position: relative;
   }
 
   /* Гарантируем, что все элементы кликабельны в полноэкранном режиме */
