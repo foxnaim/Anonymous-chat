@@ -206,41 +206,50 @@ const AdminCompanies = () => {
       toast.success(t("admin.companyDeleted") || "Компания удалена");
     },
     onError: (error: any) => {
-      console.error("[AdminCompanies] Delete company error:", error);
-      
       // Получаем сообщение об ошибке с бэкенда
       const backendMessage = error?.message || error?.response?.data?.error?.message || error?.response?.data?.message || "";
+      const errorStatus = error?.status || error?.response?.status;
       
-      // Маппинг сообщений об ошибках на ключи переводов
-      let translationKey = "common.error";
-      let errorMessage = backendMessage || t("common.error");
+      // Если 404 - компания уже удалена, это нормально
+      const isNotFound = errorStatus === 404 || 
+                        backendMessage.includes("Company not found") || 
+                        backendMessage.includes("not found");
       
-      if (backendMessage.includes("Company not found") || backendMessage.includes("not found")) {
-        translationKey = "admin.companyNotFound";
-        errorMessage = t("admin.companyNotFound") || "Компания не найдена";
-      } else if (backendMessage.includes("Access denied") || backendMessage.includes("Forbidden")) {
-        translationKey = "auth.accessDenied";
-        errorMessage = t("auth.accessDenied") || "Доступ запрещен";
-      } else if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
-        translationKey = "auth.companyCodeAlreadyExists";
-      } else if (backendMessage.includes("User already exists") ||
-                 backendMessage.includes("User with this email already exists") || 
-                 backendMessage.includes("user already exists")) {
-        translationKey = "auth.userEmailAlreadyExists";
-      } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.includes("required")) {
-        translationKey = "auth.companyFieldsRequired";
-      } else if (backendMessage.includes("Password must be at least 8 characters") || backendMessage.includes("Password must be at least 6 characters")) {
-        translationKey = "auth.passwordMinLength";
+      if (isNotFound) {
+        // Компания уже удалена - показываем успех, а не ошибку
+        toast.success(t("admin.companyDeleted") || "Компания удалена");
+      } else {
+        // Маппинг сообщений об ошибках на ключи переводов
+        let translationKey = "common.error";
+        let errorMessage = backendMessage || t("common.error");
+        
+        if (backendMessage.includes("Access denied") || backendMessage.includes("Forbidden")) {
+          translationKey = "auth.accessDenied";
+          errorMessage = t("auth.accessDenied") || "Доступ запрещен";
+        } else if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
+          translationKey = "auth.companyCodeAlreadyExists";
+        } else if (backendMessage.includes("User already exists") ||
+                   backendMessage.includes("User with this email already exists") || 
+                   backendMessage.includes("user already exists")) {
+          translationKey = "auth.userEmailAlreadyExists";
+        } else if (backendMessage.includes("Name, code, adminEmail, and password are required") || backendMessage.includes("required")) {
+          translationKey = "auth.companyFieldsRequired";
+        } else if (backendMessage.includes("Password must be at least 8 characters") || backendMessage.includes("Password must be at least 6 characters")) {
+          translationKey = "auth.passwordMinLength";
+        }
+        
+        // Показываем переведенное сообщение или общую ошибку на выбранном языке
+        const translatedMessage = t(translationKey);
+        const finalMessage = translatedMessage !== translationKey ? translatedMessage : errorMessage;
+        toast.error(finalMessage);
       }
       
-      // Показываем переведенное сообщение или общую ошибку на выбранном языке
-      const translatedMessage = t(translationKey);
-      const finalMessage = translatedMessage !== translationKey ? translatedMessage : errorMessage;
-      toast.error(finalMessage);
-      
-      // Закрываем диалог даже при ошибке
+      // Закрываем диалог в любом случае
       setIsDeleteDialogOpen(false);
       setCompanyToDelete(null);
+      if (isViewOpen) {
+        setIsViewOpen(false);
+      }
     },
   });
 

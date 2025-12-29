@@ -841,18 +841,30 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
       // Нормализуем ID
       const deletedIdStr = String(deletedId).trim();
       
-      // Обновляем кэш еще раз для надежности
+      // Принудительно обновляем ВСЕ query keys, включая с пагинацией
       const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
+      
+      let updated = false;
       allQueries.forEach(([key, data]) => {
         if (data && Array.isArray(data)) {
+          const beforeLength = data.length;
           const filtered = data.filter(company => {
             const companyId = company.id ? String(company.id).trim() : null;
             const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
             return companyId !== deletedIdStr && company_id !== deletedIdStr;
           });
-          queryClient.setQueryData<Company[]>(key, filtered);
+          
+          if (filtered.length !== beforeLength) {
+            queryClient.setQueryData<Company[]>(key, filtered);
+            updated = true;
+          }
         }
       });
+      
+      // Если не нашли в кэше, создаем пустой массив для базового ключа
+      if (!updated && allQueries.length === 0) {
+        queryClient.setQueryData<Company[]>(queryKeys.companies, []);
+      }
       
       // НЕ инвалидируем сразу, чтобы избежать возврата удаленного элемента, если бэкенд отстает (eventual consistency)
       // queryClient.invalidateQueries({ queryKey: queryKeys.companies, exact: false });
@@ -876,25 +888,33 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
 
       // Если ошибка 404 или "Not Found", значит компания уже удалена. НЕ откатываем кэш.
       if (isNotFound) {
-         // console.log('[useDeleteCompany] 404/Not Found detected - forcing removal from cache');
-         
+         // Принудительно удаляем из всех query keys
          const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
+         
+         let removed = false;
          allQueries.forEach(([key, data]) => {
            if (data && Array.isArray(data)) {
+             const beforeLength = data.length;
              const filtered = data.filter(company => {
                const companyId = company.id ? String(company.id).trim() : null;
                const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
                return companyId !== deletedIdStr && company_id !== deletedIdStr;
              });
-             if (filtered.length !== data.length) {
-                // console.log(`[useDeleteCompany] Removed item from query key: ${key}`);
-                queryClient.setQueryData<Company[]>(key, filtered);
+             
+             if (filtered.length !== beforeLength) {
+               queryClient.setQueryData<Company[]>(key, filtered);
+               removed = true;
              }
            }
          });
          
-         // Инвалидируем, чтобы при следующем запросе (например, смена страницы) данные обновились
-         queryClient.invalidateQueries({ queryKey: queryKeys.companies, exact: false });
+         // Если не нашли в кэше, создаем пустой массив для базового ключа
+         if (!removed && allQueries.length === 0) {
+           queryClient.setQueryData<Company[]>(queryKeys.companies, []);
+         }
+         
+         // НЕ инвалидируем сразу - компания уже удалена, не нужно делать refetch
+         // queryClient.invalidateQueries({ queryKey: queryKeys.companies, exact: false });
       } else {
          // console.log('[useDeleteCompany] Other error - rolling back');
          // Для других ошибок откатываем изменения
