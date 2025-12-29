@@ -53,6 +53,18 @@ function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [codeFromUrlLoaded, setCodeFromUrlLoaded] = useState(false);
 
+  // Обработка параметра register из URL
+  useEffect(() => {
+    if (searchParams.get("register") === "true") {
+      setIsRegisterModalOpen(true);
+      // Очищаем параметр из URL, чтобы при обновлении страницы модальное окно не открывалось снова
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete("register");
+      const newUrl = window.location.pathname + (newSearchParams.toString() ? `?${newSearchParams.toString()}` : "");
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, [searchParams]);
+
   // Инициализируем код компании из props или URL
   useEffect(() => {
     if (!codeFromUrlLoaded) {

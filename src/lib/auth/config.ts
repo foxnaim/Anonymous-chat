@@ -96,7 +96,10 @@ export const authOptions: NextAuthOptions = {
 
           if (!syncResponse.ok) {
             console.error("OAuth sign in denied by API:", await syncResponse.text());
-            return false; // Запрещаем вход, если API вернул ошибку (например, 403)
+            // Если доступ запрещен (не зарегистрирован), перенаправляем на главную с параметром открытия регистрации
+            // Используем специальный URL, который NextAuth обработает как редирект на ошибку,
+            // но мы можем перехватить его на клиенте или использовать query params
+            return "/?register=true"; 
           }
 
           // Если все ок, разрешаем вход
