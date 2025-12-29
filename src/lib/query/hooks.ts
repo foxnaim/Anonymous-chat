@@ -420,6 +420,7 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
 
     onError: (error, variables, context, mutation) => {
       const errorStatus = (error as any)?.status || (error as any)?.response?.status;
+      const deletedIdStr = String(variables).trim();
 
       // Если ошибка 404, значит админ уже удален. НЕ откатываем кэш.
       if (errorStatus === 404) {
@@ -429,11 +430,16 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
            if (data && Array.isArray(data)) {
              const filtered = data.filter(admin => {
                // Проверяем и id, и _id на случай разных форматов данных
-               return admin.id !== variables && (admin as any)._id !== variables;
+               const adminId = admin.id ? String(admin.id).trim() : null;
+               const admin_id = (admin as any)._id ? String((admin as any)._id).trim() : null;
+               return adminId !== deletedIdStr && admin_id !== deletedIdStr;
              });
              queryClient.setQueryData<AdminUser[]>(key, filtered);
            }
          });
+         
+         // Обновляем список с сервера, чтобы убедиться, что все синхронизировано
+         queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
       } else {
          // Для других ошибок откатываем изменения
          if (context?.previousData) {

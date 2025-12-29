@@ -259,6 +259,8 @@ const AdminAdmins = () => {
     onSuccess: async (_, adminId) => {
       // Показываем успешное уведомление
       toast.success(t("admin.adminDeleted") || "Администратор удален");
+      // Обновляем список админов с сервера для синхронизации
+      await refetch();
     },
     onError: async (error: any) => {
       // Получаем сообщение об ошибке с бэкенда
@@ -270,12 +272,12 @@ const AdminAdmins = () => {
       
       if (errorStatus === 404 || backendMessage.includes("not found") || backendMessage.includes("не найден")) {
         // Если 404, считаем, что задача выполнена (админ удален)
-        errorMessage = t("admin.adminNotFound") || "Администратор уже был удален.";
+        // Обновляем список с сервера, чтобы убрать уже удаленного админа из UI
+        await refetch();
         // Закрываем диалог
         setIsDeleteDialogOpen(false);
         setAdminToDelete(null);
-        // Показываем как info, а не ошибку
-        toast.info(errorMessage);
+        // Не показываем никакого сообщения - админ уже удален, просто обновили список
         return;
       } else if (errorStatus === 403 || backendMessage.includes("Access denied") || backendMessage.includes("доступ запрещен")) {
         errorMessage = t("auth.accessDenied") || "Доступ запрещен";
