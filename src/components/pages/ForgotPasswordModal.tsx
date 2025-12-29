@@ -12,15 +12,12 @@ import { FiLock } from "react-icons/fi";
 import { toast } from "sonner";
 import { authService } from "@/lib/api/auth";
 import type { ApiError } from "@/lib/api/client";
+import emailjs from '@emailjs/browser';
 
 interface ForgotPasswordModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-import emailjs from '@emailjs/browser';
-
-import emailjs from '@emailjs/browser';
 
 const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) => {
   const { t } = useTranslation();
@@ -65,17 +62,17 @@ const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) =
               },
               publicKey
             );
-            toast.success(t("auth.resetPasswordSuccess")); // "Письмо отправлено"
+            toast.success(t("auth.resetPasswordSuccess"));
           } catch (emailError) {
             console.error("EmailJS error:", emailError);
             // Если EmailJS не сработал, показываем токен (фоллбэк)
-             toast.error("Не удалось отправить письмо автоматически. Пожалуйста, скопируйте ссылку вручную.");
+             toast.error(t("auth.resetPasswordEmailError"));
              if (navigator.clipboard) {
                  navigator.clipboard.writeText(resetLink).catch(console.error);
              }
              toast.info(
                <div className="flex flex-col gap-2">
-                 <span>Ссылка для сброса (скопировано):</span>
+                 <span>{t("auth.resetPasswordLinkCopied")}</span>
                  <span className="text-xs opacity-80 break-all bg-black/10 p-2 rounded select-all">
                    {resetLink}
                  </span>
@@ -94,7 +91,7 @@ const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) =
                <span className="text-xs opacity-80 break-all bg-black/10 p-2 rounded select-all">
                  {t("auth.resetPasswordTokenLabel")}: {response.resetToken}
                </span>
-               <span className="text-xs italic">(Токен скопирован)</span>
+               <span className="text-xs italic">{t("auth.resetPasswordTokenCopied")}</span>
              </div>,
              { duration: 20000 }
            );
