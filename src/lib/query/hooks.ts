@@ -388,20 +388,30 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
     },
 
     onSuccess: (_, deletedId, context, mutation) => {
+      // Нормализуем ID для сравнения (приводим к строке)
+      const deletedIdStr = String(deletedId).trim();
+      
       // Убеждаемся, что админ удален из всех запросов (на случай, если что-то пропустили)
       const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
       allQueries.forEach(([key, data]) => {
         if (data && Array.isArray(data)) {
           const filtered = data.filter(admin => {
             // Проверяем и id, и _id на случай разных форматов данных
-            return admin.id !== deletedId && (admin as any)._id !== deletedId;
+            // Также проверяем строковое представление ID для надежности
+            const adminId = admin.id ? String(admin.id).trim() : null;
+            const admin_id = (admin as any)._id ? String((admin as any)._id).trim() : null;
+            
+            // Исключаем админа, если любой из его ID совпадает с удаленным ID
+            return adminId !== deletedIdStr && admin_id !== deletedIdStr;
           });
           queryClient.setQueryData<AdminUser[]>(key, filtered);
         }
       });
       
-      // Инвалидируем кэш для синхронизации с сервером
-      queryClient.invalidateQueries({ queryKey: queryKeys.admins });
+      // НЕ инвалидируем кэш сразу после удаления, чтобы не делать новый запрос
+      // который может вернуть старые данные из кэша базы данных
+      // Кэш уже обновлен оптимистично в onMutate и здесь в onSuccess
+      // Инвалидация произойдет при следующем естественном запросе (например, при перезагрузке страницы)
       
       if (userOnSuccess) {
         (userOnSuccess as any)(_, deletedId, context, mutation);
