@@ -195,23 +195,38 @@ const AdminCompanies = () => {
   });
 
   const { mutateAsync: deleteCompany, isPending: isDeleting } = useDeleteCompany({
-    onSuccess: async () => {
-      await refetch();
+    onSuccess: async (_, deletedId) => {
+      console.log(`[AdminCompanies] Company ${deletedId} deleted successfully`);
+      
+      // Закрываем диалог и очищаем состояние
       setIsDeleteDialogOpen(false);
       setCompanyToDelete(null);
       if (isViewOpen) {
         setIsViewOpen(false);
       }
+      
+      // Обновляем список компаний с сервера
+      await refetch();
+      
       toast.success(t("admin.companyDeleted") || "Компания удалена");
     },
     onError: (error: any) => {
+      console.error("[AdminCompanies] Delete company error:", error);
+      
       // Получаем сообщение об ошибке с бэкенда
-      const backendMessage = error?.message || error?.response?.data?.error?.message || "";
+      const backendMessage = error?.message || error?.response?.data?.error?.message || error?.response?.data?.message || "";
       
       // Маппинг сообщений об ошибках на ключи переводов
       let translationKey = "common.error";
+      let errorMessage = backendMessage || t("common.error");
       
-      if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
+      if (backendMessage.includes("Company not found") || backendMessage.includes("not found")) {
+        translationKey = "admin.companyNotFound";
+        errorMessage = t("admin.companyNotFound") || "Компания не найдена";
+      } else if (backendMessage.includes("Access denied") || backendMessage.includes("Forbidden")) {
+        translationKey = "auth.accessDenied";
+        errorMessage = t("auth.accessDenied") || "Доступ запрещен";
+      } else if (backendMessage.includes("Company with this code already exists") || backendMessage.includes("code already exists")) {
         translationKey = "auth.companyCodeAlreadyExists";
       } else if (backendMessage.includes("User already exists") ||
                  backendMessage.includes("User with this email already exists") || 
@@ -221,14 +236,16 @@ const AdminCompanies = () => {
         translationKey = "auth.companyFieldsRequired";
       } else if (backendMessage.includes("Password must be at least 8 characters") || backendMessage.includes("Password must be at least 6 characters")) {
         translationKey = "auth.passwordMinLength";
-      } else if (backendMessage.includes("Access denied")) {
-        translationKey = "auth.accessDenied";
       }
       
       // Показываем переведенное сообщение или общую ошибку на выбранном языке
       const translatedMessage = t(translationKey);
-      const finalMessage = translatedMessage !== translationKey ? translatedMessage : t("common.error");
+      const finalMessage = translatedMessage !== translationKey ? translatedMessage : errorMessage;
       toast.error(finalMessage);
+      
+      // Закрываем диалог даже при ошибке
+      setIsDeleteDialogOpen(false);
+      setCompanyToDelete(null);
     },
   });
 
@@ -1607,7 +1624,12 @@ const AdminCompanies = () => {
             <AlertDialogAction
               onClick={async () => {
                 if (companyToDelete) {
-                  await deleteCompany(companyToDelete.id);
+                  try {
+                    await deleteCompany(companyToDelete.id);
+                  } catch (error) {
+                    // Ошибка уже обработана в onError хука
+                    console.error("[AdminCompanies] Failed to delete company:", error);
+                  }
                 }
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
