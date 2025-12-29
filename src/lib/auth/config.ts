@@ -77,11 +77,29 @@ export const authOptions: NextAuthOptions = {
       // Для OAuth провайдеров (Google)
       if (account?.provider === "google") {
         try {
-          // Проверяем/создаем пользователя в БД через API
+          // Проверяем валидность email
           const email = user.email;
           if (!email) return false;
 
-          // Просто разрешаем вход, создание пользователя будет в jwt callback
+          // Синхронизируем пользователя с БД через API и проверяем права доступа
+          const syncResponse = await fetch(`${API_CONFIG.BASE_URL}/auth/oauth-sync`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: user.email,
+              name: user.name,
+              provider: account.provider,
+            }),
+          });
+
+          if (!syncResponse.ok) {
+            console.error("OAuth sign in denied by API:", await syncResponse.text());
+            return false; // Запрещаем вход, если API вернул ошибку (например, 403)
+          }
+
+          // Если все ок, разрешаем вход
           return true;
         } catch (error) {
           console.error("OAuth sign in error:", error);
