@@ -49,18 +49,9 @@ const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) =
         const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID?.replace(/^["']|["']$/g, '') || process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
         const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY?.replace(/^["']|["']$/g, '') || process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
 
-        console.log('EmailJS Config:', { 
-          hasServiceId: !!serviceId, 
-          hasTemplateId: !!templateId, 
-          hasPublicKey: !!publicKey,
-          serviceIdLength: serviceId?.length,
-          templateIdLength: templateId?.length,
-          publicKeyLength: publicKey?.length
-        });
-
         if (serviceId && templateId && publicKey) {
           try {
-            console.log('Sending email via EmailJS...', { email, resetLink });
+            // Пытаемся отправить письмо через EmailJS
             await emailjs.send(
               serviceId,
               templateId,
@@ -71,18 +62,17 @@ const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) =
               },
               publicKey
             );
-            console.log('Email sent successfully via EmailJS');
+            // Успешно отправлено - показываем только успешное сообщение БЕЗ токена
             toast.success(t("auth.resetPasswordSuccess"));
           } catch (emailError) {
-            console.error("EmailJS error:", emailError);
-            // Если EmailJS не сработал, показываем токен (фоллбэк)
-            toast.error("Не удалось отправить письмо. Ссылка скопирована в буфер обмена.");
+            // Если EmailJS не сработал, показываем токен (фоллбэк) - только в случае ошибки
             if (navigator.clipboard) {
-                navigator.clipboard.writeText(resetLink).catch(console.error);
+              navigator.clipboard.writeText(resetLink).catch(() => {});
             }
+            toast.error("Не удалось отправить письмо автоматически. Ссылка скопирована в буфер обмена.");
             toast.info(
               <div className="flex flex-col gap-2">
-                <span>Ссылка для сброса пароля (скопировано):</span>
+                <span>Ссылка для сброса пароля:</span>
                 <span className="text-xs opacity-80 break-all bg-black/10 p-2 rounded select-all">
                   {resetLink}
                 </span>
@@ -91,20 +81,20 @@ const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) =
             );
           }
         } else {
-           // Если ключи не настроены - показываем токен (для разработки)
-           if (navigator.clipboard) {
-             navigator.clipboard.writeText(resetLink).catch(console.error);
-           }
-           toast.success(
-             <div className="flex flex-col gap-2">
-               <span>{t("auth.resetPasswordSuccess")}</span>
-               <span className="text-xs opacity-80 break-all bg-black/10 p-2 rounded select-all">
-                 {t("auth.resetPasswordTokenLabel")}: {response.resetToken}
-               </span>
-               <span className="text-xs italic">{t("auth.resetPasswordTokenCopied")}</span>
-             </div>,
-             { duration: 20000 }
-           );
+          // Если ключи EmailJS не настроены - показываем токен (только для разработки/отладки)
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(resetLink).catch(() => {});
+          }
+          toast.warning("EmailJS не настроен. Ссылка скопирована в буфер обмена.");
+          toast.info(
+            <div className="flex flex-col gap-2">
+              <span>Ссылка для сброса пароля:</span>
+              <span className="text-xs opacity-80 break-all bg-black/10 p-2 rounded select-all">
+                {resetLink}
+              </span>
+            </div>,
+            { duration: 20000 }
+          );
         }
       } else {
         toast.success(t("auth.resetPasswordSuccess"));
