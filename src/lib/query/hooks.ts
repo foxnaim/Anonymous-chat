@@ -863,11 +863,21 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
     },
 
     onError: (error, variables, context, mutation) => {
+      // console.error('[useDeleteCompany] Error deleting:', error);
+      
       const errorStatus = (error as any)?.status || (error as any)?.response?.status;
+      const errorMessage = (error as any)?.message || "";
       const deletedIdStr = String(variables).trim();
+      
+      const isNotFound = 
+        errorStatus === 404 || 
+        errorMessage.includes("404") || 
+        errorMessage.toLowerCase().includes("not found");
 
-      // Если 404, значит уже удалено. Удаляем из кэша принудительно.
-      if (errorStatus === 404) {
+      // Если ошибка 404 или "Not Found", значит компания уже удалена. НЕ откатываем кэш.
+      if (isNotFound) {
+         // console.log('[useDeleteCompany] 404/Not Found detected - forcing removal from cache');
+         
          const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
          allQueries.forEach(([key, data]) => {
            if (data && Array.isArray(data)) {
@@ -876,13 +886,18 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
                const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
                return companyId !== deletedIdStr && company_id !== deletedIdStr;
              });
-             queryClient.setQueryData<Company[]>(key, filtered);
+             if (filtered.length !== data.length) {
+                // console.log(`[useDeleteCompany] Removed item from query key: ${key}`);
+                queryClient.setQueryData<Company[]>(key, filtered);
+             }
            }
          });
-         // Здесь можно инвалидировать, так как элемент точно удален
+         
+         // Инвалидируем, чтобы при следующем запросе (например, смена страницы) данные обновились
          queryClient.invalidateQueries({ queryKey: queryKeys.companies, exact: false });
       } else {
-         // Для других ошибок откатываем
+         // console.log('[useDeleteCompany] Other error - rolling back');
+         // Для других ошибок откатываем изменения
          if (context?.previousData) {
            context.previousData.forEach(([key, old]) => {
              queryClient.setQueryData<Company[] | undefined>(key, old);
