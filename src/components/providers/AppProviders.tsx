@@ -5,6 +5,7 @@ import { ThemeProvider, useTheme } from "next-themes";
 import { useEffect, useRef } from "react";
 import ReduxProvider from "./ReduxProvider";
 import QueryProvider from "./QueryProvider";
+import { SessionProvider } from "./SessionProvider";
 // AuthProvider удален - используем Redux auth
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -49,16 +50,18 @@ interface AppProvidersProps {
 const AppProviders = ({ children }: AppProvidersProps) => (
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
     <ThemeInitializer>
-      <ReduxProvider>
-        <QueryProvider>
-          <FullscreenProvider>
-            <TooltipProvider>
-              {children}
-              <Toaster />
-            </TooltipProvider>
-          </FullscreenProvider>
-        </QueryProvider>
-      </ReduxProvider>
+      <SessionProvider>
+        <ReduxProvider>
+          <QueryProvider>
+            <FullscreenProvider>
+              <TooltipProvider>
+                {children}
+                <Toaster />
+              </TooltipProvider>
+            </FullscreenProvider>
+          </QueryProvider>
+        </ReduxProvider>
+      </SessionProvider>
     </ThemeInitializer>
   </ThemeProvider>
 );
