@@ -812,7 +812,21 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
       // Нормализуем ID
       const deletedIdStr = String(deletedId).trim();
 
-      // Оптимистично удаляем из кэша используя setQueriesData для обновления всех запросов
+      // Оптимистично удаляем из кэша - обновляем каждый ключ отдельно
+      previousData.forEach(([key, oldData]) => {
+        if (oldData && Array.isArray(oldData)) {
+          const filtered = oldData.filter(company => {
+            const companyId = company.id ? String(company.id).trim() : null;
+            const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
+            return companyId !== deletedIdStr && company_id !== deletedIdStr;
+          });
+          
+          // ВСЕГДА создаем новый массив (для обхода structural sharing)
+          queryClient.setQueryData<Company[]>(key, filtered);
+        }
+      });
+      
+      // Также обновляем через setQueriesData
       queryClient.setQueriesData<Company[]>(
         { queryKey: queryKeys.companies, exact: false },
         (oldData) => {
@@ -826,25 +840,10 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
             return companyId !== deletedIdStr && company_id !== deletedIdStr;
           });
           
-          // Возвращаем новый массив только если что-то изменилось
-          return filtered.length !== oldData.length ? [...filtered] : oldData;
+          // ВСЕГДА возвращаем новый массив
+          return filtered;
         }
       );
-      
-      // Дополнительно обновляем каждый ключ отдельно для гарантии
-      previousData.forEach(([key, oldData]) => {
-        if (oldData && Array.isArray(oldData)) {
-          const filtered = oldData.filter(company => {
-            const companyId = company.id ? String(company.id).trim() : null;
-            const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
-            return companyId !== deletedIdStr && company_id !== deletedIdStr;
-          });
-          
-          if (filtered.length !== oldData.length) {
-            queryClient.setQueryData<Company[]>(key, [...filtered]);
-          }
-        }
-      });
 
       if (userOnMutate) {
         (userOnMutate as any)(deletedId);
@@ -857,7 +856,24 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
       // Нормализуем ID
       const deletedIdStr = String(deletedId).trim();
       
-      // Используем setQueriesData для обновления ВСЕХ связанных запросов сразу
+      // Получаем все query keys для компаний
+      const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
+      
+      // Обновляем каждый query key отдельно, создавая НОВЫЙ массив
+      allQueries.forEach(([key, data]) => {
+        if (data && Array.isArray(data)) {
+          const filtered = data.filter(company => {
+            const companyId = company.id ? String(company.id).trim() : null;
+            const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
+            return companyId !== deletedIdStr && company_id !== deletedIdStr;
+          });
+          
+          // ВСЕГДА создаем новый массив, даже если длина не изменилась (для обхода structural sharing)
+          queryClient.setQueryData<Company[]>(key, filtered);
+        }
+      });
+      
+      // Также обновляем через setQueriesData для всех запросов
       queryClient.setQueriesData<Company[]>(
         { queryKey: queryKeys.companies, exact: false },
         (oldData) => {
@@ -871,26 +887,15 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
             return companyId !== deletedIdStr && company_id !== deletedIdStr;
           });
           
-          // Возвращаем новый массив только если что-то изменилось
-          return filtered.length !== oldData.length ? [...filtered] : oldData;
+          // ВСЕГДА возвращаем новый массив
+          return filtered;
         }
       );
       
-      // Дополнительно обновляем конкретные ключи для надежности
-      const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
-      allQueries.forEach(([key, data]) => {
-        if (data && Array.isArray(data)) {
-          const filtered = data.filter(company => {
-            const companyId = company.id ? String(company.id).trim() : null;
-            const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
-            return companyId !== deletedIdStr && company_id !== deletedIdStr;
-          });
-          
-          if (filtered.length !== data.length) {
-            queryClient.setQueryData<Company[]>(key, [...filtered]);
-          }
-        }
-      });
+      // Принудительно обновляем компоненты через небольшой refetch с задержкой
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: queryKeys.companies, exact: false });
+      }, 100);
       
       if (userOnSuccess) {
         (userOnSuccess as any)(_, deletedId, context, mutation);
@@ -911,7 +916,24 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
 
       // Если ошибка 404 или "Not Found", значит компания уже удалена. НЕ откатываем кэш.
       if (isNotFound) {
-         // Используем setQueriesData для обновления всех связанных запросов
+         // Получаем все query keys
+         const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
+         
+         // Обновляем каждый ключ отдельно
+         allQueries.forEach(([key, data]) => {
+           if (data && Array.isArray(data)) {
+             const filtered = data.filter(company => {
+               const companyId = company.id ? String(company.id).trim() : null;
+               const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
+               return companyId !== deletedIdStr && company_id !== deletedIdStr;
+             });
+             
+             // ВСЕГДА создаем новый массив
+             queryClient.setQueryData<Company[]>(key, filtered);
+           }
+         });
+         
+         // Также обновляем через setQueriesData
          queryClient.setQueriesData<Company[]>(
            { queryKey: queryKeys.companies, exact: false },
            (oldData) => {
@@ -925,25 +947,10 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
                return companyId !== deletedIdStr && company_id !== deletedIdStr;
              });
              
-             return filtered.length !== oldData.length ? [...filtered] : oldData;
+             // ВСЕГДА возвращаем новый массив
+             return filtered;
            }
          );
-         
-         // Дополнительно обновляем каждый ключ отдельно
-         const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
-         allQueries.forEach(([key, data]) => {
-           if (data && Array.isArray(data)) {
-             const filtered = data.filter(company => {
-               const companyId = company.id ? String(company.id).trim() : null;
-               const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
-               return companyId !== deletedIdStr && company_id !== deletedIdStr;
-             });
-             
-             if (filtered.length !== data.length) {
-               queryClient.setQueryData<Company[]>(key, [...filtered]);
-             }
-           }
-         });
       } else {
          // console.log('[useDeleteCompany] Other error - rolling back');
          // Для других ошибок откатываем изменения
