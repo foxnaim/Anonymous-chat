@@ -49,13 +49,20 @@ export const useNextAuth = () => {
         }
       }
     } else if (status === "unauthenticated") {
-      // Очищаем состояние при выходе
-      hasSynced.current = null;
-      if (typeof window !== 'undefined') {
-        sessionStorage.removeItem('oauth_login_notified');
+      // Проверяем, есть ли токен в куках, перед тем как делать логаут
+      // Если токен есть, значит мы залогинены через Credentials (не NextAuth)
+      // В этом случае НЕ нужно делать logout
+      const hasCookieToken = typeof window !== 'undefined' ? document.cookie.includes('feedbackhub_token') : false;
+      
+      if (!hasCookieToken) {
+        // Очищаем состояние при выходе
+        hasSynced.current = null;
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('oauth_login_notified');
+        }
+        dispatch(logout());
+        removeToken();
       }
-      dispatch(logout());
-      removeToken();
     }
   }, [session, status, dispatch, router]);
 

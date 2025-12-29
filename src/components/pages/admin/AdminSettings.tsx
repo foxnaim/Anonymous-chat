@@ -21,23 +21,16 @@ import { useFullscreenContext } from "@/components/providers/FullscreenProvider"
 
 const AdminSettings = () => {
   const { t, i18n: i18nInstance } = useTranslation();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { isFullscreen, setFullscreen } = useFullscreenContext();
   const dispatch = useDispatch();
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isEditingEmail, setIsEditingEmail] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
-  const [emailPassword, setEmailPassword] = useState("");
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showEmailPassword, setShowEmailPassword] = useState(false);
-  const [isLanguageChanging, setIsLanguageChanging] = useState(false);
   
-  // Загружаем настройки из API
-  const { data: settings, isLoading: settingsLoading, refetch: refetchSettings } = useAdminSettings();
+  // ... (states)
+
+  // Загружаем настройки из API только если пользователь авторизован
+  const { data: settings, isLoading: settingsLoading, refetch: refetchSettings } = useAdminSettings({
+    enabled: isAuthenticated,
+  });
   const { mutateAsync: updateSettings, isPending: isUpdating } = useUpdateAdminSettings({
     onSuccess: async (updatedData) => {
       // После успешного обновления принудительно обновляем настройки

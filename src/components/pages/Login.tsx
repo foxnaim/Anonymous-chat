@@ -31,6 +31,9 @@ const Login = () => {
       const result = await login(email, password);
       setIsLoading(false);
       if (result.success && result.user) {
+        // Даем время на установку куки перед редиректом
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         // Используем пользователя из результата логина для определения роли
         const from = searchParams?.get('from');
         if (from) {
