@@ -18,6 +18,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import { useAuth } from "@/lib/redux";
+import { useNextAuth } from "@/lib/hooks/useNextAuth";
 import { useCompany } from "@/lib/query";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,6 +30,7 @@ export const CompanyHeader = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { signOut: nextAuthSignOut, isAuthenticated: isNextAuthAuthenticated } = useNextAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showBackButton, setShowBackButton] = useState(false);
   
@@ -164,12 +166,47 @@ export const CompanyHeader = () => {
                       <HeadlessMenu.Item>
                         {({ active }) => (
                           <button
-                            onClick={() => {
-                              logout();
-                              // Используем window.location для полного сброса состояния (requestAnimationFrame для неблокирующего редиректа)
-                              requestAnimationFrame(() => {
-                                window.location.href = "/";
-                              });
+                            onClick={async () => {
+                              try {
+                                // Сначала выходим из NextAuth (если был залогинен через OAuth)
+                                if (isNextAuthAuthenticated) {
+                                  await nextAuthSignOut();
+                                }
+                                
+                                // Затем выходим из Redux (это также удалит токен)
+                                logout();
+                                
+                                // Дополнительно очищаем все куки NextAuth
+                                if (typeof window !== 'undefined') {
+                                  // Удаляем все NextAuth куки
+                                  const nextAuthCookies = [
+                                    'next-auth.session-token',
+                                    '__Secure-next-auth.session-token',
+                                    'next-auth.csrf-token',
+                                    '__Host-next-auth.csrf-token',
+                                    'next-auth.callback-url',
+                                    '__Secure-next-auth.callback-url',
+                                  ];
+                                  
+                                  nextAuthCookies.forEach(cookieName => {
+                                    document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                                    document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
+                                  });
+                                }
+                                
+                                // Используем window.location для полного сброса состояния
+                                // Задержка, чтобы все успело очиститься
+                                setTimeout(() => {
+                                  window.location.href = "/";
+                                }, 200);
+                              } catch (error) {
+                                console.error('Logout error:', error);
+                                // В случае ошибки все равно делаем редирект
+                                logout();
+                                setTimeout(() => {
+                                  window.location.href = "/";
+                                }, 200);
+                              }
                             }}
                             className={cn(
                               "w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-md transition-colors",

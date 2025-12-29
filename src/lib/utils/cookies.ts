@@ -43,7 +43,17 @@ export const getCookie = (name: string): string | null => {
 export const deleteCookie = (name: string): void => {
   if (typeof document === 'undefined') return;
   
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+  // Удаляем куку с разными вариантами настроек для надежности
+  const domain = window.location.hostname;
+  const paths = ['/', ''];
+  const domains = [domain, `.${domain}`, ''];
+  
+  paths.forEach(path => {
+    domains.forEach(dom => {
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; domain=${dom}; SameSite=Lax`;
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; domain=${dom}; SameSite=None; Secure`;
+    });
+  });
 };
 
 /**
