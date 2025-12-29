@@ -860,8 +860,6 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
       
       // Инвалидируем и обновляем кэш с сервера для гарантии актуальности данных
       queryClient.invalidateQueries({ queryKey: queryKeys.companies, exact: false });
-      // Принудительно обновляем данные с сервера
-      queryClient.refetchQueries({ queryKey: queryKeys.companies, exact: false });
       
       if (userOnSuccess) {
         (userOnSuccess as any)(_, deletedId, context, mutation);
