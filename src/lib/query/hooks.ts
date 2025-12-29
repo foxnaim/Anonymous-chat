@@ -795,24 +795,109 @@ export const useUpdateCompanyPlan = (options?: UseMutationOptions<Company, Error
 export const useDeleteCompany = (options?: UseMutationOptions<void, Error, string | number>) => {
   const queryClient = useQueryClient();
   const userOnSuccess = options?.onSuccess;
+  const userOnError = options?.onError;
+  const userOnMutate = options?.onMutate;
+  const { onSuccess: _, onError: __, onMutate: ___, ...rest } = options ?? {};
   
-  return useMutation({
-    mutationFn: (id) => companyService.delete(id),
-    onSuccess: (data, id, context) => {
-      // Оптимистично удаляем компанию из кэша
-      queryClient.setQueryData<Company[]>(queryKeys.companies, (oldData) => {
-        if (!oldData) return [];
-        return oldData.filter((company) => company.id !== id);
+  return useMutation<void, Error, string | number, { previousData: Array<[QueryKey, Company[] | undefined]> }>({
+    mutationFn: (id: string | number) => companyService.delete(id),
+
+    onMutate: async (deletedId) => {
+      // Отменяем исходящие запросы, чтобы они не перезаписали наш оптимистичный апдейт
+      await queryClient.cancelQueries({ queryKey: queryKeys.companies, exact: false });
+
+      // Сохраняем предыдущее состояние
+      const previousData = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
+
+      // Оптимистично удаляем компанию из кэша сразу - обновляем ВСЕ запросы
+      previousData.forEach(([key, oldData]) => {
+        if (oldData && Array.isArray(oldData)) {
+          const filtered = oldData.filter(company => {
+            // Проверяем и id, и _id на случай разных форматов данных
+            return company.id !== deletedId && (company as any)._id !== deletedId;
+          });
+          queryClient.setQueryData<Company[]>(key, filtered);
+        }
       });
       
-      // Также инвалидируем запрос для синхронизации с сервером
-      queryClient.invalidateQueries({ queryKey: queryKeys.companies });
+      // Если кэша не было, ставим пустой массив
+      if (previousData.length === 0) {
+        queryClient.setQueryData<Company[]>(queryKeys.companies, []);
+      }
+
+      if (userOnMutate) {
+        (userOnMutate as any)(deletedId);
+      }
+
+      return { previousData };
+    },
+
+    onSuccess: (_, deletedId, context, mutation) => {
+      // Нормализуем ID для сравнения (приводим к строке)
+      const deletedIdStr = String(deletedId).trim();
+      
+      // Убеждаемся, что компания удалена из всех запросов (на случай, если что-то пропустили)
+      const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
+      allQueries.forEach(([key, data]) => {
+        if (data && Array.isArray(data)) {
+          const filtered = data.filter(company => {
+            // Проверяем и id, и _id на случай разных форматов данных
+            const companyId = company.id ? String(company.id).trim() : null;
+            const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
+            
+            // Исключаем компанию, если любой из её ID совпадает с удаленным ID
+            return companyId !== deletedIdStr && company_id !== deletedIdStr;
+          });
+          queryClient.setQueryData<Company[]>(key, filtered);
+        }
+      });
+      
+      // Инвалидируем и обновляем кэш с сервера для гарантии актуальности данных
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies, exact: false });
+      // Принудительно обновляем данные с сервера
+      queryClient.refetchQueries({ queryKey: queryKeys.companies, exact: false });
       
       if (userOnSuccess) {
-        (userOnSuccess as any)(data, id, context);
+        (userOnSuccess as any)(_, deletedId, context, mutation);
       }
     },
-    ...options,
+
+    onError: (error, variables, context, mutation) => {
+      const errorStatus = (error as any)?.status || (error as any)?.response?.status;
+      const deletedIdStr = String(variables).trim();
+
+      // Если ошибка 404, значит компания уже удалена. НЕ откатываем кэш.
+      if (errorStatus === 404) {
+         // Явно удаляем компанию из кэша, если она там еще есть
+         const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
+         allQueries.forEach(([key, data]) => {
+           if (data && Array.isArray(data)) {
+             const filtered = data.filter(company => {
+               // Проверяем и id, и _id на случай разных форматов данных
+               const companyId = company.id ? String(company.id).trim() : null;
+               const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
+               return companyId !== deletedIdStr && company_id !== deletedIdStr;
+             });
+             queryClient.setQueryData<Company[]>(key, filtered);
+           }
+         });
+         
+         // Обновляем список с сервера, чтобы убедиться, что все синхронизировано
+         queryClient.invalidateQueries({ queryKey: queryKeys.companies, exact: false });
+      } else {
+         // Для других ошибок откатываем изменения
+         if (context?.previousData) {
+           context.previousData.forEach(([key, old]) => {
+             queryClient.setQueryData<Company[] | undefined>(key, old);
+           });
+         }
+      }
+
+      if (userOnError) {
+        (userOnError as any)(error, variables, context, mutation);
+      }
+    },
+    ...rest,
   });
 };
 
