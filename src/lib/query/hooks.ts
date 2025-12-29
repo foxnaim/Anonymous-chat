@@ -400,6 +400,9 @@ export const useDeleteAdmin = (options?: UseMutationOptions<void, Error, string>
         }
       });
       
+      // Инвалидируем кэш для синхронизации с сервером
+      queryClient.invalidateQueries({ queryKey: queryKeys.admins });
+      
       if (userOnSuccess) {
         (userOnSuccess as any)(_, deletedId, context, mutation);
       }

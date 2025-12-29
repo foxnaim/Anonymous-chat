@@ -896,6 +896,36 @@ const AdminPanel = () => {
                   <Dialog.Title className="text-lg font-semibold text-foreground">
                     {t("admin.createCompany")}
                   </Dialog.Title>
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      if (!newCompany.name.trim() || !newCompany.adminEmail.trim() || newCompany.code.length !== 8 || !newCompany.password.trim()) {
+                        toast.error(t("common.fillAllFields") || "Заполните все поля");
+                        return;
+                      }
+                      // Проверка надежности пароля
+                      const passwordValidation = validatePasswordStrength(newCompany.password);
+                      if (!passwordValidation.isValid) {
+                        // Показываем первую ошибку
+                        const firstError = passwordValidation.errors[0];
+                        toast.error(firstError || t("auth.passwordTooWeak"));
+                        return;
+                      }
+                      await createCompany({
+                        ...newCompany,
+                        status: COMPANY_STATUS.ACTIVE, // По умолчанию "Активна" для новых компаний
+                        messagesLimit: 100,
+                        storageLimit: 10,
+                      });
+                      setNewCompany({
+                        name: "",
+                        adminEmail: "",
+                        code: generateCode(),
+                        password: "",
+                        plan: "Пробный",
+                      });
+                    }}
+                  >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm text-foreground">{t("admin.companyName")}</label>
@@ -925,6 +955,7 @@ const AdminPanel = () => {
                           placeholder="ACME0001"
                         />
                         <Button
+                          type="button"
                           variant="outline"
                           onClick={() => setNewCompany((prev) => ({ ...prev, code: generateCode() }))}
                         >
@@ -954,11 +985,13 @@ const AdminPanel = () => {
                         onChange={(e) => setNewCompany({ ...newCompany, password: e.target.value })}
                         placeholder="Минимум 6 символов"
                         minLength={8}
+                        autoComplete="new-password"
                       />
                     </div>
                   </div>
-                  <div className="flex justify-end gap-3 pt-2">
+                  <div className="flex justify-end gap-3 pt-2 mt-4">
                     <Button
+                      type="button"
                       ref={createCloseRef}
                       variant="outline"
                       onClick={() => setIsCreateOpen(false)}
@@ -967,38 +1000,13 @@ const AdminPanel = () => {
                       {t("common.cancel")}
                     </Button>
                     <Button
-                      onClick={async () => {
-                        if (!newCompany.name.trim() || !newCompany.adminEmail.trim() || newCompany.code.length !== 8 || !newCompany.password.trim()) {
-                          toast.error(t("common.fillAllFields") || "Заполните все поля");
-                          return;
-                        }
-                        // Проверка надежности пароля
-                        const passwordValidation = validatePasswordStrength(newCompany.password);
-                        if (!passwordValidation.isValid) {
-                          // Показываем первую ошибку
-                          const firstError = passwordValidation.errors[0];
-                          toast.error(firstError || t("auth.passwordTooWeak"));
-                          return;
-                        }
-                        await createCompany({
-                          ...newCompany,
-                          status: COMPANY_STATUS.ACTIVE, // По умолчанию "Активна" для новых компаний
-                          messagesLimit: 100,
-                          storageLimit: 10,
-                        });
-                        setNewCompany({
-                          name: "",
-                          adminEmail: "",
-                          code: generateCode(),
-                          password: "",
-                          plan: "Пробный",
-                        });
-                      }}
+                      type="submit"
                       disabled={isCreating}
                     >
                       {isCreating ? t("common.loading") : t("common.create")}
                     </Button>
                   </div>
+                  </form>
                 </Dialog.Panel>
               </Transition.Child>
             </div>
