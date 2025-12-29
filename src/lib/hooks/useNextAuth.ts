@@ -17,10 +17,12 @@ export const useNextAuth = () => {
   const { data: session, status } = useSession();
   const dispatch = useDispatch();
   const router = useRouter();
-  const hasSynced = useRef(false);
+  const hasSynced = useRef<string | null>(null);
 
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
+      const userId = session.user.id;
+      
       // Синхронизируем сессию NextAuth с Redux
       const user: User = {
         id: session.user.id,
@@ -37,14 +39,21 @@ export const useNextAuth = () => {
         setToken(session.apiToken);
       }
 
-      // Показываем уведомление о успешном входе только один раз
-      if (!hasSynced.current) {
-        hasSynced.current = true;
-        toast.success("Вход выполнен успешно");
+      // Показываем уведомление о успешном входе только один раз для этого пользователя
+      if (hasSynced.current !== userId) {
+        hasSynced.current = userId;
+        // Показываем уведомление только если это новый вход (не при перезагрузке страницы)
+        if (typeof window !== 'undefined' && !sessionStorage.getItem('oauth_login_notified')) {
+          sessionStorage.setItem('oauth_login_notified', 'true');
+          toast.success("Вход выполнен успешно");
+        }
       }
     } else if (status === "unauthenticated") {
       // Очищаем состояние при выходе
-      hasSynced.current = false;
+      hasSynced.current = null;
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('oauth_login_notified');
+      }
       dispatch(logout());
       removeToken();
     }

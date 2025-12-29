@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/redux";
+import { useNextAuth } from "@/lib/hooks/useNextAuth";
 import { UserRole } from "@/types";
 import { useEffect } from "react";
 import { getToken } from "@/lib/utils/cookies";
@@ -15,40 +16,53 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { t } = useTranslation();
   const { isAuthenticated, user, isLoading } = useAuth();
+  const { isAuthenticated: isNextAuthAuthenticated, session, isLoading: isNextAuthLoading } = useNextAuth();
   const router = useRouter();
 
+  // Проверяем авторизацию через Redux или NextAuth
+  const hasAuth = isAuthenticated || isNextAuthAuthenticated;
+  const currentUser = user || (session?.user ? {
+    id: session.user.id,
+    email: session.user.email,
+    role: session.user.role as UserRole,
+    companyId: session.user.companyId,
+    name: session.user.name || undefined,
+  } : null);
+  const authLoading = isLoading || isNextAuthLoading;
+
   useEffect(() => {
-    // Проверяем наличие токена
+    // Проверяем наличие токена или NextAuth сессии
     const token = getToken();
+    const hasTokenOrSession = token || isNextAuthAuthenticated;
     
-    // Если токена нет, сразу перенаправляем на главный экран
-    if (!token) {
+    // Если нет ни токена, ни сессии, перенаправляем на главный экран
+    if (!hasTokenOrSession && !authLoading) {
       router.replace("/");
       return;
     }
 
     // Если загрузка завершена и пользователь не аутентифицирован, перенаправляем
-    if (!isLoading && !isAuthenticated) {
+    if (!authLoading && !hasAuth) {
       router.replace("/");
       return;
     }
 
     // Проверяем роль пользователя, если требуется
-    if (!isLoading && isAuthenticated && user && requiredRole) {
+    if (!authLoading && hasAuth && currentUser && requiredRole) {
       const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-      if (!roles.includes(user.role)) {
-        if (user.role === "company") {
+      if (!roles.includes(currentUser.role)) {
+        if (currentUser.role === "company") {
           router.replace("/company");
-        } else if (user.role === "admin" || user.role === "super_admin") {
+        } else if (currentUser.role === "admin" || currentUser.role === "super_admin") {
           router.replace("/admin");
         } else {
           router.replace("/");
         }
       }
     }
-  }, [isAuthenticated, user, isLoading, requiredRole, router]);
+  }, [hasAuth, currentUser, authLoading, requiredRole, router, isNextAuthAuthenticated]);
 
-  if (isLoading) {
+  if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -59,15 +73,16 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
-  // Проверяем токен еще раз перед рендером
+  // Проверяем токен или NextAuth сессию еще раз перед рендером
   const token = getToken();
-  if (!token || !isAuthenticated || !user) {
+  const hasTokenOrSession = token || isNextAuthAuthenticated;
+  if (!hasTokenOrSession || !hasAuth || !currentUser) {
     return null;
   }
 
   if (requiredRole) {
     const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-    if (!roles.includes(user.role)) {
+    if (!roles.includes(currentUser.role)) {
       return null;
     }
   }

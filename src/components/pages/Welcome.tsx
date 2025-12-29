@@ -11,6 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/lib/redux";
+import { useNextAuth } from "@/lib/hooks/useNextAuth";
 import { useCompanyByCode, companyService } from "@/lib/query";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -40,6 +41,7 @@ function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated: isNextAuthAuthenticated, session } = useNextAuth();
   const [companyCode, setCompanyCode] = useState("");
   const [validatedCode, setValidatedCode] = useState<string | null>(null);
   const [password, setPassword] = useState("");
@@ -182,19 +184,26 @@ function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
                 <LanguageSwitcher />
               </div>
               {(() => {
-                // Проверяем токен напрямую, чтобы сразу скрыть кнопку при его отсутствии
+                // Проверяем токен или NextAuth сессию
                 const token = getToken();
-                const hasValidAuth = token && isAuthenticated && user;
+                const currentUser = user || (session?.user ? {
+                  id: session.user.id,
+                  email: session.user.email,
+                  role: session.user.role,
+                  companyId: session.user.companyId,
+                  name: session.user.name || undefined,
+                } : null);
+                const hasValidAuth = (token && isAuthenticated && user) || (isNextAuthAuthenticated && session?.user);
                 
-                if (hasValidAuth) {
+                if (hasValidAuth && currentUser) {
                   return (
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={() => {
-                        if (user!.role === "admin" || user!.role === "super_admin") {
+                        if (currentUser.role === "admin" || currentUser.role === "super_admin") {
                           router.push("/admin");
-                        } else if (user!.role === "company") {
+                        } else if (currentUser.role === "company") {
                           router.push("/company");
                         }
                       }} 

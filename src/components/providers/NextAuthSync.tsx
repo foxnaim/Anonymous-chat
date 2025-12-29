@@ -21,14 +21,16 @@ export const NextAuthSync = () => {
       // Перенаправляем только если мы на главной странице или на странице входа
       if (pathname === "/" || pathname === "/login") {
         // Небольшая задержка, чтобы Redux успел обновиться
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           if (role === "admin" || role === "super_admin") {
             router.replace("/admin");
           } else if (role === "company") {
             router.replace("/company");
           }
           // Для role === "user" остаемся на главной странице
-        }, 100);
+        }, 200);
+        
+        return () => clearTimeout(timeoutId);
       }
     }
   }, [status, isAuthenticated, session, router, pathname]);
