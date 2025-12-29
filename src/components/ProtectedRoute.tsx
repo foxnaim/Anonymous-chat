@@ -50,10 +50,14 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     // Проверяем роль пользователя, если требуется
     if (!authLoading && hasAuth && currentUser && requiredRole) {
       const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-      if (!roles.includes(currentUser.role)) {
-        if (currentUser.role === "company") {
+      // Приводим роли к нижнему регистру для надежного сравнения
+      const userRole = String(currentUser.role).toLowerCase();
+      const allowedRoles = roles.map(r => String(r).toLowerCase());
+      
+      if (!allowedRoles.includes(userRole)) {
+        if (userRole === "company") {
           router.replace("/company");
-        } else if (currentUser.role === "admin" || currentUser.role === "super_admin") {
+        } else if (userRole === "admin" || userRole === "super_admin") {
           router.replace("/admin");
         } else {
           router.replace("/");
@@ -85,7 +89,11 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
   // Проверяем роль пользователя, если требуется
   if (requiredRole) {
     const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-    if (!roles.includes(currentUser.role)) {
+    // Приводим роли к нижнему регистру для надежного сравнения
+    const userRole = String(currentUser.role).toLowerCase();
+    const allowedRoles = roles.map(r => String(r).toLowerCase());
+    
+    if (!allowedRoles.includes(userRole)) {
       // Если роль не подходит, не рендерим (редирект уже произошел в useEffect)
       return null;
     }

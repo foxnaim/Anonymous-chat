@@ -39,11 +39,18 @@ const Login = () => {
         if (from) {
           router.replace(from as any);
         } else {
-          if (result.user.role === "admin" || result.user.role === "super_admin") {
+          const role = result.user.role?.toLowerCase();
+          console.log("Login successful (page), user role:", result.user.role);
+
+          if (role === "admin" || role === "super_admin") {
             router.replace("/admin");
-          } else if (result.user.role === "company") {
+          } else if (role === "company") {
             router.replace("/company");
           } else {
+            console.log("Redirecting to home page, role:", role);
+            if (role !== "user") {
+               toast.error(`Неизвестная роль пользователя: ${result.user.role}`);
+            }
             router.replace("/");
           }
         }

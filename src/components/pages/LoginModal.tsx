@@ -37,12 +37,22 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
       const result = await login(email, password);
       setIsLoading(false);
       if (result.success && result.user) {
+        // Логируем роль для отладки
+        console.log("Login successful, user role:", result.user.role);
+        
         // Используем пользователя из результата логина для определения роли
-        if (result.user.role === "admin" || result.user.role === "super_admin") {
+        const role = result.user.role?.toLowerCase();
+        
+        if (role === "admin" || role === "super_admin") {
           router.replace("/admin");
-        } else if (result.user.role === "company") {
+        } else if (role === "company") {
           router.replace("/company");
         } else {
+          // Если роль не распознана или это обычный пользователь
+          console.log("Redirecting to home page, role:", role);
+          if (role !== "user") {
+            toast.error(`Неизвестная роль пользователя: ${result.user.role}`);
+          }
           router.replace("/");
         }
         onOpenChange(false);
