@@ -81,6 +81,11 @@ class ApiClient {
     
     if (token && !headers.has('Authorization')) {
       headers.set('Authorization', `Bearer ${token}`);
+    } else if (!token) {
+      // Логируем отсутствие токена для отладки, только в dev режиме или при явной ошибке
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`[ApiClient] Token missing for request: ${url}`);
+      }
     }
 
     try {

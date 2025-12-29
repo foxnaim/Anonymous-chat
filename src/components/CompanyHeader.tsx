@@ -34,7 +34,7 @@ export const CompanyHeader = () => {
   
   // Полноэкранный режим обрабатывается глобально через FullscreenProvider
   const { data: company } = useCompany(user?.companyId || 0, {
-    enabled: !!user?.companyId,
+    enabled: !!user?.companyId && (user?.role === 'company' || user?.role === 'admin' || user?.role === 'super_admin'),
   });
 
   // Проверяем, был ли вход выполнен под админом
