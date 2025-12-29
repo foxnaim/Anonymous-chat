@@ -25,7 +25,18 @@ const AdminSettings = () => {
   const { isFullscreen, setFullscreen } = useFullscreenContext();
   const dispatch = useDispatch();
   
-  // ... (states)
+  // States
+  const [isLanguageChanging, setIsLanguageChanging] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailPassword, setEmailPassword] = useState("");
+  const [showEmailPassword, setShowEmailPassword] = useState(false);
 
   // Загружаем настройки из API только если пользователь авторизован
   const { data: settings, isLoading: settingsLoading, refetch: refetchSettings } = useAdminSettings({
