@@ -165,7 +165,7 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
                   onClick={() => setShowEmailForm(false)}
                   className="text-primary hover:underline"
                 >
-                  {t("auth.backToOAuth") || "Вернуться к OAuth"}
+                  {t("auth.backToOAuth") || "Вернуться без OAuth"}
                 </button>
               </div>
             </form>
