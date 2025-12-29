@@ -803,38 +803,25 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
     mutationFn: (id: string | number) => companyService.delete(id),
 
     onMutate: async (deletedId) => {
-      console.log('[useDeleteCompany] Mutating delete for:', deletedId);
-      // Отменяем исходящие запросы, чтобы они не перезаписали наш оптимистичный апдейт
+      // Отменяем исходящие запросы
       await queryClient.cancelQueries({ queryKey: queryKeys.companies, exact: false });
 
       // Сохраняем предыдущее состояние
       const previousData = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
-      console.log('[useDeleteCompany] Previous data found for queries:', previousData.length);
 
-      // Нормализуем ID для сравнения
+      // Нормализуем ID
       const deletedIdStr = String(deletedId).trim();
-      console.log('[useDeleteCompany] Normalized ID:', deletedIdStr);
 
-      // Оптимистично удаляем компанию из кэша сразу - обновляем ВСЕ запросы
+      // Оптимистично удаляем из кэша
       previousData.forEach(([key, oldData]) => {
-        console.log('[useDeleteCompany] Processing query key:', key);
         if (oldData && Array.isArray(oldData)) {
-          console.log('[useDeleteCompany] Old data length:', oldData.length);
           const filtered = oldData.filter(company => {
-            // Проверяем и id, и _id на случай разных форматов данных
             const companyId = company.id ? String(company.id).trim() : null;
             const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
             
-            const shouldKeep = companyId !== deletedIdStr && company_id !== deletedIdStr;
-            if (!shouldKeep) {
-               console.log('[useDeleteCompany] Removing company:', company);
-            }
-            return shouldKeep;
+            return companyId !== deletedIdStr && company_id !== deletedIdStr;
           });
-          console.log('[useDeleteCompany] New data length:', filtered.length);
           queryClient.setQueryData<Company[]>(key, filtered);
-        } else {
-             console.log('[useDeleteCompany] Data is not array or empty:', oldData);
         }
       });
       
@@ -851,28 +838,24 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
     },
 
     onSuccess: (_, deletedId, context, mutation) => {
-      console.log('[useDeleteCompany] Success delete for:', deletedId);
-      // Нормализуем ID для сравнения (приводим к строке)
+      // Нормализуем ID
       const deletedIdStr = String(deletedId).trim();
       
-      // Убеждаемся, что компания удалена из всех запросов (на случай, если что-то пропустили)
+      // Обновляем кэш еще раз для надежности
       const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
       allQueries.forEach(([key, data]) => {
         if (data && Array.isArray(data)) {
           const filtered = data.filter(company => {
-            // Проверяем и id, и _id на случай разных форматов данных
             const companyId = company.id ? String(company.id).trim() : null;
             const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
-            
-            // Исключаем компанию, если любой из её ID совпадает с удаленным ID
             return companyId !== deletedIdStr && company_id !== deletedIdStr;
           });
           queryClient.setQueryData<Company[]>(key, filtered);
         }
       });
       
-      // Инвалидируем и обновляем кэш с сервера для гарантии актуальности данных
-      queryClient.invalidateQueries({ queryKey: queryKeys.companies, exact: false });
+      // НЕ инвалидируем сразу, чтобы избежать возврата удаленного элемента, если бэкенд отстает (eventual consistency)
+      // queryClient.invalidateQueries({ queryKey: queryKeys.companies, exact: false });
       
       if (userOnSuccess) {
         (userOnSuccess as any)(_, deletedId, context, mutation);
@@ -880,19 +863,15 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
     },
 
     onError: (error, variables, context, mutation) => {
-      console.error('[useDeleteCompany] Error deleting:', error);
       const errorStatus = (error as any)?.status || (error as any)?.response?.status;
       const deletedIdStr = String(variables).trim();
 
-      // Если ошибка 404, значит компания уже удалена. НЕ откатываем кэш.
+      // Если 404, значит уже удалено. Удаляем из кэша принудительно.
       if (errorStatus === 404) {
-         console.log('[useDeleteCompany] 404 error - forcing removal from cache');
-         // Явно удаляем компанию из кэша, если она там еще есть
          const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
          allQueries.forEach(([key, data]) => {
            if (data && Array.isArray(data)) {
              const filtered = data.filter(company => {
-               // Проверяем и id, и _id на случай разных форматов данных
                const companyId = company.id ? String(company.id).trim() : null;
                const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
                return companyId !== deletedIdStr && company_id !== deletedIdStr;
@@ -900,12 +879,10 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
              queryClient.setQueryData<Company[]>(key, filtered);
            }
          });
-         
-         // Обновляем список с сервера, чтобы убедиться, что все синхронизировано
+         // Здесь можно инвалидировать, так как элемент точно удален
          queryClient.invalidateQueries({ queryKey: queryKeys.companies, exact: false });
       } else {
-         console.log('[useDeleteCompany] Other error - rolling back');
-         // Для других ошибок откатываем изменения
+         // Для других ошибок откатываем
          if (context?.previousData) {
            context.previousData.forEach(([key, old]) => {
              queryClient.setQueryData<Company[] | undefined>(key, old);

@@ -196,8 +196,6 @@ const AdminCompanies = () => {
 
   const { mutateAsync: deleteCompany, isPending: isDeleting } = useDeleteCompany({
     onSuccess: async (_, deletedId) => {
-      console.log(`[AdminCompanies] Company ${deletedId} deleted successfully`);
-      
       // Закрываем диалог и очищаем состояние
       setIsDeleteDialogOpen(false);
       setCompanyToDelete(null);
