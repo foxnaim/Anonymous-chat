@@ -173,7 +173,7 @@ const Login = () => {
                     onClick={() => setShowEmailForm(false)}
                     className="text-primary hover:underline"
                   >
-                    {t("auth.backToOAuth") || "Вернуться без OAuth"}
+                    {t("auth.backToOAuth") || "Вернуться"}
                   </button>
                 </div>
               </form>
