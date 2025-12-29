@@ -14,13 +14,11 @@ import { FiArrowLeft, FiEye, FiEyeOff } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { OAuthButtons } from "@/components/auth/OAuthButtons";
-import { useNextAuth } from "@/lib/hooks/useNextAuth";
 const Login = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
-  const { signIn: nextAuthSignIn } = useNextAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
