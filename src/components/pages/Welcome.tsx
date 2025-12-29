@@ -195,7 +195,8 @@ function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
                 } : null);
                 const hasValidAuth = (token && isAuthenticated && user) || (isNextAuthAuthenticated && session?.user);
                 
-                if (hasValidAuth && currentUser) {
+                // Показываем кнопку только для пользователей с ролью admin, super_admin или company
+                if (hasValidAuth && currentUser && (currentUser.role === "admin" || currentUser.role === "super_admin" || currentUser.role === "company")) {
                   return (
                     <Button 
                       variant="ghost" 
@@ -205,6 +206,9 @@ function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
                           router.push("/admin");
                         } else if (currentUser.role === "company") {
                           router.push("/company");
+                        } else {
+                          // Для других ролей остаемся на главной странице
+                          console.log("User role:", currentUser.role, "does not have access to control panel");
                         }
                       }} 
                       className="text-[10px] sm:text-xs md:text-sm min-w-[100px] sm:min-w-[120px] md:min-w-[140px] px-2 sm:px-3"

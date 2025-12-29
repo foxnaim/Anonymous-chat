@@ -76,13 +76,17 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
   // Проверяем токен или NextAuth сессию еще раз перед рендером
   const token = getToken();
   const hasTokenOrSession = token || isNextAuthAuthenticated;
+  
+  // Если нет авторизации, не рендерим ничего (редирект уже произошел в useEffect)
   if (!hasTokenOrSession || !hasAuth || !currentUser) {
     return null;
   }
 
+  // Проверяем роль пользователя, если требуется
   if (requiredRole) {
     const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
     if (!roles.includes(currentUser.role)) {
+      // Если роль не подходит, не рендерим (редирект уже произошел в useEffect)
       return null;
     }
   }
