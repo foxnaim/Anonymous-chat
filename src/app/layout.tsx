@@ -129,7 +129,6 @@ export default function RootLayout({
                   'cannot read properties',
                   'reading control',
                   'permissions-policy',
-                  'browsing-topics',
                   'unexpected identifier',
                   'unexpected token'
                 ];

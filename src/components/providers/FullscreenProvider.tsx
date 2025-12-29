@@ -71,12 +71,8 @@ export const FullscreenProvider = ({ children }: { children: React.ReactNode }) 
       document.documentElement.classList.add('fullscreen-mode');
       document.body.classList.add('fullscreen-mode');
       
-      // Пытаемся включить нативный полноэкранный режим (скрыть элементы браузера)
-      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {
-          // Игнорируем ошибку при загрузке страницы без жеста пользователя
-        });
-      }
+      // Не вызываем requestFullscreen автоматически - это требует жеста пользователя
+      // Используем только CSS классы для стилизации
     } else {
       document.documentElement.classList.remove('fullscreen-mode');
       document.body.classList.remove('fullscreen-mode');

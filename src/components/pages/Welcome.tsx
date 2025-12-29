@@ -341,6 +341,7 @@ function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
                           placeholder={t("welcome.companyPasswordPlaceholder")}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
+                          autoComplete="current-password"
                           onKeyDown={(e) => {
                             if (e.key === "Enter" && password && validatedCode) {
                               handleSendMessage();

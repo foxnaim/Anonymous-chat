@@ -953,6 +953,7 @@ const AdminPanel = () => {
                           onChange={(e) => setNewCompany({ ...newCompany, code: e.target.value.toUpperCase() })}
                           maxLength={8}
                           placeholder="ACME0001"
+                          autoComplete="off"
                         />
                         <Button
                           type="button"

@@ -893,6 +893,7 @@ const AdminCompanies = () => {
                         setNewCompany({ ...newCompany, adminEmail: e.target.value })
                       }
                       placeholder="admin@company.com"
+                      autoComplete="email"
                     />
                   </div>
                   <div>
@@ -951,6 +952,7 @@ const AdminCompanies = () => {
                       onChange={(e) =>
                         setNewCompany({ ...newCompany, password: e.target.value })
                       }
+                      autoComplete="new-password"
                       placeholder="Минимум 6 символов"
                       minLength={8}
                     />
@@ -1058,6 +1060,7 @@ const AdminCompanies = () => {
                       onChange={(e) =>
                         setEditCompany({ ...editCompany, adminEmail: e.target.value })
                       }
+                      autoComplete="email"
                     />
                   </div>
                   <div>

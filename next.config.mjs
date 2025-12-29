@@ -103,7 +103,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Permissions-Policy',
-            value: 'geolocation=(), microphone=(), camera=(), browsing-topics=()'
+            value: 'geolocation=(), microphone=(), camera=()'
           },
           {
             key: 'X-Content-Type-Options',
