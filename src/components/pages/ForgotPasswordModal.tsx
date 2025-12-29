@@ -44,41 +44,51 @@ const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) =
         const resetLink = `${window.location.origin}/reset-password?token=${response.resetToken}`;
         
         // 3. Отправляем письмо через EmailJS
-        // Проверяем наличие ключей
-        const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-        const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
-        const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+        // Проверяем наличие ключей (убираем кавычки, если есть)
+        const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID?.replace(/^["']|["']$/g, '') || process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+        const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID?.replace(/^["']|["']$/g, '') || process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+        const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY?.replace(/^["']|["']$/g, '') || process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
+        console.log('EmailJS Config:', { 
+          hasServiceId: !!serviceId, 
+          hasTemplateId: !!templateId, 
+          hasPublicKey: !!publicKey,
+          serviceIdLength: serviceId?.length,
+          templateIdLength: templateId?.length,
+          publicKeyLength: publicKey?.length
+        });
 
         if (serviceId && templateId && publicKey) {
           try {
+            console.log('Sending email via EmailJS...', { email, resetLink });
             await emailjs.send(
               serviceId,
               templateId,
               {
                 email: email,        // Переменная для шаблона {{email}}
                 link: resetLink,     // Переменная для шаблона {{link}}
-                // Дополнительные параметры, которые можно использовать в шаблоне EmailJS
                 company_name: "FeedbackHub" 
               },
               publicKey
             );
+            console.log('Email sent successfully via EmailJS');
             toast.success(t("auth.resetPasswordSuccess"));
           } catch (emailError) {
             console.error("EmailJS error:", emailError);
             // Если EmailJS не сработал, показываем токен (фоллбэк)
-             toast.error(t("auth.resetPasswordEmailError"));
-             if (navigator.clipboard) {
-                 navigator.clipboard.writeText(resetLink).catch(console.error);
-             }
-             toast.info(
-               <div className="flex flex-col gap-2">
-                 <span>{t("auth.resetPasswordLinkCopied")}</span>
-                 <span className="text-xs opacity-80 break-all bg-black/10 p-2 rounded select-all">
-                   {resetLink}
-                 </span>
-               </div>,
-               { duration: 20000 }
-             );
+            toast.error("Не удалось отправить письмо. Ссылка скопирована в буфер обмена.");
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(resetLink).catch(console.error);
+            }
+            toast.info(
+              <div className="flex flex-col gap-2">
+                <span>Ссылка для сброса пароля (скопировано):</span>
+                <span className="text-xs opacity-80 break-all bg-black/10 p-2 rounded select-all">
+                  {resetLink}
+                </span>
+              </div>,
+              { duration: 20000 }
+            );
           }
         } else {
            // Если ключи не настроены - показываем токен (для разработки)
