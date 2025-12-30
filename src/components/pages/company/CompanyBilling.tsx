@@ -11,7 +11,10 @@ import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import { toast } from "sonner";
 import { getTranslatedValue } from "@/lib/utils/translations";
+import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
+
 const CompanyBilling = () => {
+  const { isFullscreen } = useFullscreenContext();
   const { t } = useTranslation();
   const { user } = useAuth();
   const { data: company, isLoading: companyLoading, refetch: refetchCompany } = useCompany(user?.companyId || 0, {
