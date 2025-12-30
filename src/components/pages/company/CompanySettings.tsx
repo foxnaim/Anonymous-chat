@@ -565,41 +565,7 @@ const CompanySettings = () => {
                     <SelectItem value="kk">Қазақша</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              {/* Полноэкранный режим */}
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>{t("company.fullscreenMode")}</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {t("company.fullscreenModeDescription")}
-                  </p>
-                </div>
-                <Switch 
-                  checked={isFullscreen} 
-                  onCheckedChange={async (checked) => {
-                    if (user?.companyId) {
-                      // Сразу применяем изменения в UI для мгновенной обратной связи
-                      setFullscreen(checked);
-                      
-                      try {
-                        await updateCompany({
-                          id: user.companyId,
-                          updates: { fullscreenMode: checked },
-                        });
-                        // Принудительно обновляем компанию, чтобы FullscreenProvider подхватил изменения
-                        await refetchCompany();
-                        toast.success(t("company.settingsSaved") || "Настройки сохранены");
-                      } catch (error) {
-                        // В случае ошибки откатываем изменения в UI
-                        setFullscreen(!checked);
-                        toast.error(t("common.error") || "Ошибка при сохранении настроек");
-                      }
-                    }
-                  }} 
-                />
-              </div>
-            </div>
+              </div>            </div>
           </Card>
           {/* Danger Zone */}
           <Card className="p-6 border-destructive">
