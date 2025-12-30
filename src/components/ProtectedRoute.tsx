@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/redux";
 import { useNextAuth } from "@/lib/hooks/useNextAuth";
 import { UserRole } from "@/types";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { getToken } from "@/lib/utils/cookies";
 
 interface ProtectedRouteProps {
@@ -21,13 +21,15 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
 
   // Проверяем авторизацию через Redux или NextAuth
   const hasAuth = isAuthenticated || isNextAuthAuthenticated;
-  const currentUser = user || (session?.user ? {
-    id: session.user.id,
-    email: session.user.email,
-    role: session.user.role as UserRole,
-    companyId: session.user.companyId,
-    name: session.user.name || undefined,
-  } : null);
+  const currentUser = useMemo(() => {
+    return user || (session?.user ? {
+      id: session.user.id,
+      email: session.user.email,
+      role: session.user.role as UserRole,
+      companyId: session.user.companyId,
+      name: session.user.name || undefined,
+    } : null);
+  }, [user, session?.user]);
   const authLoading = isLoading || isNextAuthLoading;
 
   useEffect(() => {
