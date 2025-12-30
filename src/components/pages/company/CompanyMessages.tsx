@@ -17,8 +17,10 @@ import { Message, MessageStatus } from "@/types";
 import { toast } from "sonner";
 import { MESSAGE_STATUSES } from "@/lib/utils/constants";
 import { useSocketMessages } from "@/lib/websocket/useSocket";
+import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
 
 const CompanyMessages = () => {
+  const { isFullscreen } = useFullscreenContext();
   const { t } = useTranslation();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
@@ -173,11 +175,11 @@ const CompanyMessages = () => {
   };
   
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden w-full">
+    <div className={`min-h-screen bg-background flex flex-col overflow-x-hidden w-full ${isFullscreen ? 'h-auto overflow-y-auto' : ''}`}>
       <CompanyHeader />
-      <div className="flex flex-col flex-1 overflow-hidden w-full min-h-0">
-        <main className="flex-1 px-6 py-4 overflow-hidden w-full flex flex-col min-h-0">
-          <div className="flex flex-col gap-4 w-full h-full min-h-0">
+      <div className={`flex flex-col flex-1 w-full min-h-0 ${isFullscreen ? 'h-auto overflow-visible block' : 'overflow-hidden'}`}>
+        <main className={`flex-1 px-6 py-4 w-full flex flex-col min-h-0 ${isFullscreen ? 'h-auto overflow-visible block' : 'overflow-hidden'}`}>
+          <div className={`flex flex-col gap-4 w-full h-full min-h-0 ${isFullscreen ? 'h-auto block' : ''}`}>
             {/* Filters */}
             <Card className="p-4 border-border shadow-lg flex-shrink-0 bg-white">
             <div className="flex flex-col md:flex-row gap-3 sm:gap-4">

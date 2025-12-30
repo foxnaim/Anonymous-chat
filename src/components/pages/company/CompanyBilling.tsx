@@ -82,10 +82,10 @@ const CompanyBilling = () => {
     ? Math.round((company.messagesThisMonth || 0) / (company.messagesLimit || 1) * 100)
     : 0;
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden w-full">
+    <div className={`min-h-screen bg-background flex flex-col overflow-x-hidden w-full ${isFullscreen ? 'h-auto overflow-y-auto' : ''}`}>
       <CompanyHeader />
-      <div className="flex flex-col flex-1 overflow-hidden w-full min-h-0">
-        <main className="flex-1 px-6 py-4 overflow-y-auto w-full flex flex-col min-h-0">
+      <div className={`flex flex-col flex-1 w-full min-h-0 ${isFullscreen ? 'h-auto overflow-visible block' : 'overflow-hidden'}`}>
+        <main className={`flex-1 px-6 py-4 w-full flex flex-col min-h-0 ${isFullscreen ? 'h-auto overflow-visible block' : 'overflow-y-auto'}`}>
           <div className="flex flex-col gap-4 w-full min-h-0 pb-6">
             {/* Current Plan */}
             {currentPlan && company && (

@@ -270,10 +270,10 @@ const CompanySettings = () => {
     );
   }
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className={`min-h-screen bg-background overflow-x-hidden ${isFullscreen ? 'h-auto overflow-y-auto' : ''}`}>
       <CompanyHeader />
-      <div className="flex flex-col">
-        <main className="container flex-1 p-6 space-y-6">
+      <div className={`flex flex-col ${isFullscreen ? 'h-auto block' : ''}`}>
+        <main className={`container flex-1 p-6 space-y-6 ${isFullscreen ? 'h-auto overflow-visible block' : ''}`}>
           {/* Company Info */}
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-6">{t("company.companyInfo")}</h3>

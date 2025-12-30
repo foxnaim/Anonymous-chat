@@ -26,8 +26,10 @@ import { toast } from "sonner";
 import TrialCard from "@/components/TrialCard";
 import { Badge } from "@/components/ui/badge";
 import { getTranslatedValue } from "@/lib/utils/translations";
+import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
 
 const CompanyDashboard = () => {
+  const { isFullscreen } = useFullscreenContext();
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
@@ -202,10 +204,10 @@ const CompanyDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden w-full">
+    <div className={`min-h-screen bg-background flex flex-col overflow-x-hidden w-full ${isFullscreen ? 'h-auto overflow-y-auto' : ''}`}>
       <CompanyHeader />
-      <div className="flex flex-col flex-1 overflow-hidden w-full min-h-0">
-        <main className="flex-1 px-4 sm:px-6 py-4 overflow-y-auto w-full">
+      <div className={`flex flex-col flex-1 w-full min-h-0 ${isFullscreen ? 'h-auto overflow-visible block' : 'overflow-hidden'}`}>
+        <main className={`flex-1 px-4 sm:px-6 py-4 w-full ${isFullscreen ? 'h-auto overflow-visible block' : 'overflow-y-auto'}`}>
           <div className="w-full space-y-4">
             {statsLoading || distributionLoading || achievementsLoading || growthLoading || companyLoading || plansLoading ? (
               <div className="text-center py-12">

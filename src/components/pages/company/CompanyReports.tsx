@@ -17,8 +17,10 @@ import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
 
 const CompanyReports = () => {
+  const { isFullscreen } = useFullscreenContext();
   const { t, i18n: i18nInstance } = useTranslation();
   const { user } = useAuth();
   
@@ -257,9 +259,9 @@ const CompanyReports = () => {
   };
   
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
+    <div className={`min-h-screen bg-background flex flex-col overflow-x-hidden ${isFullscreen ? 'h-auto overflow-y-auto' : ''}`}>
       <CompanyHeader />
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className={`flex flex-col flex-1 ${isFullscreen ? 'h-auto overflow-visible block' : 'overflow-hidden'}`}>
         <div className="border-b border-border bg-card flex-shrink-0">
           <div className="container px-3 sm:px-4 md:px-6 py-3">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
@@ -308,7 +310,7 @@ const CompanyReports = () => {
             </div>
           </div>
         </div>
-        <main className="flex-1 px-4 sm:px-6 py-4 sm:py-6 overflow-auto w-full">
+        <main className={`flex-1 px-4 sm:px-6 py-4 sm:py-6 w-full ${isFullscreen ? 'h-auto overflow-visible block' : 'overflow-auto'}`}>
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
               <p className="text-muted-foreground">{t("common.loading")}</p>

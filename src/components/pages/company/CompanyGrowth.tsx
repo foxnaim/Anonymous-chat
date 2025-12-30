@@ -9,8 +9,10 @@ import { FiAward, FiStar, FiMessageSquare, FiCheckCircle, FiClock, FiHelpCircle 
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import { useGrowthMetrics, useGroupedAchievements } from "@/lib/query";
+import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
 
 const CompanyGrowth = () => {
+  const { isFullscreen } = useFullscreenContext();
   const { t } = useTranslation();
   const { user } = useAuth();
   const { data: metrics, isLoading: isLoadingMetrics } = useGrowthMetrics(user?.companyId || 0, {
@@ -36,10 +38,10 @@ const CompanyGrowth = () => {
     }
   };
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-x-hidden w-full">
+    <div className={`min-h-screen bg-background flex flex-col overflow-x-hidden w-full ${isFullscreen ? 'h-auto overflow-y-auto' : ''}`}>
       <CompanyHeader />
-      <div className="flex flex-col flex-1 overflow-hidden w-full min-h-0">
-        <main className="flex-1 px-6 py-4 overflow-hidden w-full flex flex-col min-h-0">
+      <div className={`flex flex-col flex-1 w-full min-h-0 ${isFullscreen ? 'h-auto overflow-visible block' : 'overflow-hidden'}`}>
+        <main className={`flex-1 px-6 py-4 w-full flex flex-col min-h-0 ${isFullscreen ? 'h-auto overflow-visible block' : 'overflow-hidden'}`}>
           {isLoading ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">{t("common.loading")}</p>
