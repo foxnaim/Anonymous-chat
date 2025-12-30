@@ -40,7 +40,7 @@ export const LanguageSwitcher = memo(() => {
           <Listbox.Button
             className={cn(
               "relative w-full cursor-pointer rounded-lg bg-white dark:bg-card border border-border py-1.5 sm:py-2 pl-2 sm:pl-3 pr-8 sm:pr-10 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 text-xs sm:text-sm",
-              "hover:bg-muted/50 transition-colors h-8 sm:h-9 md:h-10 min-w-0 max-w-full"
+              "hover:bg-muted/50 transition-colors h-8 sm:h-9 md:h-10 w-full"
             )}
           >
             <span className="flex items-center gap-1 sm:gap-2 min-w-0">

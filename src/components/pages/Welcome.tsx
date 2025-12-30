@@ -192,7 +192,7 @@ function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
               />
             </Link>
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
-              <div className="min-w-[100px] sm:min-w-[120px] md:min-w-[140px]">
+              <div className="w-full sm:w-auto min-w-[100px] sm:min-w-[120px] md:min-w-[140px]">
                 <LanguageSwitcher />
               </div>
               {(() => {
@@ -212,18 +212,7 @@ function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
                   return (
                     <Button 
                       variant="ghost" 
-                      size="sm" 
-                      onClick={() => {
-                        if (currentUser.role === "admin" || currentUser.role === "super_admin") {
-                          router.push("/admin");
-                        } else if (currentUser.role === "company") {
-                          router.push("/company");
-                        } else {
-                          // Для других ролей остаемся на главной странице
-                          console.log("User role:", currentUser.role, "does not have access to control panel");
-                        }
-                      }} 
-                      className="text-[10px] sm:text-xs md:text-sm min-w-[100px] sm:min-w-[120px] md:min-w-[140px] px-2 sm:px-3"
+                      className="h-8 sm:h-9 md:h-10 text-[10px] sm:text-xs md:text-sm min-w-[100px] sm:min-w-[120px] md:min-w-[140px] px-2 sm:px-3"
                     >
                       <FiLayout className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       <span className="truncate">{t("common.controlPanel")}</span>
@@ -235,8 +224,7 @@ function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button 
-                        size="sm" 
-                        className="text-[10px] sm:text-xs md:text-sm px-2 sm:px-3 md:px-4 bg-primary text-primary-foreground hover:bg-primary/90 min-w-[100px] sm:min-w-[120px] md:min-w-[140px]"
+                        className="h-8 sm:h-9 md:h-10 text-[10px] sm:text-xs md:text-sm px-2 sm:px-3 md:px-4 bg-primary text-primary-foreground hover:bg-primary/90 min-w-[100px] sm:min-w-[120px] md:min-w-[140px]"
                       >
                         <span className="truncate">{t("welcome.business")}</span>
                         <FiChevronDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 flex-shrink-0" />
