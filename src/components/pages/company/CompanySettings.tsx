@@ -80,15 +80,13 @@ const CompanySettings = () => {
 
       try {
         setIsCompressing(true);
-        const compressedFile = await compressImage(file);
-        setLogoFile(compressedFile);
+        const compressedBase64 = await compressImage(file);
         
-        // Create preview URL
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setLogoPreview(reader.result as string);
-        };
-        reader.readAsDataURL(compressedFile);
+        // Сохраняем оригинальный файл для отправки на сервер
+        setLogoFile(file);
+        
+        // Создаем preview из сжатого base64
+        setLogoPreview(compressedBase64);
       } catch (error) {
         console.error('Error compressing image:', error);
         toast.error(t("company.imageProcessingError"));
@@ -165,7 +163,10 @@ const CompanySettings = () => {
     }
 
     try {
-      await authService.updatePassword(currentPassword, newPassword);
+      await authService.changePassword({
+        currentPassword,
+        newPassword,
+      });
       toast.success(t("auth.passwordUpdated"));
       setCurrentPassword("");
       setNewPassword("");
