@@ -7,7 +7,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FiUpload, FiX, FiEdit2, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
@@ -26,7 +25,7 @@ import { useFullscreenContext } from "@/components/providers/FullscreenProvider"
 const CompanySettings = () => {
   const { t, i18n: i18nInstance } = useTranslation();
   const { user } = useAuth();
-  const { isFullscreen, setFullscreen } = useFullscreenContext();
+  const { isFullscreen } = useFullscreenContext();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
