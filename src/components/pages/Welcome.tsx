@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FiMessageSquare, FiCheckCircle, FiSend, FiLogIn, FiHome, FiX, FiKey, FiHash, FiEye, FiEyeOff, FiSearch, FiUserPlus, FiChevronDown, FiLayout } from "react-icons/fi";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/lib/redux";
@@ -38,7 +38,6 @@ export interface WelcomeProps {
 
 function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
   const { t } = useTranslation();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAuth();
   const { isAuthenticated: isNextAuthAuthenticated, session } = useNextAuth();
