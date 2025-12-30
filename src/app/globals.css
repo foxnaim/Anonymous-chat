@@ -187,6 +187,21 @@ All colors MUST be HSL.
   html.fullscreen-mode main {
     padding-top: 0 !important;
     margin-top: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    max-height: none !important;
+  }
+
+  /* В полноэкранном режиме разрешаем скроллинг на основных контейнерах страниц */
+  /* Убираем overflow-hidden с контейнеров, которые оборачивают main */
+  body.fullscreen-mode > div[class*="min-h-screen"] > div[class*="flex"][class*="overflow-hidden"],
+  html.fullscreen-mode > div[class*="min-h-screen"] > div[class*="flex"][class*="overflow-hidden"],
+  body.fullscreen-mode div[class*="flex"][class*="flex-1"][class*="overflow-hidden"],
+  html.fullscreen-mode div[class*="flex"][class*="flex-1"][class*="overflow-hidden"] {
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
   }
 
   /* Убираем sticky позиционирование для элементов, которые могут быть видны */
