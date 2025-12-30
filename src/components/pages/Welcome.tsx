@@ -38,7 +38,7 @@ export interface WelcomeProps {
 
 function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
   const { t } = useTranslation();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams(); // Get search params from URL
   const { isAuthenticated, user } = useAuth();
   const { isAuthenticated: isNextAuthAuthenticated, session } = useNextAuth();
   const [companyCode, setCompanyCode] = useState("");
