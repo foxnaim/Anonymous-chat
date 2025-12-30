@@ -12,9 +12,10 @@ import { Label } from "@/components/ui/label";
 import { plansService } from "@/lib/query";
 import { useAuth } from "@/lib/redux";
 import { toast } from "sonner";
-import { FiKey, FiSettings, FiGift, FiCheck, FiEye, FiEyeOff, FiArrowLeft, FiUserPlus } from "react-icons/fi";
+import { FiKey, FiSettings, FiGift, FiCheck, FiEye, FiEyeOff, FiArrowLeft, FiUserPlus, FiMail } from "react-icons/fi";
 import { Badge } from "@/components/ui/badge";
 import { validatePasswordStrength } from "@/lib/utils/validation";
+import emailjs from '@emailjs/browser';
 
 interface RegisterModalProps {
   open: boolean;
@@ -97,7 +98,7 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
     
     try {
       // Регистрируем пользователя с ролью company и создаем компанию
-      const success = await register(
+      const result = await register(
         formData.email,
         formData.password,
         formData.name,
@@ -106,13 +107,58 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
         code
       );
       
-      if (success) {
-        toast.success(t("auth.registerSuccess"));
-        // Перенаправляем в панель компании (используем requestAnimationFrame для неблокирующего редиректа)
-        requestAnimationFrame(() => {
-          router.replace("/company");
-          onOpenChange(false);
-        });
+      // Проверяем результат
+      if (result.success) {
+        if (result.verificationToken) {
+           // Если нужен email verification
+           const verifyLink = `${window.location.origin}/verify-email?token=${result.verificationToken}`;
+           
+           // Отправляем письмо
+           const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID?.replace(/^["']|["']$/g, '') || process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+           const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID?.replace(/^["']|["']$/g, '') || process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+           const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY?.replace(/^["']|["']$/g, '') || process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
+           if (serviceId && templateId && publicKey) {
+             try {
+               await emailjs.send(
+                 serviceId,
+                 templateId,
+                 {
+                   email: formData.email,
+                   link: verifyLink,
+                   company_name: "FeedbackHub"
+                 },
+                 publicKey
+               );
+               toast.success(t("auth.verificationEmailSent") || "Письмо с подтверждением отправлено");
+             } catch (emailError) {
+               console.error("Email send error:", emailError);
+               // Fallback: копируем ссылку в буфер
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(verifyLink).catch(() => {});
+                }
+                toast.warning("Не удалось отправить письмо. Ссылка для подтверждения скопирована.");
+             }
+           } else {
+             // Fallback dev mode
+              if (navigator.clipboard) {
+                  navigator.clipboard.writeText(verifyLink).catch(() => {});
+              }
+              toast.warning("EmailJS не настроен. Ссылка скопирована (Dev mode).");
+           }
+
+           // Показываем сообщение и закрываем
+           onOpenChange(false);
+           // Можно показать отдельный диалог или тост с инструкцией
+           toast.info("Пожалуйста, проверьте вашу почту для подтверждения аккаунта.", { duration: 10000 });
+        } else {
+           // Если верификация не потребовалась (старая логика)
+           toast.success(t("auth.registerSuccess"));
+           requestAnimationFrame(() => {
+             router.replace("/company");
+             onOpenChange(false);
+           });
+        }
       }
     } catch (error: any) {
       // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }

@@ -44,8 +44,29 @@ export interface RegisterResponse {
       companyId?: string;
       name?: string;
     };
+    token?: string; // JWT token (теперь опциональный)
+    verificationToken?: string; // Токен для подтверждения email
+  };
+  message?: string;
+}
+
+export interface VerifyEmailRequest {
+  token: string;
+}
+
+export interface VerifyEmailResponse {
+  success: boolean;
+  data: {
+    user: {
+      id: string;
+      email: string;
+      role: string;
+      companyId?: string;
+      name?: string;
+    };
     token: string;
   };
+  message: string;
 }
 
 export interface ForgotPasswordRequest {
@@ -125,6 +146,13 @@ class AuthService {
    */
   async register(data: RegisterRequest): Promise<RegisterResponse> {
     return apiClient.post<RegisterResponse>('/auth/register', data);
+  }
+
+  /**
+   * Подтверждение email
+   */
+  async verifyEmail(data: VerifyEmailRequest): Promise<VerifyEmailResponse> {
+    return apiClient.post<VerifyEmailResponse>('/auth/verify-email', data);
   }
 
   /**

@@ -47,7 +47,7 @@ export const loginAsync = createAsyncThunk<
 
 // Async thunk для регистрации
 export const registerAsync = createAsyncThunk<
-  User,
+  { user: User; verificationToken?: string; token?: string },
   {
     email: string;
     password: string;
@@ -70,10 +70,48 @@ export const registerAsync = createAsyncThunk<
         companyCode,
       });
       
+      // Если есть токен авторизации - сохраняем
+      if (response.data.token) {
+        setToken(response.data.token);
+      }
+
+      // Преобразуем ответ в формат User
+      const user: User = {
+        id: response.data.user.id,
+        email: response.data.user.email,
+        role: response.data.user.role as User['role'],
+        companyId: response.data.user.companyId
+          ? String(response.data.user.companyId)
+          : undefined,
+        name: response.data.user.name,
+      };
+
+      return { 
+        user, 
+        verificationToken: response.data.verificationToken,
+        token: response.data.token 
+      };
+    } catch (error) {
+      const apiError = error as ApiError;
+      return rejectWithValue(apiError.message || "Ошибка регистрации");
+    }
+  }
+);
+
+// Async thunk для подтверждения email
+export const verifyEmailAsync = createAsyncThunk<
+  User,
+  { token: string },
+  { rejectValue: string }
+>(
+  'auth/verifyEmail',
+  async ({ token }, { rejectWithValue }) => {
+    try {
+      const response = await authService.verifyEmail({ token });
+      
       // Сохраняем токен в куки
       setToken(response.data.token);
 
-      // Преобразуем ответ в формат User
       const user: User = {
         id: response.data.user.id,
         email: response.data.user.email,
@@ -87,7 +125,7 @@ export const registerAsync = createAsyncThunk<
       return user;
     } catch (error) {
       const apiError = error as ApiError;
-      return rejectWithValue(apiError.message || "Ошибка регистрации");
+      return rejectWithValue(apiError.message || "Ошибка подтверждения email");
     }
   }
 );
@@ -165,14 +203,36 @@ const authSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(registerAsync.fulfilled, (state, action) => {
-        state.user = action.payload;
-        state.isAuthenticated = true;
+        // Если вернулся verificationToken, значит нужна верификация, и пользователь НЕ залогинен
+        if (action.payload.verificationToken) {
+          state.user = null;
+          state.isAuthenticated = false;
+          // Мы не показываем тост успеха здесь, так как это сделает компонент с отправкой письма
+        } else {
+          // Стандартная логика (если вдруг verificationToken нет)
+          state.user = action.payload.user;
+          state.isAuthenticated = true;
+          toast.success("Регистрация выполнена успешно");
+        }
         state.isLoading = false;
-        toast.success("Регистрация выполнена успешно");
       })
       .addCase(registerAsync.rejected, (state, action) => {
         state.isLoading = false;
         toast.error(action.payload as string || "Ошибка регистрации");
+      })
+      // Verify Email
+      .addCase(verifyEmailAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(verifyEmailAsync.fulfilled, (state, action) => {
+        state.user = action.payload;
+        state.isAuthenticated = true;
+        state.isLoading = false;
+        toast.success("Email успешно подтвержден");
+      })
+      .addCase(verifyEmailAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        toast.error(action.payload as string || "Ошибка подтверждения email");
       })
       .addCase(loginAsync.rejected, (state, action) => {
         state.isLoading = false;
