@@ -162,13 +162,17 @@ All colors MUST be HSL.
 
   /* Fullscreen mode - скрываем элементы браузера и интерфейса для максимального рабочего пространства */
   html.fullscreen-mode {
-    overflow-y: auto;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     min-height: 100%;
+    height: auto !important;
   }
 
   body.fullscreen-mode {
-    overflow-y: auto;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     min-height: 100vh;
+    height: auto !important;
     width: 100vw;
     position: relative;
   }
@@ -187,7 +191,7 @@ All colors MUST be HSL.
   html.fullscreen-mode main {
     padding-top: 0 !important;
     margin-top: 0 !important;
-    overflow-y: auto !important;
+    overflow-y: visible !important;
     overflow-x: hidden !important;
     height: auto !important;
     min-height: 100vh !important;
@@ -196,12 +200,47 @@ All colors MUST be HSL.
 
   /* В полноэкранном режиме разрешаем скроллинг на основных контейнерах страниц */
   /* Убираем overflow-hidden с контейнеров, которые оборачивают main */
+  body.fullscreen-mode > div[class*="min-h-screen"],
+  html.fullscreen-mode > div[class*="min-h-screen"] {
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+  }
+
   body.fullscreen-mode > div[class*="min-h-screen"] > div[class*="flex"][class*="overflow-hidden"],
   html.fullscreen-mode > div[class*="min-h-screen"] > div[class*="flex"][class*="overflow-hidden"],
   body.fullscreen-mode div[class*="flex"][class*="flex-1"][class*="overflow-hidden"],
-  html.fullscreen-mode div[class*="flex"][class*="flex-1"][class*="overflow-hidden"] {
+  html.fullscreen-mode div[class*="flex"][class*="flex-1"][class*="overflow-hidden"],
+  /* Универсальное правило для всех div с overflow-hidden, кроме карточек и элементов с rounded */
+  body.fullscreen-mode div[class*="overflow-hidden"]:not([class*="rounded"]):not([class*="Card"]):not([class*="border"]),
+  html.fullscreen-mode div[class*="overflow-hidden"]:not([class*="rounded"]):not([class*="Card"]):not([class*="border"]) {
     overflow-y: visible !important;
     overflow-x: hidden !important;
+    height: auto !important;
+  }
+
+  /* Дополнительное правило для обеспечения скроллинга - убираем все overflow-hidden с основных контейнеров */
+  body.fullscreen-mode #__next,
+  html.fullscreen-mode #__next,
+  body.fullscreen-mode #__next > div,
+  html.fullscreen-mode #__next > div {
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+  }
+
+  /* Агрессивное правило для всех контейнеров с overflow-hidden в полноэкранном режиме */
+  body.fullscreen-mode * {
+    max-height: none !important;
+  }
+
+  /* Убираем overflow-hidden со всех flex контейнеров, которые могут блокировать скроллинг */
+  body.fullscreen-mode div.flex.overflow-hidden,
+  html.fullscreen-mode div.flex.overflow-hidden {
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    max-height: none !important;
   }
 
   /* Убираем sticky позиционирование для элементов, которые могут быть видны */
