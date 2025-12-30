@@ -160,107 +160,65 @@ All colors MUST be HSL.
     height: 100%;
   }
 
-  /* Fullscreen mode - скрываем элементы браузера и интерфейса для максимального рабочего пространства */
-  html.fullscreen-mode {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    min-height: 100%;
-    height: auto !important;
-  }
-
+  /* Fullscreen Mode - Optimized for Scrolling */
+  html.fullscreen-mode,
   body.fullscreen-mode {
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    min-height: 100vh;
-    height: auto !important;
-    width: 100vw;
-    position: relative;
-  }
-
-  /* Скрываем хедер в полноэкранном режиме */
-  body.fullscreen-mode header,
-  html.fullscreen-mode header {
-    display: none !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    overflow: hidden !important;
-  }
-
-  /* Убираем отступы сверху, так как хедер скрыт */
-  body.fullscreen-mode main,
-  html.fullscreen-mode main {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-    overflow-y: visible !important;
-    overflow-x: hidden !important;
     height: auto !important;
     min-height: 100vh !important;
-    max-height: none !important;
+    position: static !important;
   }
 
-  /* В полноэкранном режиме разрешаем скроллинг на основных контейнерах страниц */
-  /* Убираем overflow-hidden с контейнеров, которые оборачивают main */
-  body.fullscreen-mode > div[class*="min-h-screen"],
-  html.fullscreen-mode > div[class*="min-h-screen"] {
-    overflow-y: visible !important;
-    overflow-x: hidden !important;
-    height: auto !important;
+  /* Hide Header */
+  body.fullscreen-mode header {
+    display: none !important;
   }
 
-  body.fullscreen-mode > div[class*="min-h-screen"] > div[class*="flex"][class*="overflow-hidden"],
-  html.fullscreen-mode > div[class*="min-h-screen"] > div[class*="flex"][class*="overflow-hidden"],
-  body.fullscreen-mode div[class*="flex"][class*="flex-1"][class*="overflow-hidden"],
-  html.fullscreen-mode div[class*="flex"][class*="flex-1"][class*="overflow-hidden"],
-  /* Универсальное правило для всех div с overflow-hidden, кроме карточек и элементов с rounded */
-  body.fullscreen-mode div[class*="overflow-hidden"]:not([class*="rounded"]):not([class*="Card"]):not([class*="border"]),
-  html.fullscreen-mode div[class*="overflow-hidden"]:not([class*="rounded"]):not([class*="Card"]):not([class*="border"]) {
-    overflow-y: visible !important;
-    overflow-x: hidden !important;
-    height: auto !important;
-  }
-
-  /* Дополнительное правило для обеспечения скроллинга - убираем все overflow-hidden с основных контейнеров */
+  /* Reset layout containers to allow natural scrolling */
   body.fullscreen-mode #__next,
-  html.fullscreen-mode #__next,
-  body.fullscreen-mode #__next > div,
-  html.fullscreen-mode #__next > div {
-    overflow-y: visible !important;
-    overflow-x: hidden !important;
+  body.fullscreen-mode div[class*="min-h-screen"] {
     height: auto !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
+    display: block !important;
   }
 
-  /* Агрессивное правило для всех контейнеров с overflow-hidden в полноэкранном режиме */
-  body.fullscreen-mode * {
-    max-height: none !important;
-  }
-
-  /* Убираем overflow-hidden со всех flex контейнеров, которые могут блокировать скроллинг */
-  body.fullscreen-mode div.flex.overflow-hidden,
-  html.fullscreen-mode div.flex.overflow-hidden {
-    overflow-y: visible !important;
-    overflow-x: hidden !important;
+  /* Fix intermediate containers in Dashboard/nested layouts */
+  body.fullscreen-mode div[class*="min-h-screen"] > div {
     height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  /* Fix Main Content Area */
+  body.fullscreen-mode main {
+    height: auto !important;
+    min-height: 0 !important;
     max-height: none !important;
+    overflow: visible !important;
+    padding-top: 20px !important;
+    display: block !important;
+    flex: none !important;
   }
 
-  /* Убираем sticky позиционирование для элементов, которые могут быть видны */
-  body.fullscreen-mode .sticky,
-  html.fullscreen-mode .sticky {
-    position: relative !important;
-  }
-
-  /* Гарантируем, что все элементы кликабельны в полноэкранном режиме */
+  /* Restore pointer events */
   body.fullscreen-mode * {
     pointer-events: auto !important;
   }
 
-  /* Особенно важно для интерактивных элементов */
+  /* Fix sticky elements */
+  body.fullscreen-mode .sticky {
+    position: relative !important;
+    top: auto !important;
+  }
+
+  /* Ensure inputs/interactive elements work */
   body.fullscreen-mode button,
   body.fullscreen-mode a,
-  body.fullscreen-mode [role="button"],
-  body.fullscreen-mode tr,
-  body.fullscreen-mode td,
-  body.fullscreen-mode [onclick] {
+  body.fullscreen-mode input,
+  body.fullscreen-mode textarea,
+  body.fullscreen-mode [role="button"] {
     pointer-events: auto !important;
     cursor: pointer !important;
   }
