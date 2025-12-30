@@ -261,13 +261,13 @@ const CompanyReports = () => {
       <CompanyHeader />
       <div className="flex flex-col flex-1 overflow-hidden">
         <div className="border-b border-border bg-card flex-shrink-0">
-          <div className="container px-6 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm text-muted-foreground">{t("company.selectMonth")}:</label>
+          <div className="container px-3 sm:px-4 md:px-6 py-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 flex-1">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-1 sm:flex-initial">
+                  <label className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">{t("company.selectMonth")}:</label>
                   <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-full sm:w-[180px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -279,9 +279,9 @@ const CompanyReports = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-center gap-2">
-                  <label className="text-sm text-muted-foreground">{t("company.selectYear")}:</label>
-                  <div className="relative w-[140px]">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-1 sm:flex-initial">
+                  <label className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">{t("company.selectYear")}:</label>
+                  <div className="relative w-full sm:w-[140px]">
                     <input
                       type="number"
                       min="1900"
@@ -300,7 +300,7 @@ const CompanyReports = () => {
                 disabled={isLoading}
                 variant="outline"
                 size="icon"
-                className="h-10 w-10 rounded-full"
+                className="h-10 w-10 rounded-full flex-shrink-0 self-start sm:self-auto"
                 aria-label={t("company.downloadMonthlyReport")}
               >
                 <FiDownload className="h-4 w-4" />
