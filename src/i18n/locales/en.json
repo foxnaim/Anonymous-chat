@@ -204,7 +204,17 @@
     "loginWithApple": "Sign in with Apple",
     "or": "or",
     "backToOAuth": "Back",
-    "notRegisteredAsCompany": "Your account is not registered as a company. Please register through the registration form."
+    "notRegisteredAsCompany": "Your account is not registered as a company. Please register through the registration form.",
+    "verificationEmailSent": "Verification email sent. Please check your inbox.",
+    "verifyingEmail": "Verifying email...",
+    "verifyEmailWait": "Please wait while we verify your email address.",
+    "emailVerified": "Email Verified!",
+    "emailVerifiedSuccess": "Your email has been successfully verified. Redirecting you to the dashboard...",
+    "goToDashboard": "Go to Dashboard",
+    "verificationFailed": "Verification Failed",
+    "verificationLinkInvalid": "The verification link is invalid or has expired.",
+    "returnHome": "Return Home",
+    "checkEmailInstruction": "Please check your email to verify your account."
   },
   "company": {
     "dashboard": "Dashboard",

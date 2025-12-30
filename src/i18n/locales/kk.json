@@ -202,7 +202,17 @@
     "loginWithApple": "Apple арқылы кіру",
     "or": "немесе",
     "backToOAuth": "Оралу",
-    "notRegisteredAsCompany": "Сіздің аккаунтыңыз компания ретінде тіркелмеген. Тіркеу формасы арқылы тіркеліңіз."
+    "notRegisteredAsCompany": "Сіздің аккаунтыңыз компания ретінде тіркелмеген. Тіркеу формасы арқылы тіркеліңіз.",
+    "verificationEmailSent": "Растау хаты жіберілді. Поштаңызды тексеріңіз.",
+    "verifyingEmail": "Email расталуда...",
+    "verifyEmailWait": "Email мекенжайыңызды растау кезінде күтіңіз.",
+    "emailVerified": "Email расталды!",
+    "emailVerifiedSuccess": "Сіздің email мекенжайыңыз сәтті расталды. Сізді басқару панеліне бағыттап жатырмыз...",
+    "goToDashboard": "Басқару панеліне өту",
+    "verificationFailed": "Растау сәтсіз аяқталды",
+    "verificationLinkInvalid": "Растау сілтемесі жарамсыз немесе мерзімі өткен.",
+    "returnHome": "Басты бетке оралу",
+    "checkEmailInstruction": "Аккаунтыңызды растау үшін поштаңызды тексеріңіз."
   },
   "company": {
     "dashboard": "Басқару панелі",
