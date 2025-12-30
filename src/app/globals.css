@@ -175,45 +175,51 @@ All colors MUST be HSL.
     display: none !important;
   }
 
-  /* Reset layout containers to allow natural scrolling */
-  body.fullscreen-mode #__next,
+  /* 1. Reset Root Layout Containers (usually min-h-screen) */
   body.fullscreen-mode div[class*="min-h-screen"] {
+    display: block !important;
     height: auto !important;
     min-height: 100vh !important;
     overflow: visible !important;
-    display: block !important;
+    flex: none !important;
   }
 
-  /* Fix intermediate containers in Dashboard/nested layouts */
-  body.fullscreen-mode div[class*="min-h-screen"] > div {
+  /* 2. Reset Intermediate Layout Wrappers */
+  /* Targets: <div className="flex flex-col flex-1 overflow-hidden"> and similar */
+  body.fullscreen-mode div[class*="min-h-screen"] > div,
+  body.fullscreen-mode div[class*="flex-1"][class*="overflow-hidden"],
+  body.fullscreen-mode div[class*="flex-1"][class*="flex"],
+  body.fullscreen-mode div[class*="flex-col"][class*="overflow-hidden"] {
+    display: block !important;
     height: auto !important;
     overflow: visible !important;
-    display: block !important;
+    flex: none !important;
+    max-height: none !important;
   }
 
-  /* Fix Main Content Area */
+  /* 3. Reset Main Content Area */
   body.fullscreen-mode main {
+    display: block !important;
     height: auto !important;
     min-height: 0 !important;
     max-height: none !important;
     overflow: visible !important;
     padding-top: 20px !important;
-    display: block !important;
     flex: none !important;
   }
 
-  /* Restore pointer events */
+  /* 4. Restore pointer events globally */
   body.fullscreen-mode * {
     pointer-events: auto !important;
   }
 
-  /* Fix sticky elements */
+  /* 5. Fix Sticky Elements */
   body.fullscreen-mode .sticky {
     position: relative !important;
     top: auto !important;
   }
 
-  /* Ensure inputs/interactive elements work */
+  /* 6. Interactive Elements Fix */
   body.fullscreen-mode button,
   body.fullscreen-mode a,
   body.fullscreen-mode input,
