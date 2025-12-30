@@ -308,7 +308,7 @@ const CompanyReports = () => {
             </div>
           </div>
         </div>
-        <main className="flex-1 px-6 py-6 overflow-auto w-full">
+        <main className="flex-1 px-4 sm:px-6 py-4 sm:py-6 overflow-auto w-full">
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
               <p className="text-muted-foreground">{t("common.loading")}</p>
@@ -368,66 +368,66 @@ const CompanyReports = () => {
                   </div>
                 </Card>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0">
-                <Card className="p-6 border-border shadow-lg bg-card flex flex-col h-full">
-                  <div className="flex items-center gap-2 mb-4">
-                    <FiBarChart2 className="h-4 w-4 text-primary" />
-                    <h3 className="text-sm font-semibold">{t("company.messageDistribution")}</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 flex-1 min-h-0">
+                <Card className="p-4 sm:p-6 border-border shadow-lg bg-card flex flex-col h-full">
+                  <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                    <FiBarChart2 className="h-4 w-4 text-primary flex-shrink-0" />
+                    <h3 className="text-xs sm:text-sm font-semibold">{t("company.messageDistribution")}</h3>
                   </div>
-                  <div className="space-y-5 flex-1 flex flex-col justify-center">
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm font-medium">
+                  <div className="space-y-4 sm:space-y-5 flex-1 flex flex-col justify-center">
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <div className="flex justify-between text-xs sm:text-sm font-medium">
                         <span className="text-muted-foreground">{t("sendMessage.complaint")}</span>
-                        <span className="font-bold" style={{ color: 'hsl(var(--accent))' }}>{complaintsPercent}%</span>
+                        <span className="font-bold text-xs sm:text-sm" style={{ color: 'hsl(var(--accent))' }}>{complaintsPercent}%</span>
                       </div>
-                      <div className="h-4 bg-muted rounded-full overflow-hidden">
+                      <div className="h-2 sm:h-4 bg-muted rounded-full overflow-hidden">
                         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${complaintsPercent}%`, backgroundColor: 'hsl(var(--accent))' }}></div>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm font-medium">
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <div className="flex justify-between text-xs sm:text-sm font-medium">
                         <span className="text-muted-foreground">{t("sendMessage.praise")}</span>
-                        <span className="font-bold" style={{ color: 'hsl(var(--secondary))' }}>{praisesPercent}%</span>
+                        <span className="font-bold text-xs sm:text-sm" style={{ color: 'hsl(var(--secondary))' }}>{praisesPercent}%</span>
                       </div>
-                      <div className="h-4 bg-muted rounded-full overflow-hidden">
+                      <div className="h-2 sm:h-4 bg-muted rounded-full overflow-hidden">
                         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${praisesPercent}%`, backgroundColor: 'hsl(var(--secondary))' }}></div>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm font-medium">
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <div className="flex justify-between text-xs sm:text-sm font-medium">
                         <span className="text-muted-foreground">{t("sendMessage.suggestion")}</span>
-                        <span className="font-bold" style={{ color: 'hsl(var(--primary))' }}>{suggestionsPercent}%</span>
+                        <span className="font-bold text-xs sm:text-sm" style={{ color: 'hsl(var(--primary))' }}>{suggestionsPercent}%</span>
                       </div>
-                      <div className="h-4 bg-muted rounded-full overflow-hidden">
+                      <div className="h-2 sm:h-4 bg-muted rounded-full overflow-hidden">
                         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${suggestionsPercent}%`, backgroundColor: 'hsl(var(--primary))' }}></div>
                       </div>
                     </div>
                   </div>
                 </Card>
-                <Card className="p-6 border-border shadow-lg bg-card flex flex-col h-full" style={{ background: 'linear-gradient(to bottom right, hsl(var(--success) / 0.08), hsl(var(--success) / 0.03))' }}>
-                  <div className="flex items-center gap-2 mb-4">
-                    <FiCheckCircle className="h-4 w-4 text-primary" />
-                    <h3 className="text-sm font-semibold">{t("company.resolvedCases")}</h3>
+                <Card className="p-4 sm:p-6 border-border shadow-lg bg-card flex flex-col h-full" style={{ background: 'linear-gradient(to bottom right, hsl(var(--success) / 0.08), hsl(var(--success) / 0.03))' }}>
+                  <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                    <FiCheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
+                    <h3 className="text-xs sm:text-sm font-semibold">{t("company.resolvedCases")}</h3>
                   </div>
-                  <div className="space-y-6 flex-1 flex flex-col justify-center">
-                    <div className="flex justify-between items-center p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--success) / 0.3)' }}>
-                      <div className="flex items-center gap-3">
-                        <FiCheckCircle className="h-5 w-5" style={{ color: 'hsl(var(--success))' }} />
-                        <span className="text-sm font-medium text-muted-foreground">{t("company.resolved")}</span>
+                  <div className="space-y-4 sm:space-y-6 flex-1 flex flex-col justify-center">
+                    <div className="flex justify-between items-center p-3 sm:p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--success) / 0.3)' }}>
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <FiCheckCircle className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" style={{ color: 'hsl(var(--success))' }} />
+                        <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{t("company.resolved")}</span>
                       </div>
-                      <span className="text-4xl font-bold" style={{ color: 'hsl(var(--success))' }}>{resolved}</span>
+                      <span className="text-2xl sm:text-3xl lg:text-4xl font-bold flex-shrink-0 ml-2" style={{ color: 'hsl(var(--success))' }}>{resolved}</span>
                     </div>
-                    <div className="flex justify-between items-center p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--accent) / 0.3)' }}>
-                      <div className="flex items-center gap-3">
-                        <FiX className="h-5 w-5" style={{ color: 'hsl(var(--accent))' }} />
-                        <span className="text-sm font-medium text-muted-foreground">{t("company.unresolved")}</span>
+                    <div className="flex justify-between items-center p-3 sm:p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--accent) / 0.3)' }}>
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <FiX className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" style={{ color: 'hsl(var(--accent))' }} />
+                        <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{t("company.unresolved")}</span>
                       </div>
-                      <span className="text-4xl font-bold" style={{ color: 'hsl(var(--accent))' }}>{unresolved}</span>
+                      <span className="text-2xl sm:text-3xl lg:text-4xl font-bold flex-shrink-0 ml-2" style={{ color: 'hsl(var(--accent))' }}>{unresolved}</span>
                     </div>
-                    <div className="pt-4 border-t border-border">
+                    <div className="pt-3 sm:pt-4 border-t border-border">
                       <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-muted-foreground">{t("company.resolutionRate")}</span>
-                        <span className="text-2xl font-bold" style={{ color: 'hsl(var(--success))' }}>
+                        <span className="text-xs sm:text-sm font-medium text-muted-foreground">{t("company.resolutionRate")}</span>
+                        <span className="text-xl sm:text-2xl font-bold" style={{ color: 'hsl(var(--success))' }}>
                           {total > 0 ? Math.round((resolved / total) * 100) : 0}%
                         </span>
                       </div>
@@ -435,27 +435,27 @@ const CompanyReports = () => {
                   </div>
                 </Card>
                 {growthMetrics && (
-                  <Card className="p-6 border-border shadow-lg relative overflow-hidden bg-card flex flex-col h-full" style={{ background: 'linear-gradient(to bottom right, hsl(var(--secondary) / 0.08), hsl(var(--secondary) / 0.03))' }}>
-                    <div className="absolute top-0 right-0 w-40 h-40 rounded-full -mr-20 -mt-20 opacity-20" style={{ backgroundColor: 'hsl(var(--secondary))' }}></div>
+                  <Card className="p-4 sm:p-6 border-border shadow-lg relative overflow-hidden bg-card flex flex-col h-full" style={{ background: 'linear-gradient(to bottom right, hsl(var(--secondary) / 0.08), hsl(var(--secondary) / 0.03))' }}>
+                    <div className="absolute top-0 right-0 w-32 sm:w-40 h-32 sm:h-40 rounded-full -mr-16 sm:-mr-20 -mt-16 sm:-mt-20 opacity-20" style={{ backgroundColor: 'hsl(var(--secondary))' }}></div>
                     <div className="relative z-10 flex flex-col h-full">
-                      <div className="flex items-center gap-2 mb-4">
-                        <FiTrendingUp className="h-4 w-4 text-primary" />
-                        <h3 className="text-sm font-semibold">{t("company.teamMood")}</h3>
+                      <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                        <FiTrendingUp className="h-4 w-4 text-primary flex-shrink-0" />
+                        <h3 className="text-xs sm:text-sm font-semibold">{t("company.teamMood")}</h3>
                       </div>
-                      <div className="space-y-6 flex-1 flex flex-col justify-center">
-                        <div className="p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-muted-foreground">{t("company.growthRating")}</span>
-                            <span className="text-3xl font-bold" style={{ color: 'hsl(var(--secondary))' }}>{growthMetrics.rating}</span>
+                      <div className="space-y-4 sm:space-y-6 flex-1 flex flex-col justify-center">
+                        <div className="p-3 sm:p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{t("company.growthRating")}</span>
+                            <span className="text-2xl sm:text-3xl font-bold flex-shrink-0" style={{ color: 'hsl(var(--secondary))' }}>{growthMetrics.rating}</span>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>
-                          <span className="text-sm font-medium text-muted-foreground">{t("company.overallMood")}</span>
-                          <span className="text-lg font-bold" style={{ color: 'hsl(var(--secondary))' }}>{getMoodLabel(growthMetrics.mood)}</span>
+                        <div className="flex items-center justify-between p-3 sm:p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>
+                          <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{t("company.overallMood")}</span>
+                          <span className="text-base sm:text-lg font-bold flex-shrink-0 ml-2" style={{ color: 'hsl(var(--secondary))' }}>{getMoodLabel(growthMetrics.mood)}</span>
                         </div>
-                        <div className="flex items-center justify-between p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>
-                          <span className="text-sm font-medium text-muted-foreground">{t("company.trend")}</span>
-                          <span className="text-lg font-bold" style={{ color: 'hsl(var(--success))' }}>{getTrendLabel(growthMetrics.trend)}</span>
+                        <div className="flex items-center justify-between p-3 sm:p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>
+                          <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{t("company.trend")}</span>
+                          <span className="text-base sm:text-lg font-bold flex-shrink-0 ml-2" style={{ color: 'hsl(var(--success))' }}>{getTrendLabel(growthMetrics.trend)}</span>
                         </div>
                       </div>
                     </div>
