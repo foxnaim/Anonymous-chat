@@ -15,6 +15,7 @@ import "@/lib/utils/suppressExtensionErrors";
 
 import { FullscreenProvider } from "./FullscreenProvider";
 import { NextAuthSync } from "./NextAuthSync";
+import { SessionChecker } from "./SessionChecker";
 
 // Компонент для принудительной установки светлой темы при первой загрузке
 const ThemeInitializer = ({ children }: { children: ReactNode }) => {
@@ -54,6 +55,7 @@ const AppProviders = ({ children }: AppProvidersProps) => (
       <SessionProvider>
         <ReduxProvider>
           <QueryProvider>
+            <SessionChecker />
             <FullscreenProvider>
               <NextAuthSync />
               <TooltipProvider>

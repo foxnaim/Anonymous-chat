@@ -3,8 +3,7 @@
  */
 
 import { useAppDispatch, useAppSelector } from '../hooks';
-import { loginAsync, registerAsync, logout, checkSessionAsync, verifyEmailAsync } from '../slices/authSlice';
-import { useEffect, useRef } from 'react';
+import { loginAsync, registerAsync, logout, verifyEmailAsync } from '../slices/authSlice';
 import { useQueryClient } from '@tanstack/react-query';
 
 /**
@@ -15,15 +14,9 @@ export const useAuth = () => {
   const dispatch = useAppDispatch();
   const auth = useAppSelector((state) => state.auth);
   const queryClient = useQueryClient();
-  const hasCheckedSession = useRef(false);
 
-  // Проверяем сессию при монтировании (только один раз)
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !hasCheckedSession.current && auth.isLoading) {
-      hasCheckedSession.current = true;
-      dispatch(checkSessionAsync());
-    }
-  }, [dispatch, auth.isLoading]);
+  // Проверка сессии теперь происходит в SessionChecker компоненте
+  // чтобы избежать дублирования запросов при использовании useAuth в нескольких компонентах
 
   const login = async (email: string, password: string): Promise<{ success: boolean; user?: any }> => {
     try {
