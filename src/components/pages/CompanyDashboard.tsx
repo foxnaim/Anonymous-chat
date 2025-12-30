@@ -284,74 +284,74 @@ const CompanyDashboard = () => {
                         )}
                       </Button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
                       {/* Company Code */}
-                      <div className="space-y-2.5">
-                        <label className="text-sm font-medium text-muted-foreground">{t("company.companyCode")}</label>
+                      <div className="space-y-2 sm:space-y-2.5">
+                        <label className="text-xs sm:text-sm font-medium text-muted-foreground">{t("company.companyCode")}</label>
                         <div className="flex items-center gap-2">
-                          <code className="flex-1 text-xl font-mono font-bold text-primary bg-muted px-4 py-3 rounded-md tracking-wider">
+                          <code className="flex-1 text-base sm:text-lg md:text-xl font-mono font-bold text-primary bg-muted px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 rounded-md tracking-wider min-w-0 overflow-hidden text-ellipsis">
                             {showSensitiveData ? company.code : '••••••••'}
                           </code>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleCopy(company.code, 'code')}
-                            className="h-10 w-10"
+                            className="h-9 sm:h-10 w-9 sm:w-10 flex-shrink-0"
                           >
                             {copiedCode ? (
-                              <FiCheckCircle className="h-4 w-4 text-success" />
+                              <FiCheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-success" />
                             ) : (
-                              <FiCopy className="h-4 w-4" />
+                              <FiCopy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             )}
                           </Button>
                         </div>
                       </div>
 
                       {/* Share Link */}
-                      <div className="space-y-2.5">
-                        <label className="text-sm font-medium text-muted-foreground">{t("company.shareLink")}</label>
+                      <div className="space-y-2 sm:space-y-2.5">
+                        <label className="text-xs sm:text-sm font-medium text-muted-foreground">{t("company.shareLink")}</label>
                         <div className="flex items-center gap-2">
                           <Input
                             value={showSensitiveData ? shareLink : '••••••••••••••••••••••••••••'}
                             readOnly
-                            className="font-mono text-sm h-10"
+                            className="font-mono text-xs sm:text-sm h-9 sm:h-10 min-w-0 flex-1"
                             autoComplete="off"
                           />
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleCopy(shareLink, 'link')}
-                            className="h-10 w-10"
+                            className="h-9 sm:h-10 w-9 sm:w-10 flex-shrink-0"
                           >
                             {copiedLink ? (
-                              <FiCheckCircle className="h-4 w-4 text-success" />
+                              <FiCheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-success" />
                             ) : (
-                              <FiShare2 className="h-4 w-4" />
+                              <FiShare2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             )}
                           </Button>
                         </div>
                       </div>
 
                       {/* Daily Password */}
-                      <div className="space-y-2.5">
-                        <label className="text-sm font-medium text-muted-foreground">{t("company.passwordForSendingMessages")}</label>
+                      <div className="space-y-2 sm:space-y-2.5">
+                        <label className="text-xs sm:text-sm font-medium text-muted-foreground">{t("company.passwordForSendingMessages")}</label>
                         <div className="flex items-center gap-2">
                           <Input
                             value={showSensitiveData ? dailyPassword : '••••••••••'}
                             readOnly
-                            className="font-mono text-sm h-10"
+                            className="font-mono text-xs sm:text-sm h-9 sm:h-10 min-w-0 flex-1"
                             autoComplete="off"
                           />
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleCopy(dailyPassword, 'password')}
-                            className="h-10 w-10"
+                            className="h-9 sm:h-10 w-9 sm:w-10 flex-shrink-0"
                           >
                             {copiedPassword ? (
-                              <FiCheckCircle className="h-4 w-4 text-success" />
+                              <FiCheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-success" />
                             ) : (
-                              <FiCopy className="h-4 w-4" />
+                              <FiCopy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             )}
                           </Button>
                         </div>
