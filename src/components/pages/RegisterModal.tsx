@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { plansService } from "@/lib/query";
 import { useAuth } from "@/lib/redux";
 import { toast } from "sonner";
-import { FiKey, FiSettings, FiGift, FiCheck, FiEye, FiEyeOff, FiArrowLeft, FiUserPlus, FiMail } from "react-icons/fi";
+import { FiKey, FiSettings, FiGift, FiCheck, FiEye, FiEyeOff, FiArrowLeft, FiUserPlus } from "react-icons/fi";
 import { Badge } from "@/components/ui/badge";
 import { validatePasswordStrength } from "@/lib/utils/validation";
 import emailjs from '@emailjs/browser';
