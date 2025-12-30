@@ -80,6 +80,7 @@ const CompanySettings = () => {
 
       try {
         setIsCompressing(true);
+        // compressImage возвращает base64 строку, а не File
         const compressedBase64 = await compressImage(file);
         
         // Сохраняем оригинальный файл для отправки на сервер
