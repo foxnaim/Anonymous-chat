@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/redux";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { FiCheckCircle, FiXCircle, FiLoader } from "react-icons/fi";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const { t } = useTranslation();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -95,6 +95,21 @@ export default function VerifyEmailPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <FiLoader className="h-12 w-12 text-primary animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
 

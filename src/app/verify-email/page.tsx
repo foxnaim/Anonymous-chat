@@ -7,4 +7,3 @@ export const metadata = {
 export default function VerifyEmail() {
   return <VerifyEmailPage />;
 }
-
