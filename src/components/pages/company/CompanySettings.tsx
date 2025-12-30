@@ -14,7 +14,6 @@ import { useAuth } from "@/lib/redux";
 import { useCompany, useUpdateCompany } from "@/lib/query";
 import { toast } from "sonner";
 import { authService } from "@/lib/api/auth";
-import type { UserRole } from "@/types";
 import { validatePasswordStrength } from "@/lib/utils/validation";
 import { compressImage, validateFileSize, validateImageType } from "@/lib/utils/imageCompression";
 
