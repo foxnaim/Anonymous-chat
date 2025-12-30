@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FiUpload, FiX, FiEdit2, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiUpload, FiX, FiEdit2 } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import { useCompany, useUpdateCompany } from "@/lib/query";
