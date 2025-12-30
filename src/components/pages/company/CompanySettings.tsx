@@ -54,8 +54,8 @@ const CompanySettings = () => {
   useEffect(() => {
     if (company) {
       setLogoPreview(company.logoUrl || null);
-      if (company.email) {
-        setNewEmail(company.email);
+      if (company.adminEmail) {
+        setNewEmail(company.adminEmail);
       }
       if (company.name) {
         setCompanyName(company.name);
@@ -318,7 +318,7 @@ const CompanySettings = () => {
                         size="sm"
                         onClick={() => {
                           setIsEditingEmail(false);
-                          setNewEmail(company?.email || "");
+                          setNewEmail(company?.adminEmail || "");
                           setEmailPassword("");
                         }}
                       >
@@ -327,7 +327,7 @@ const CompanySettings = () => {
                       <Button 
                         size="sm"
                         onClick={handleEmailChange}
-                        disabled={!newEmail || !emailPassword || newEmail === company?.email}
+                        disabled={!newEmail || !emailPassword || newEmail === company?.adminEmail}
                       >
                         {t("common.save")}
                       </Button>
@@ -335,7 +335,7 @@ const CompanySettings = () => {
                   </div>
                 ) : (
                   <div className="p-3 bg-muted rounded-md text-sm font-medium">
-                    {company?.email || user?.email}
+                    {company?.adminEmail || user?.email}
                   </div>
                 )}
               </div>
