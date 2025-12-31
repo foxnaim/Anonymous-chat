@@ -31,18 +31,16 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "types": ["node"]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
-    "src/__tests__/**/*.ts",
-    "src/__tests__/**/*.tsx"
+    ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "src/__tests__"
+    "node_modules"
   ]
 }

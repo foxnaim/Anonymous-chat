@@ -578,6 +578,11 @@ export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Om
  */
 type UpdateMessageStatusVariables = { id: string; status: Message["status"]; response?: string };
 
+type UpdateMessageStatusContext = {
+  previousQueries: Array<[QueryKey, Message[] | undefined]>;
+  userContext?: any;
+};
+
 export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Error, UpdateMessageStatusVariables>) => {
   const queryClient = useQueryClient();
   const userOnSuccess = options?.onSuccess;
@@ -585,7 +590,7 @@ export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Err
   const userOnMutate = options?.onMutate;
   const { onSuccess: _, onError: __, onMutate: ___, ...rest } = options ?? {};
   
-  return useMutation<Message, Error, UpdateMessageStatusVariables>({
+  return useMutation<Message, Error, UpdateMessageStatusVariables, UpdateMessageStatusContext>({
     mutationFn: ({ id, status, response }) => messageService.updateStatus(id, status, response),
     onMutate: async (variables) => {
       // Отменяем исходящие запросы, чтобы они не перезаписали оптимистичное обновление

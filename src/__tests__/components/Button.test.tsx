@@ -1,3 +1,7 @@
+/// <reference types="jest" />
+/// <reference types="@testing-library/jest-dom" />
+
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { Button } from '@/components/ui/button';
 
@@ -9,9 +13,10 @@ describe('Button Component', () => {
   });
 
   it('applies variant classes correctly', () => {
-    render(<Button variant="destructive">Delete</Button>);
-    const button = screen.getByRole('button');
-    expect(button).toHaveClass('bg-destructive');
+    const { container } = render(<Button variant="destructive">Delete</Button>);
+    const button = container.querySelector('button');
+    expect(button).toBeInTheDocument();
+    expect(button?.className).toContain('bg-destructive');
   });
 
   it('handles click events', () => {
@@ -27,11 +32,11 @@ describe('Button Component', () => {
     const button = screen.getByRole('button');
     expect(button).toBeDisabled();
   });
+
+  it('renders with default variant when no variant is specified', () => {
+    const { container } = render(<Button>Default</Button>);
+    const button = container.querySelector('button');
+    expect(button).toBeInTheDocument();
+    expect(button?.className).toContain('bg-primary');
+  });
 });
-
-
-
-
-
-
-

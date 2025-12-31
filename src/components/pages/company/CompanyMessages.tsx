@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Fragment, useEffect } from "react";
+import { useState, Fragment, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useCompany, useMessages, useUpdateMessageStatus } from "@/lib/query";
 import { Dialog, Transition, Listbox } from "@headlessui/react";
@@ -164,6 +164,9 @@ const CompanyMessages = () => {
     });
   };
   
+  // Сохраняем предыдущее значение selectedMessage для сравнения
+  const prevSelectedMessageRef = useRef<Message | null>(null);
+  
   // Обновляем selectedMessage когда сообщение обновляется в списке
   useEffect(() => {
     if (selectedMessage) {
@@ -177,7 +180,8 @@ const CompanyMessages = () => {
         setResponseText(updatedMessage.companyResponse || "");
       }
     }
-  }, [messages, selectedMessage?.id]);
+    prevSelectedMessageRef.current = selectedMessage;
+  }, [messages, selectedMessage]);
 
   // При возврате вкладки/окна в фокус — обновляем список, чтобы новые сообщения подтянулись сразу
   useEffect(() => {
