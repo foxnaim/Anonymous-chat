@@ -33,15 +33,26 @@ const CompanyMessages = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const { mutate: updateMessageStatus } = useUpdateMessageStatus({
+    onMutate: async (variables) => {
+      // Оптимистично обновляем selectedMessage ДО отправки запроса
+      if (selectedMessage && selectedMessage.id === variables.id) {
+        const optimisticMessage: Message = {
+          ...selectedMessage,
+          status: variables.status || selectedMessage.status,
+          companyResponse: variables.response !== undefined ? variables.response : selectedMessage.companyResponse,
+          updatedAt: new Date().toISOString().split('T')[0],
+          lastUpdate: new Date().toISOString().split('T')[0],
+        };
+        setSelectedMessage(optimisticMessage);
+        setResponseText(optimisticMessage.companyResponse || "");
+      }
+    },
     onSuccess: (updatedMessage) => {
       toast.success(t("messages.statusUpdated"));
-      setIsDialogOpen(false);
-      setSelectedMessage(null);
-      setResponseText("");
-      // Обновляем выбранное сообщение если оно было открыто
-      if (selectedMessage && selectedMessage.id === updatedMessage.id) {
-        setSelectedMessage(updatedMessage);
-      }
+      // Обновляем selectedMessage с данными с сервера для гарантии актуальности
+      setSelectedMessage(updatedMessage);
+      setResponseText(updatedMessage.companyResponse || "");
+      // Диалог остается открытым, чтобы пользователь видел свой ответ
       // refetch() не нужен, так как оптимистичное обновление уже обновило кэш
     },
     onError: (error: any) => {
@@ -483,6 +494,16 @@ const CompanyMessages = () => {
                             </p>
                           </div>
                         </div>
+                        {selectedMessage.companyResponse && (
+                          <div className="space-y-2">
+                            <Label>{t("messages.yourResponse")}</Label>
+                            <div className="bg-muted p-4 rounded-lg">
+                              <p className="text-foreground whitespace-pre-wrap break-words">
+                                {selectedMessage.companyResponse}
+                              </p>
+                            </div>
+                          </div>
+                        )}
                         <div className="space-y-2">
                           <Label>{t("messages.response")}</Label>
                           <Textarea

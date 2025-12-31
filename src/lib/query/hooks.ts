@@ -581,6 +581,7 @@ type UpdateMessageStatusVariables = { id: string; status: Message["status"]; res
 type UpdateMessageStatusContext = {
   previousQueries: Array<[QueryKey, Message[] | undefined]>;
   userContext?: any;
+  optimisticMessage?: Message | null;
 };
 
 export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Error, UpdateMessageStatusVariables>) => {
@@ -602,13 +603,54 @@ export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Err
         exact: false,
       });
       
+      // Оптимистично обновляем сообщение ДО отправки запроса
+      // Находим текущее сообщение в кэше
+      const allMessages = queryClient.getQueriesData<Message[]>({
+        queryKey: queryKeys.messages(),
+        exact: false,
+      });
+      
+      let currentMessage: Message | null = null;
+      for (const [, messages] of allMessages) {
+        if (messages && Array.isArray(messages)) {
+          const found = messages.find(m => m.id === variables.id);
+          if (found) {
+            currentMessage = found;
+            break;
+          }
+        }
+      }
+      
+      // Создаем оптимистично обновленное сообщение
+      if (currentMessage) {
+        const optimisticMessage: Message = {
+          ...currentMessage,
+          status: variables.status || currentMessage.status,
+          companyResponse: variables.response !== undefined ? variables.response : currentMessage.companyResponse,
+          updatedAt: new Date().toISOString().split('T')[0],
+          lastUpdate: new Date().toISOString().split('T')[0],
+        };
+        
+        // Оптимистично обновляем все запросы сообщений
+        queryClient.setQueriesData<Message[]>(
+          { queryKey: queryKeys.messages(), exact: false },
+          (old) => {
+            if (!old) return old;
+            return old.map((m) => (m.id === optimisticMessage.id ? optimisticMessage : m));
+          }
+        );
+        
+        // Обновляем отдельное сообщение в кэше
+        queryClient.setQueryData(queryKeys.message(optimisticMessage.id), optimisticMessage);
+      }
+      
       // Вызываем пользовательский onMutate если он есть
       let userContext: any;
       if (userOnMutate) {
         userContext = await (userOnMutate as any)(variables);
       }
       
-      return { previousQueries, userContext };
+      return { previousQueries, userContext, optimisticMessage: currentMessage };
     },
     onSuccess: (data, variables, context, mutation) => {
       // Оптимистично обновляем все запросы сообщений
