@@ -23,10 +23,11 @@ import type { GroupedAchievements } from "../achievements";
 // ========== MESSAGE SERVICES ==========
 // Используем реальный API вместо моковых данных
 export const messageService = {
-  getAll: async (companyCode?: string, page?: number, limit?: number): Promise<Message[]> => {
+  getAll: async (companyCode?: string, page?: number, limit?: number, messageId?: string): Promise<Message[]> => {
     try {
       const params = new URLSearchParams();
       if (companyCode) params.append('companyCode', companyCode);
+      if (messageId) params.append('messageId', messageId);
       if (page) params.append('page', page.toString());
       if (limit) params.append('limit', limit.toString());
       const queryString = params.toString();

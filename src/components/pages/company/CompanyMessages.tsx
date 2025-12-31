@@ -18,12 +18,14 @@ import { toast } from "sonner";
 import { MESSAGE_STATUSES } from "@/lib/utils/constants";
 import { useSocketMessages } from "@/lib/websocket/useSocket";
 import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
+import { useDebounce } from "@/hooks/use-debounce";
 
 const CompanyMessages = () => {
   const { isFullscreen } = useFullscreenContext();
   const { t } = useTranslation();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
@@ -72,14 +74,28 @@ const CompanyMessages = () => {
   const { data: company } = useCompany(user?.companyId || 0, {
     enabled: !!user?.companyId,
   });
-  const { data: messages = [], isLoading, refetch } = useMessages(company?.code, undefined, undefined, {
-    enabled: !!company?.code,
-    staleTime: 1000 * 15, // считаем свежими 15с
-    refetchOnMount: true,
-    refetchOnWindowFocus: true, // гарантируем подтяжку при фокусе/новом устройстве
-    refetchOnReconnect: true,
-    // без постоянного интервала — rely на сокет + события видимости
-  });
+  
+  // Определяем, является ли поисковый запрос похожим на ID сообщения (FB-YYYY-XXXXXX)
+  // Используем debounced версию для поиска на бэкенде
+  const isMessageIdSearch = /^FB[-_]?\d{4}[-_]?[A-Z0-9]{1,6}$/i.test(debouncedSearchQuery.trim());
+  const normalizedMessageId = isMessageIdSearch && debouncedSearchQuery.trim().length > 0
+    ? debouncedSearchQuery.trim().replace(/[-_]/g, '').toUpperCase() 
+    : undefined;
+  
+  const { data: messages = [], isLoading, refetch } = useMessages(
+    company?.code, 
+    undefined, 
+    undefined, 
+    normalizedMessageId, // Передаем нормализованный ID для поиска на бэкенде
+    {
+      enabled: !!company?.code,
+      staleTime: 1000 * 15, // считаем свежими 15с
+      refetchOnMount: true,
+      refetchOnWindowFocus: true, // гарантируем подтяжку при фокусе/новом устройстве
+      refetchOnReconnect: true,
+      // без постоянного интервала — rely на сокет + события видимости
+    }
+  );
   
   // Подключаемся к WebSocket для real-time обновлений
   useSocketMessages(company?.code);
@@ -98,14 +114,34 @@ const CompanyMessages = () => {
     return statusMap[status] || status;
   };
   
+  // Функция для нормализации ID сообщения для поиска (убирает дефисы, приводит к верхнему регистру)
+  const normalizeMessageId = (id: string): string => {
+    return id.replace(/[-_]/g, '').toUpperCase();
+  };
+  
   const filteredMessages = messages.filter((msg) => {
-    const matchesSearch = msg.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      msg.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      msg.companyCode.toLowerCase().includes(searchQuery.toLowerCase());
-    const normalizedStatus = normalizeStatus(statusFilter);
-    const matchesStatus = normalizedStatus === "all" || msg.status === normalizedStatus;
-    const matchesType = typeFilter === "all" || msg.type === typeFilter;
-    return matchesSearch && matchesStatus && matchesType;
+    // Если поиск по ID на бэкенде уже выполнен, просто применяем фильтры по статусу и типу
+    // Иначе делаем клиентскую фильтрацию
+    if (!isMessageIdSearch || !normalizedMessageId) {
+      // Обычный поиск - фильтруем на клиенте
+      const normalizedSearchQuery = normalizeMessageId(searchQuery);
+      const normalizedMsgId = normalizeMessageId(msg.id);
+      const normalizedCompanyCode = msg.companyCode.toUpperCase();
+      
+      const matchesSearch = msg.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        normalizedMsgId.includes(normalizedSearchQuery) ||
+        normalizedCompanyCode.includes(searchQuery.toUpperCase());
+      const normalizedStatus = normalizeStatus(statusFilter);
+      const matchesStatus = normalizedStatus === "all" || msg.status === normalizedStatus;
+      const matchesType = typeFilter === "all" || msg.type === typeFilter;
+      return matchesSearch && matchesStatus && matchesType;
+    } else {
+      // Поиск по ID на бэкенде - только фильтры по статусу и типу
+      const normalizedStatus = normalizeStatus(statusFilter);
+      const matchesStatus = normalizedStatus === "all" || msg.status === normalizedStatus;
+      const matchesType = typeFilter === "all" || msg.type === typeFilter;
+      return matchesStatus && matchesType;
+    }
   });
   
   const handleViewMessage = (message: Message) => {

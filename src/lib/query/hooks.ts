@@ -22,13 +22,14 @@ import { adminSettingsApi, type AdminSettings, type UpdateAdminSettingsRequest }
  * Если companyCode не передан (undefined) - получает все сообщения (для админа)
  * Если companyCode === null - запрос отключен
  * Если companyCode === string - получает сообщения конкретной компании
+ * messageId - опциональный параметр для поиска по ID сообщения
  */
-export const useMessages = (companyCode?: string | null, page?: number, limit?: number, options?: Omit<UseQueryOptions<Message[]>, 'queryKey' | 'queryFn'>) => {
+export const useMessages = (companyCode?: string | null, page?: number, limit?: number, messageId?: string, options?: Omit<UseQueryOptions<Message[]>, 'queryKey' | 'queryFn'>) => {
   // Нормализуем null в undefined для queryKey
   const normalizedCode = companyCode ?? undefined;
   return useQuery({
-    queryKey: [...queryKeys.messages(normalizedCode), page, limit],
-    queryFn: () => messageService.getAll(normalizedCode, page, limit),
+    queryKey: [...queryKeys.messages(normalizedCode), page, limit, messageId],
+    queryFn: () => messageService.getAll(normalizedCode, page, limit, messageId),
     enabled: companyCode !== null, // enabled если не null (undefined разрешен для админа)
     staleTime: 1000 * 10, // 10 секунд - сообщения обновляются часто, уменьшено для более быстрого обновления
     gcTime: 1000 * 60 * 5, // 5 минут в кэше
