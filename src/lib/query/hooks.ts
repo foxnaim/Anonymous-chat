@@ -605,7 +605,7 @@ export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Err
       
       return { previousQueries, userContext };
     },
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutation) => {
       // Оптимистично обновляем все запросы сообщений
       const baseQueryKey = queryKeys.messages(data.companyCode);
       
@@ -641,10 +641,10 @@ export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Err
       
       // Вызываем пользовательский onSuccess если он есть
       if (userOnSuccess) {
-        userOnSuccess(data, variables, context);
+        userOnSuccess(data, variables, context, mutation);
       }
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, context, mutation) => {
       // Откатываем изменения при ошибке
       if (context?.previousQueries) {
         context.previousQueries.forEach(([key, old]) => {
@@ -654,7 +654,7 @@ export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Err
       
       // Вызываем пользовательский onError если он есть
       if (userOnError) {
-        userOnError(error, variables, context);
+        userOnError(error, variables, context, mutation);
       }
     },
     ...rest,
