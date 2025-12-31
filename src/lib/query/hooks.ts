@@ -691,11 +691,10 @@ export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Err
         userOnSuccess(data, variables, context, mutation);
       }
     },
-    onError: (error, variables, context, mutation) => {
+    onError: (error: Error, variables: UpdateMessageStatusVariables, context: UpdateMessageStatusContext | undefined, mutation: any) => {
       // Откатываем изменения при ошибке
-      const ctx = context as UpdateMessageStatusContext | undefined;
-      if (ctx?.previousQueries) {
-        ctx.previousQueries.forEach(([key, old]) => {
+      if (context?.previousQueries) {
+        context.previousQueries.forEach(([key, old]) => {
           queryClient.setQueryData<Message[] | undefined>(key, old);
         });
       }
