@@ -33,8 +33,15 @@ const CompanyMessages = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditingResponse, setIsEditingResponse] = useState(false);
   
+  // Реф для отслеживания времени последнего локального обновления
+  // Используется для блокировки обновлений из списка (защита от race condition/stale cache)
+  const lastLocalUpdateRef = useRef<number>(0);
+  
   const { mutate: updateMessageStatus } = useUpdateMessageStatus({
     onMutate: async (variables) => {
+      // Устанавливаем время последнего обновления
+      lastLocalUpdateRef.current = Date.now();
+      
       // Оптимистично обновляем selectedMessage ДО отправки запроса
       if (selectedMessage && selectedMessage.id === variables.id) {
         const optimisticMessage: Message = {
@@ -52,6 +59,9 @@ const CompanyMessages = () => {
       return {} as any;
     },
     onSuccess: (updatedMessage) => {
+      // Обновляем таймер защиты
+      lastLocalUpdateRef.current = Date.now();
+      
       toast.success(t("messages.statusUpdated"));
       // Обновляем selectedMessage с данными с сервера для гарантии актуальности
       setSelectedMessage(updatedMessage);
@@ -187,6 +197,13 @@ const CompanyMessages = () => {
   // Обновляем selectedMessage когда сообщение обновляется в списке
   useEffect(() => {
     if (selectedMessage) {
+      // Проверка на "период благодати" после локального обновления
+      // Если мы недавно (менее 5 сек назад) обновили сообщение, игнорируем обновления из списка,
+      // так как они могут быть устаревшими (stale cache / replication lag)
+      if (Date.now() - lastLocalUpdateRef.current < 5000) {
+        return;
+      }
+
       const updatedMessage = messages.find(m => m.id === selectedMessage.id);
       
       if (updatedMessage) {
@@ -200,35 +217,16 @@ const CompanyMessages = () => {
           updatedDate !== selectedDate;
           
         // Если данные изменились, обновляем выбранное сообщение
-        // Но если у нас есть оптимистичный ответ, а в обновлении его нет (и это не явное удаление),
-        // то сохраняем оптимистичный ответ (защита от гонки данных)
         if (hasChanges) {
+          // Дополнительная защита: не перезаписываем ответ, если в новом сообщении его нет, а у нас есть
+          // Это на случай, если 5 секунд не хватило
           let messageToSet = updatedMessage;
           
-          // Проверка на "старые" данные из кэша/списка
-          // 1. Если локально статус не "Новое", а пришло "Новое" - игнорируем обновление статуса (скорее всего старый кэш)
-          const localStatus = selectedMessage.status;
-          const remoteStatus = updatedMessage.status;
-          
-          const isStaleStatus = remoteStatus === "Новое" && localStatus !== "Новое";
-          
-          // 2. Если локально есть ответ, а удаленно нет - сохраняем локальный ответ
-          const isStaleResponse = !updatedMessage.companyResponse && selectedMessage.companyResponse;
-          
-          if (isStaleStatus || isStaleResponse) {
-             console.log("Detected stale update, preserving local state", { 
-               staleStatus: isStaleStatus, 
-               staleResponse: isStaleResponse,
-               local: selectedMessage,
-               remote: updatedMessage 
-             });
-             
+          if (!updatedMessage.companyResponse && selectedMessage.companyResponse && updatedMessage.status === selectedMessage.status) {
+             console.log("Preserving optimistic response against stale update (extended check)");
              messageToSet = {
                ...updatedMessage,
-               // Если статус "протух", оставляем локальный
-               status: isStaleStatus ? localStatus : remoteStatus,
-               // Если ответ "протух", оставляем локальный
-               companyResponse: isStaleResponse ? selectedMessage.companyResponse : updatedMessage.companyResponse
+               companyResponse: selectedMessage.companyResponse
              };
           }
           
