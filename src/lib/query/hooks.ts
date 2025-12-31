@@ -598,7 +598,10 @@ export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Err
       });
       
       // Вызываем пользовательский onMutate если он есть
-      const userContext = userOnMutate ? await userOnMutate(variables) : undefined;
+      let userContext: any;
+      if (userOnMutate) {
+        userContext = await (userOnMutate as any)(variables);
+      }
       
       return { previousQueries, userContext };
     },
