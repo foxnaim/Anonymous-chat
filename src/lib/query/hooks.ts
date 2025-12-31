@@ -693,8 +693,9 @@ export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Err
     },
     onError: (error, variables, context, mutation) => {
       // Откатываем изменения при ошибке
-      if (context?.previousQueries) {
-        context.previousQueries.forEach(([key, old]) => {
+      const ctx = context as UpdateMessageStatusContext | undefined;
+      if (ctx?.previousQueries) {
+        ctx.previousQueries.forEach(([key, old]) => {
           queryClient.setQueryData<Message[] | undefined>(key, old);
         });
       }
