@@ -581,18 +581,70 @@ export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Err
   
   return useMutation({
     mutationFn: ({ id, status, response }) => messageService.updateStatus(id, status, response),
-    onSuccess: (data) => {
-      // Инвалидируем кэш конкретного сообщения и списка
+    onMutate: async (variables) => {
+      // Отменяем исходящие запросы, чтобы они не перезаписали оптимистичное обновление
+      await queryClient.cancelQueries({ queryKey: queryKeys.messages() });
+      
+      // Сохраняем предыдущие данные для отката
+      const previousQueries = queryClient.getQueriesData<Message[]>({
+        queryKey: queryKeys.messages(),
+        exact: false,
+      });
+      
+      return { previousQueries };
+    },
+    onSuccess: (data, variables, context) => {
+      // Оптимистично обновляем все запросы сообщений
+      const baseQueryKey = queryKeys.messages(data.companyCode);
+      
+      queryClient.setQueriesData<Message[]>(
+        { queryKey: baseQueryKey, exact: false },
+        (old) => {
+          if (!old) return old;
+          return old.map((m) => (m.id === data.id ? data : m));
+        }
+      );
+      
+      // Также обновляем кэш для всех сообщений (для админов)
+      queryClient.setQueriesData<Message[]>(
+        { queryKey: queryKeys.messages(undefined), exact: false },
+        (old) => {
+          if (!old) return old;
+          return old.map((m) => (m.id === data.id ? data : m));
+        }
+      );
+      
+      // Обновляем отдельное сообщение в кэше
+      queryClient.setQueryData(queryKeys.message(data.id), data);
+      
+      // Инвалидируем кэш для гарантии актуальности данных
       queryClient.invalidateQueries({ queryKey: queryKeys.message(data.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.messages(data.companyCode) });
-      // Инвалидируем статистику и достижения для всех компаний (они будут пересчитаны при следующем запросе)
-      // Используем более широкую инвалидацию, так как мы не знаем companyId из companyCode напрямую
+      
+      // Инвалидируем статистику и достижения
       queryClient.invalidateQueries({ queryKey: ['stats'] });
       queryClient.invalidateQueries({ queryKey: ['message-distribution'] });
       queryClient.invalidateQueries({ queryKey: ['growth-metrics'] });
       queryClient.invalidateQueries({ queryKey: ['achievements'] });
+      
+      // Вызываем пользовательский onSuccess если он есть
+      if (options?.onSuccess) {
+        options.onSuccess(data, variables, context);
+      }
     },
-    ...options,
+    onError: (error, variables, context) => {
+      // Откатываем изменения при ошибке
+      if (context?.previousQueries) {
+        context.previousQueries.forEach(([key, old]) => {
+          queryClient.setQueryData<Message[] | undefined>(key, old);
+        });
+      }
+      
+      // Вызываем пользовательский onError если он есть
+      if (options?.onError) {
+        options.onError(error, variables, context);
+      }
+    },
   });
 };
 

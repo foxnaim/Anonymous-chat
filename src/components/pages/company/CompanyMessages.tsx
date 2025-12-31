@@ -33,10 +33,16 @@ const CompanyMessages = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const { mutate: updateMessageStatus } = useUpdateMessageStatus({
-    onSuccess: () => {
+    onSuccess: (updatedMessage) => {
       toast.success(t("messages.statusUpdated"));
       setIsDialogOpen(false);
-      refetch();
+      setSelectedMessage(null);
+      setResponseText("");
+      // Обновляем выбранное сообщение если оно было открыто
+      if (selectedMessage && selectedMessage.id === updatedMessage.id) {
+        setSelectedMessage(updatedMessage);
+      }
+      // refetch() не нужен, так как оптимистичное обновление уже обновило кэш
     },
     onError: (error: any) => {
       const backendMessage = error?.response?.data?.message || error?.message || "";
@@ -157,6 +163,21 @@ const CompanyMessages = () => {
       response: responseText || undefined,
     });
   };
+  
+  // Обновляем selectedMessage когда сообщение обновляется в списке
+  useEffect(() => {
+    if (selectedMessage) {
+      const updatedMessage = messages.find(m => m.id === selectedMessage.id);
+      if (updatedMessage && (
+        updatedMessage.companyResponse !== selectedMessage.companyResponse ||
+        updatedMessage.status !== selectedMessage.status ||
+        updatedMessage.updatedAt !== selectedMessage.updatedAt
+      )) {
+        setSelectedMessage(updatedMessage);
+        setResponseText(updatedMessage.companyResponse || "");
+      }
+    }
+  }, [messages, selectedMessage?.id]);
 
   // При возврате вкладки/окна в фокус — обновляем список, чтобы новые сообщения подтянулись сразу
   useEffect(() => {
