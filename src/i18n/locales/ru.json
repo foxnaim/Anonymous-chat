@@ -321,6 +321,11 @@
         "description": "Работайте с платформой {{target}} месяцев"
       }
     },
+    "achievementFirst10": "Получить первые 10 отзывов",
+    "achievement50": "Получить 50 отзывов",
+    "achievement100": "Получить 100 отзывов",
+    "achievement50Resolved": "Решить 50 проблем",
+    "achievementMonthNoComplaints": "Месяц без жалоб",
     "totalReviews": "Всего отзывов",
     "perMonth": "в месяц",
     "resolvedProblems": "Решенных проблем",
@@ -647,4 +652,3 @@
     "defaultKeywords": "обратная связь, анонимные отзывы, HR, feedback, компания, анонимность, жалобы, предложения, отзывы сотрудников"
   }
 }
-

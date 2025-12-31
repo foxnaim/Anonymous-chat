@@ -158,7 +158,6 @@
     "passwordStrengthWeak": "Weak",
     "passwordStrengthMedium": "Medium",
     "passwordStrengthStrong": "Strong",
-    "passwordMinLength": "Minimum {{length}} characters",
     "invalidEmail": "Please enter a valid email address",
     "startUsingToday": "Start using the platform today",
     "afterRegistration": "After registration you will receive:",
@@ -193,9 +192,7 @@
     "accessDenied": "Access denied. You do not have permission to perform this action.",
     "companyCodeLength": "Company code must contain exactly 8 characters",
     "passwordTooWeak": "Password is too weak",
-    "registrationSuccess": "Registration completed successfully",
     "registrationError": "Registration error",
-    "loginError": "Login error",
     "resetTokenNotFound": "Reset token not found. Please use the link from the email.",
     "passwordResetSuccess": "Password has been successfully changed!",
     "passwordResetError": "Error resetting password",
@@ -321,17 +318,6 @@
         "description": "Work with the platform for {{target}} months"
       }
     },
-    "achievement": {
-      "activity": {
-        "level": "Activity level {{level}}"
-      },
-      "quality": {
-        "level": "Quality level {{level}}"
-      },
-      "response_speed": {
-        "level": "Response speed level {{level}}"
-      }
-    },
     "achievementFirst10": "Get first 10 reviews",
     "achievement50": "Get 50 reviews",
     "achievement100": "Get 100 reviews",
@@ -447,7 +433,6 @@
     "status": "Status",
     "plan": "Plan",
     "employees": "Employees",
-    "totalMessages": "Total Messages",
     "registration": "Registration",
     "actions": "Actions",
     "openPanel": "Open Panel",
@@ -458,6 +443,7 @@
     "activateCompany": "Activate Company",
     "companyActivated": "Company activated",
     "activateError": "Error activating company",
+    "changeStatus": "Change Status",
     "changePlan": "Change Plan",
     "planEndDate": "Plan End Date",
     "planEndDateDescription": "Leave empty for unlimited plan",
