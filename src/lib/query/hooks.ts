@@ -576,10 +576,16 @@ export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Om
 /**
  * Хук для обновления статуса сообщения
  */
-export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Error, { id: string; status: Message["status"]; response?: string }>) => {
+type UpdateMessageStatusVariables = { id: string; status: Message["status"]; response?: string };
+
+export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Error, UpdateMessageStatusVariables>) => {
   const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess;
+  const userOnError = options?.onError;
+  const userOnMutate = options?.onMutate;
+  const { onSuccess: _, onError: __, onMutate: ___, ...rest } = options ?? {};
   
-  return useMutation({
+  return useMutation<Message, Error, UpdateMessageStatusVariables>({
     mutationFn: ({ id, status, response }) => messageService.updateStatus(id, status, response),
     onMutate: async (variables) => {
       // Отменяем исходящие запросы, чтобы они не перезаписали оптимистичное обновление
@@ -591,7 +597,10 @@ export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Err
         exact: false,
       });
       
-      return { previousQueries };
+      // Вызываем пользовательский onMutate если он есть
+      const userContext = userOnMutate ? await userOnMutate(variables) : undefined;
+      
+      return { previousQueries, userContext };
     },
     onSuccess: (data, variables, context) => {
       // Оптимистично обновляем все запросы сообщений
@@ -628,8 +637,8 @@ export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Err
       queryClient.invalidateQueries({ queryKey: ['achievements'] });
       
       // Вызываем пользовательский onSuccess если он есть
-      if (options?.onSuccess) {
-        options.onSuccess(data, variables, context);
+      if (userOnSuccess) {
+        userOnSuccess(data, variables, context);
       }
     },
     onError: (error, variables, context) => {
@@ -641,10 +650,11 @@ export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Err
       }
       
       // Вызываем пользовательский onError если он есть
-      if (options?.onError) {
-        options.onError(error, variables, context);
+      if (userOnError) {
+        userOnError(error, variables, context);
       }
     },
+    ...rest,
   });
 };
 
