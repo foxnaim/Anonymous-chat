@@ -31,6 +31,7 @@ const CompanyMessages = () => {
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [responseText, setResponseText] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditingResponse, setIsEditingResponse] = useState(false);
   
   const { mutate: updateMessageStatus } = useUpdateMessageStatus({
     onMutate: async (variables) => {
@@ -45,6 +46,7 @@ const CompanyMessages = () => {
         };
         setSelectedMessage(optimisticMessage);
         setResponseText(optimisticMessage.companyResponse || "");
+        setIsEditingResponse(false);
       }
       // Возвращаем пустой объект, так как основной контекст уже обрабатывается в хуке
       return {} as any;
@@ -54,6 +56,7 @@ const CompanyMessages = () => {
       // Обновляем selectedMessage с данными с сервера для гарантии актуальности
       setSelectedMessage(updatedMessage);
       setResponseText(updatedMessage.companyResponse || "");
+      setIsEditingResponse(false);
       // Диалог остается открытым, чтобы пользователь видел свой ответ
       // refetch() не нужен, так как оптимистичное обновление уже обновило кэш
     },
@@ -166,6 +169,7 @@ const CompanyMessages = () => {
   const handleViewMessage = (message: Message) => {
     setSelectedMessage(message);
     setResponseText(message.companyResponse || "");
+    setIsEditingResponse(false);
     setIsDialogOpen(true);
   };
   const handleUpdateStatus = (status: MessageStatus) => {
@@ -184,13 +188,31 @@ const CompanyMessages = () => {
   useEffect(() => {
     if (selectedMessage) {
       const updatedMessage = messages.find(m => m.id === selectedMessage.id);
-      if (updatedMessage && (
-        updatedMessage.companyResponse !== selectedMessage.companyResponse ||
-        updatedMessage.status !== selectedMessage.status ||
-        updatedMessage.updatedAt !== selectedMessage.updatedAt
-      )) {
-        setSelectedMessage(updatedMessage);
-        setResponseText(updatedMessage.companyResponse || "");
+      
+      if (updatedMessage) {
+        // Сравниваем даты без учета времени для избежания проблем с форматами (ISO vs YYYY-MM-DD)
+        const updatedDate = new Date(updatedMessage.updatedAt).toISOString().split('T')[0];
+        const selectedDate = new Date(selectedMessage.updatedAt).toISOString().split('T')[0];
+        
+        const hasChanges = 
+          updatedMessage.companyResponse !== selectedMessage.companyResponse ||
+          updatedMessage.status !== selectedMessage.status ||
+          updatedDate !== selectedDate;
+          
+        // Если данные изменились, обновляем выбранное сообщение
+        // Но если у нас есть оптимистичный ответ, а в обновлении его нет (и это не явное удаление),
+        // то сохраняем оптимистичный ответ (защита от гонки данных)
+        if (hasChanges) {
+          // Если в новом сообщении нет ответа, а в текущем есть, и статус не изменился на "Новое",
+          // возможно, пришел старый кэш или гонка. Оставляем текущий ответ.
+          if (!updatedMessage.companyResponse && selectedMessage.companyResponse && updatedMessage.status === selectedMessage.status) {
+             // Не обновляем, если это похоже на потерю данных при рефетче
+             return;
+          }
+          
+          setSelectedMessage(updatedMessage);
+          setResponseText(updatedMessage.companyResponse || "");
+        }
       }
     }
     prevSelectedMessageRef.current = selectedMessage;
@@ -496,26 +518,49 @@ const CompanyMessages = () => {
                             </p>
                           </div>
                         </div>
-                        {selectedMessage.companyResponse && (
+                        {selectedMessage.companyResponse && !isEditingResponse ? (
                           <div className="space-y-2">
-                            <Label>{t("messages.yourResponse")}</Label>
+                            <div className="flex items-center justify-between">
+                              <Label>{t("messages.yourResponse")}</Label>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => setIsEditingResponse(true)}
+                                className="h-6 px-2 text-xs"
+                              >
+                                {t("common.edit") || "Редактировать"}
+                              </Button>
+                            </div>
                             <div className="bg-muted p-4 rounded-lg">
                               <p className="text-foreground whitespace-pre-wrap break-words">
                                 {selectedMessage.companyResponse}
                               </p>
                             </div>
                           </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label>{t("messages.response")}</Label>
+                              {selectedMessage.companyResponse && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => setIsEditingResponse(false)}
+                                  className="h-6 px-2 text-xs"
+                                >
+                                  {t("common.cancel") || "Отмена"}
+                                </Button>
+                              )}
+                            </div>
+                            <Textarea
+                              value={responseText}
+                              onChange={(e) => setResponseText(e.target.value)}
+                              placeholder={t("messages.enterResponse")}
+                              className="min-h-[120px]"
+                              disabled={isRejectedByAdmin(selectedMessage)}
+                            />
+                          </div>
                         )}
-                        <div className="space-y-2">
-                          <Label>{t("messages.response")}</Label>
-                          <Textarea
-                            value={responseText}
-                            onChange={(e) => setResponseText(e.target.value)}
-                            placeholder={t("messages.enterResponse")}
-                            className="min-h-[120px]"
-                            disabled={isRejectedByAdmin(selectedMessage)}
-                          />
-                        </div>
                         <div className="flex gap-3">
                           <Button
                             variant="outline"
