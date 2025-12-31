@@ -205,13 +205,21 @@ const CompanyMessages = () => {
         if (hasChanges) {
           // Если в новом сообщении нет ответа, а в текущем есть, и статус не изменился на "Новое",
           // возможно, пришел старый кэш или гонка. Оставляем текущий ответ.
+          let messageToSet = updatedMessage;
+          
           if (!updatedMessage.companyResponse && selectedMessage.companyResponse && updatedMessage.status === selectedMessage.status) {
-             // Не обновляем, если это похоже на потерю данных при рефетче
-             return;
+             console.log("Preserving optimistic response against stale update");
+             messageToSet = {
+               ...updatedMessage,
+               companyResponse: selectedMessage.companyResponse
+             };
           }
           
-          setSelectedMessage(updatedMessage);
-          setResponseText(updatedMessage.companyResponse || "");
+          setSelectedMessage(messageToSet);
+          // Обновляем текст ответа только если мы НЕ редактируем его в данный момент
+          if (!isEditingResponse) {
+            setResponseText(messageToSet.companyResponse || "");
+          }
         }
       }
     }
