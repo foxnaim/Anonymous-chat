@@ -46,6 +46,8 @@ const CompanyMessages = () => {
         setSelectedMessage(optimisticMessage);
         setResponseText(optimisticMessage.companyResponse || "");
       }
+      // Возвращаем пустой объект, так как основной контекст уже обрабатывается в хуке
+      return {} as any;
     },
     onSuccess: (updatedMessage) => {
       toast.success(t("messages.statusUpdated"));

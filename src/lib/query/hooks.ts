@@ -584,7 +584,9 @@ type UpdateMessageStatusContext = {
   optimisticMessage?: Message | null;
 };
 
-export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Error, UpdateMessageStatusVariables>) => {
+export const useUpdateMessageStatus = (options?: Omit<UseMutationOptions<Message, Error, UpdateMessageStatusVariables, UpdateMessageStatusContext>, 'onMutate'> & {
+  onMutate?: (variables: UpdateMessageStatusVariables) => Promise<any> | any;
+}) => {
   const queryClient = useQueryClient();
   const userOnSuccess = options?.onSuccess;
   const userOnError = options?.onError;
@@ -693,15 +695,16 @@ export const useUpdateMessageStatus = (options?: UseMutationOptions<Message, Err
     },
     onError: (error: Error, variables: UpdateMessageStatusVariables, context: UpdateMessageStatusContext | undefined, mutation: any) => {
       // Откатываем изменения при ошибке
-      if (context?.previousQueries) {
-        context.previousQueries.forEach(([key, old]) => {
+      const typedContext = context as UpdateMessageStatusContext | undefined;
+      if (typedContext?.previousQueries) {
+        typedContext.previousQueries.forEach(([key, old]) => {
           queryClient.setQueryData<Message[] | undefined>(key, old);
         });
       }
       
       // Вызываем пользовательский onError если он есть
       if (userOnError) {
-        userOnError(error, variables, context, mutation);
+        (userOnError as any)(error, variables, context, mutation);
       }
     },
     ...rest,
