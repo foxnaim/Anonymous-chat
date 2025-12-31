@@ -203,15 +203,32 @@ const CompanyMessages = () => {
         // Но если у нас есть оптимистичный ответ, а в обновлении его нет (и это не явное удаление),
         // то сохраняем оптимистичный ответ (защита от гонки данных)
         if (hasChanges) {
-          // Если в новом сообщении нет ответа, а в текущем есть, и статус не изменился на "Новое",
-          // возможно, пришел старый кэш или гонка. Оставляем текущий ответ.
           let messageToSet = updatedMessage;
           
-          if (!updatedMessage.companyResponse && selectedMessage.companyResponse && updatedMessage.status === selectedMessage.status) {
-             console.log("Preserving optimistic response against stale update");
+          // Проверка на "старые" данные из кэша/списка
+          // 1. Если локально статус не "Новое", а пришло "Новое" - игнорируем обновление статуса (скорее всего старый кэш)
+          const localStatus = selectedMessage.status;
+          const remoteStatus = updatedMessage.status;
+          
+          const isStaleStatus = remoteStatus === "Новое" && localStatus !== "Новое";
+          
+          // 2. Если локально есть ответ, а удаленно нет - сохраняем локальный ответ
+          const isStaleResponse = !updatedMessage.companyResponse && selectedMessage.companyResponse;
+          
+          if (isStaleStatus || isStaleResponse) {
+             console.log("Detected stale update, preserving local state", { 
+               staleStatus: isStaleStatus, 
+               staleResponse: isStaleResponse,
+               local: selectedMessage,
+               remote: updatedMessage 
+             });
+             
              messageToSet = {
                ...updatedMessage,
-               companyResponse: selectedMessage.companyResponse
+               // Если статус "протух", оставляем локальный
+               status: isStaleStatus ? localStatus : remoteStatus,
+               // Если ответ "протух", оставляем локальный
+               companyResponse: isStaleResponse ? selectedMessage.companyResponse : updatedMessage.companyResponse
              };
           }
           
