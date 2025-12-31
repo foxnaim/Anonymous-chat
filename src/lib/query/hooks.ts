@@ -584,6 +584,11 @@ type UpdateMessageStatusContext = {
   optimisticMessage?: Message | null;
 };
 
+// Type guard для проверки типа контекста
+function isUpdateMessageStatusContext(context: any): context is UpdateMessageStatusContext {
+  return context && typeof context === 'object' && 'previousQueries' in context;
+}
+
 export const useUpdateMessageStatus = (options?: Omit<UseMutationOptions<Message, Error, UpdateMessageStatusVariables, UpdateMessageStatusContext>, 'onMutate'> & {
   onMutate?: (variables: UpdateMessageStatusVariables) => Promise<any> | any;
 }) => {
@@ -695,9 +700,8 @@ export const useUpdateMessageStatus = (options?: Omit<UseMutationOptions<Message
     },
     onError: (error: Error, variables: UpdateMessageStatusVariables, context: UpdateMessageStatusContext | undefined, mutation: any) => {
       // Откатываем изменения при ошибке
-      const typedContext = context as UpdateMessageStatusContext | undefined;
-      if (typedContext?.previousQueries) {
-        typedContext.previousQueries.forEach(([key, old]) => {
+      if (isUpdateMessageStatusContext(context) && context.previousQueries) {
+        context.previousQueries.forEach(([key, old]) => {
           queryClient.setQueryData<Message[] | undefined>(key, old);
         });
       }
