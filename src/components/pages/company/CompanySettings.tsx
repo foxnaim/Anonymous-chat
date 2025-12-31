@@ -65,35 +65,36 @@ const CompanySettings = () => {
 
   const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // Validate file size (max 5MB)
-      if (!validateFileSize(file, 5)) {
-        toast.error(t("company.fileTooLarge"));
-        return;
-      }
+    if (!file) return;
 
-      // Validate image type
-      if (!validateImageType(file)) {
-        toast.error(t("company.invalidFileType"));
-        return;
-      }
+    // Validate file size (max 5MB)
+    if (!validateFileSize(file, 5)) {
+      toast.error(t("company.fileTooLarge"));
+      return;
+    }
 
-      try {
-        setIsCompressing(true);
-        // compressImage возвращает base64 строку, а не File
-        const compressedBase64 = await compressImage(file);
-        
-        // Сохраняем оригинальный файл для отправки на сервер
-        setLogoFile(file);
-        
-        // Создаем preview из сжатого base64
-        setLogoPreview(compressedBase64);
-      } catch (error) {
-        console.error('Error compressing image:', error);
-        toast.error(t("company.imageProcessingError"));
-      } finally {
-        setIsCompressing(false);
-      }
+    // Validate image type
+    if (!validateImageType(file)) {
+      toast.error(t("company.invalidFileType"));
+      return;
+    }
+
+    try {
+      setIsCompressing(true);
+      // compressImage возвращает base64 строку (string), а не File
+      // Поэтому сохраняем оригинальный файл для отправки на сервер
+      const compressedBase64String: string = await compressImage(file);
+      
+      // Сохраняем оригинальный File объект для отправки на сервер
+      setLogoFile(file);
+      
+      // Сохраняем base64 строку для preview
+      setLogoPreview(compressedBase64String);
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      toast.error(t("company.imageProcessingError"));
+    } finally {
+      setIsCompressing(false);
     }
   };
 
