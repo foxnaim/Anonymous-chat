@@ -83,6 +83,9 @@ const CompanyMessages = () => {
       setIsEditingResponse(false);
     },
     onError: (error: any) => {
+      // Если произошла ошибка, возвращаем режим редактирования
+      setIsEditingResponse(true);
+      
       const backendMessage = error?.response?.data?.message || error?.message || "";
       const msgLower = backendMessage.toLowerCase();
       
@@ -196,6 +199,11 @@ const CompanyMessages = () => {
   };
   const handleUpdateStatus = (status: MessageStatus) => {
     if (!selectedMessage) return;
+    
+    // Сразу устанавливаем время обновления и закрываем форму для мгновенной реакции
+    lastLocalUpdateRef.current = Date.now();
+    setIsEditingResponse(false);
+    
     updateMessageStatus({
       id: selectedMessage.id,
       status,
