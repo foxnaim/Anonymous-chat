@@ -63,12 +63,24 @@ const CompanyMessages = () => {
       lastLocalUpdateRef.current = Date.now();
       
       toast.success(t("messages.statusUpdated"));
-      // Обновляем selectedMessage с данными с сервера для гарантии актуальности
-      setSelectedMessage(updatedMessage);
-      setResponseText(updatedMessage.companyResponse || "");
+      
+      // Защита от потери ответа: если сервер вернул пустой ответ, но мы отправляли текст,
+      // форсируем использование отправленного текста.
+      let messageToSet = updatedMessage;
+      if (!updatedMessage.companyResponse && responseText && responseText.trim().length > 0) {
+         console.warn("Server returned empty response, using local text");
+         messageToSet = {
+            ...updatedMessage,
+            companyResponse: responseText
+         };
+      }
+      
+      // Обновляем selectedMessage с данными с сервера (или исправленными)
+      setSelectedMessage(messageToSet);
+      setResponseText(messageToSet.companyResponse || "");
+      
+      // Явно выключаем режим редактирования, чтобы показать ответ в режиме чтения
       setIsEditingResponse(false);
-      // Диалог остается открытым, чтобы пользователь видел свой ответ
-      // refetch() не нужен, так как оптимистичное обновление уже обновило кэш
     },
     onError: (error: any) => {
       const backendMessage = error?.response?.data?.message || error?.message || "";
@@ -201,6 +213,11 @@ const CompanyMessages = () => {
       // Если мы недавно (менее 5 сек назад) обновили сообщение, игнорируем обновления из списка,
       // так как они могут быть устаревшими (stale cache / replication lag)
       if (Date.now() - lastLocalUpdateRef.current < 5000) {
+        // Если это "старый" список (без ответа), но мы его только что обновили,
+        // убеждаемся, что в selectedMessage остались наши данные.
+        // Если вдруг selectedMessage был перезаписан кем-то другим, восстанавливаем.
+        // Но здесь мы в цикле useEffect, который зависит от messages.
+        // Просто return предотвратит перезапись.
         return;
       }
 
@@ -219,15 +236,20 @@ const CompanyMessages = () => {
         // Если данные изменились, обновляем выбранное сообщение
         if (hasChanges) {
           // Дополнительная защита: не перезаписываем ответ, если в новом сообщении его нет, а у нас есть
-          // Это на случай, если 5 секунд не хватило
+          // Это на случай, если 5 секунд не хватило или список "протух"
           let messageToSet = updatedMessage;
           
-          if (!updatedMessage.companyResponse && selectedMessage.companyResponse && updatedMessage.status === selectedMessage.status) {
+          if (!updatedMessage.companyResponse && selectedMessage.companyResponse) {
              console.log("Preserving optimistic response against stale update (extended check)");
              messageToSet = {
                ...updatedMessage,
                companyResponse: selectedMessage.companyResponse
              };
+             // Если мы сохраняем наш ответ, то и статус лучше оставить наш, если он "свежее"
+             // Например, если пришел "Новое", а у нас "В работе", то оставляем "В работе"
+             if (updatedMessage.status === "Новое" && selectedMessage.status !== "Новое") {
+                messageToSet.status = selectedMessage.status;
+             }
           }
           
           setSelectedMessage(messageToSet);
