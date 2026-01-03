@@ -139,20 +139,17 @@ export const useSocketMessages = (companyCode?: string | null) => {
         });
       });
       
-      // КРИТИЧЕСКИ ВАЖНО: Принудительно обновляем все активные запросы (кроме тех, что с messageId)
+      // КРИТИЧЕСКИ ВАЖНО: Принудительно обновляем все активные запросы
       // Это гарантирует, что React Query перерисует компоненты с новыми данными сразу
       if (wasUpdated) {
-        // Инвалидируем запросы без refetch - это заставит React Query обновить компоненты
-        // Но только для запросов БЕЗ messageId, чтобы не сломать поиск
+        // Просто инвалидируем активные запросы.
+        // React Query автоматически обновит компоненты данными из кэша (которые мы только что туда положили),
+        // а затем сделает фоновый запрос для подтверждения актуальности.
+        // Это обеспечивает мгновенную реакцию интерфейса и согласованность данных.
         queryClient.invalidateQueries({
           queryKey: baseQueryKey,
           exact: false,
-          refetchType: 'none', // Не делаем refetch, просто обновляем компоненты
-          predicate: (query) => {
-            // Исключаем запросы с messageId из инвалидации
-            const messageIdInQuery = query.queryKey[4] as string | undefined;
-            return !messageIdInQuery;
-          },
+          type: 'active',
         });
       }
       
