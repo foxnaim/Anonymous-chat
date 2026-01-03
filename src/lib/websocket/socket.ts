@@ -122,7 +122,12 @@ export const getSocket = (forceReconnect = false): Socket | null => {
     newSocket.on('connect', () => {
       // WebSocket connected
       if (process.env.NODE_ENV === 'development') {
-        console.log('[WebSocket] Connected successfully, socket ID:', newSocket.id);
+        const socketId = newSocket.id;
+        if (socketId) {
+          console.log('[WebSocket] Connected successfully, socket ID:', socketId);
+        } else {
+          console.log('[WebSocket] Connected successfully');
+        }
       }
     });
 
