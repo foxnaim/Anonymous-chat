@@ -115,19 +115,12 @@ export const getSocket = (forceReconnect = false): Socket | null => {
       reconnectionAttempts: 5,
       autoConnect: true,
     });
-    
-    socket = newSocket;
 
     // Добавляем обработчики событий только один раз
     newSocket.on('connect', () => {
       // WebSocket connected
       if (process.env.NODE_ENV === 'development') {
-        const socketId = newSocket.id;
-        if (socketId) {
-          console.log('[WebSocket] Connected successfully, socket ID:', socketId);
-        } else {
-          console.log('[WebSocket] Connected successfully');
-        }
+        console.log('[WebSocket] Connected successfully');
       }
     });
 
@@ -144,6 +137,8 @@ export const getSocket = (forceReconnect = false): Socket | null => {
         console.error('[WebSocket] Connection error:', error);
       }
     });
+
+    socket = newSocket;
   } else {
     // Если сокет уже существует, обновляем токен аутентификации
     socket.auth = { token: token };
