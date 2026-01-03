@@ -92,6 +92,8 @@ export const useSocketMessages = (companyCode?: string | null) => {
       const baseQueryKey = queryKeys.messages(targetCode);
       
       let wasEmpty = false;
+      let wasUpdated = false;
+      let newData: Message[] | undefined;
       
       // Обновляем все запросы, которые начинаются с базового ключа (включая варианты с page, limit, messageId)
       queryClient.setQueriesData<Message[]>(
@@ -100,18 +102,44 @@ export const useSocketMessages = (companyCode?: string | null) => {
           // Если кэш пустой, создаем новый массив с сообщением
           if (!old || old.length === 0) {
             wasEmpty = true;
-            return [message];
+            wasUpdated = true;
+            newData = [message];
+            return newData;
           }
           // Проверяем, существует ли уже сообщение с таким ID
           const exists = old.some((m) => m.id === message.id);
           if (exists) {
             // Если существует, обновляем его
-            return old.map((m) => (m.id === message.id ? message : m));
+            wasUpdated = true;
+            newData = old.map((m) => (m.id === message.id ? message : m));
+            return newData;
           }
           // Если не существует, добавляем в начало списка
-          return [message, ...old];
+          wasUpdated = true;
+          newData = [message, ...old];
+          return newData;
         }
       );
+      
+      // КРИТИЧЕСКИ ВАЖНО: Принудительно обновляем все активные запросы
+      // Это гарантирует, что React Query перерисует компоненты с новыми данными сразу
+      if (wasUpdated && newData) {
+        // Находим все активные запросы для этого ключа и обновляем их напрямую
+        const queryCache = queryClient.getQueryCache();
+        const queries = queryCache.findAll({ queryKey: baseQueryKey, exact: false });
+        
+        queries.forEach((query) => {
+          // Обновляем данные запроса напрямую
+          queryClient.setQueryData(query.queryKey, newData);
+        });
+        
+        // Инвалидируем запросы без refetch - это заставит React Query обновить компоненты
+        queryClient.invalidateQueries({
+          queryKey: baseQueryKey,
+          exact: false,
+          refetchType: 'none', // Не делаем refetch, просто обновляем компоненты
+        });
+      }
       
       return wasEmpty;
     };
@@ -143,7 +171,18 @@ export const useSocketMessages = (companyCode?: string | null) => {
       }
     }
     
-    // 4. ЗАЩИТА: Если кэш был пустой, делаем один точечный refetch для активных запросов
+    // 4. КРИТИЧЕСКИ ВАЖНО: Принудительно обновляем все активные запросы для этой компании
+    // Это гарантирует, что компоненты перерисуются с новыми данными сразу
+    if (messageCompanyCode) {
+      // Инвалидируем запросы без refetch - просто обновляем компоненты
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.messages(messageCompanyCode),
+        exact: false,
+        refetchType: 'none', // Не делаем refetch, просто обновляем компоненты с новыми данными из кэша
+      });
+    }
+    
+    // 5. ЗАЩИТА: Если кэш был пустой, делаем один точечный refetch для активных запросов
     // Это гарантирует, что мы получим все сообщения, а не только одно
     // Но делаем это только если кэш был действительно пустой (защита от пропущенных сообщений)
     if (needsRefetch && messageCompanyCode) {
