@@ -73,6 +73,15 @@ export const useSocketMessages = (companyCode?: string | null) => {
 
   // Мемоизируем обработчики для избежания лишних переподписок
   const handleNewMessage = useCallback((message: Message) => {
+    // Логирование для отладки (только в development)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[WebSocket] New message received:', {
+        messageId: message.id,
+        companyCode: message.companyCode,
+        currentCompanyCode: companyCode,
+      });
+    }
+    
     // КРИТИЧЕСКИ ВАЖНО: Обновляем кэш для компании, которой принадлежит сообщение
     // Это гарантирует, что сообщение появится сразу в списке компании
     const messageCompanyCode = message.companyCode?.toUpperCase();
@@ -270,11 +279,12 @@ export const useSocketMessages = (companyCode?: string | null) => {
     
     const joinRoom = (code?: string | null) => {
       if (!socket) return;
-      const nextRoom = code || null;
+      const nextRoom = code ? code.toUpperCase() : null;
       if (roomRef.current && roomRef.current !== nextRoom) {
-        socket.emit('leave', roomRef.current);
+        socket.emit('leave', `company:${roomRef.current}`);
       }
       if (nextRoom && roomRef.current !== nextRoom) {
+        // Отправляем код компании, бэкенд сам добавит префикс "company:"
         socket.emit('join', nextRoom);
         roomRef.current = nextRoom;
       }
@@ -286,10 +296,17 @@ export const useSocketMessages = (companyCode?: string | null) => {
       
       // Подписываемся на события
       const onNewMessage = (msg: Message) => {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[WebSocket] message:new event received:', msg.id);
+        }
         handleNewMessage(msg);
       };
       
       socket.on('message:new', onNewMessage);
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[WebSocket] Subscribed to message:new events, companyCode:', companyCode);
+      }
       socket.on('message:updated', handleMessageUpdate);
       socket.on('message:deleted', handleMessageDelete);
       
@@ -316,7 +333,7 @@ export const useSocketMessages = (companyCode?: string | null) => {
     return () => {
       if (socket) {
         if (roomRef.current) {
-          socket.emit('leave', roomRef.current);
+          socket.emit('leave', `company:${roomRef.current}`);
           roomRef.current = null;
         }
         const onNewMessage = (socket as any)._onNewMessage;
@@ -333,4 +350,5 @@ export const useSocketMessages = (companyCode?: string | null) => {
     };
   }, [companyCode, handleNewMessage, handleMessageUpdate, handleMessageDelete]);
 };
+
 
