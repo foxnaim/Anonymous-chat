@@ -93,51 +93,66 @@ export const useSocketMessages = (companyCode?: string | null) => {
       
       let wasEmpty = false;
       let wasUpdated = false;
-      let newData: Message[] | undefined;
       
-      // Обновляем все запросы, которые начинаются с базового ключа (включая варианты с page, limit, messageId)
-      queryClient.setQueriesData<Message[]>(
-        { queryKey: baseQueryKey, exact: false },
-        (old) => {
+      // Находим все запросы для этого ключа
+      const queryCache = queryClient.getQueryCache();
+      const queries = queryCache.findAll({ queryKey: baseQueryKey, exact: false });
+      
+      queries.forEach((query) => {
+        const queryKey = query.queryKey;
+        // Проверяем, есть ли в queryKey параметр messageId (4-й элемент массива)
+        const messageIdInQuery = queryKey[4] as string | undefined;
+        
+        // КРИТИЧЕСКИ ВАЖНО: Если это запрос с messageId, обновляем только если это то же сообщение
+        if (messageIdInQuery) {
+          // Нормализуем ID для сравнения
+          const normalizedQueryId = messageIdInQuery.replace(/[-_\s]/g, '').toUpperCase();
+          const normalizedMessageId = message.id.replace(/[-_\s]/g, '').toUpperCase();
+          
+          // Обновляем только если это то же сообщение
+          if (normalizedQueryId === normalizedMessageId) {
+            queryClient.setQueryData(queryKey, [message]);
+            wasUpdated = true;
+          }
+          // Если это другой messageId, не трогаем этот запрос
+          return;
+        }
+        
+        // Для запросов без messageId обновляем как обычно
+        queryClient.setQueryData<Message[]>(queryKey, (old) => {
           // Если кэш пустой, создаем новый массив с сообщением
           if (!old || old.length === 0) {
             wasEmpty = true;
             wasUpdated = true;
-            newData = [message];
-            return newData;
+            return [message];
           }
           // Проверяем, существует ли уже сообщение с таким ID
           const exists = old.some((m) => m.id === message.id);
           if (exists) {
             // Если существует, обновляем его
             wasUpdated = true;
-            newData = old.map((m) => (m.id === message.id ? message : m));
-            return newData;
+            return old.map((m) => (m.id === message.id ? message : m));
           }
           // Если не существует, добавляем в начало списка
           wasUpdated = true;
-          newData = [message, ...old];
-          return newData;
-        }
-      );
-      
-      // КРИТИЧЕСКИ ВАЖНО: Принудительно обновляем все активные запросы
-      // Это гарантирует, что React Query перерисует компоненты с новыми данными сразу
-      if (wasUpdated && newData) {
-        // Находим все активные запросы для этого ключа и обновляем их напрямую
-        const queryCache = queryClient.getQueryCache();
-        const queries = queryCache.findAll({ queryKey: baseQueryKey, exact: false });
-        
-        queries.forEach((query) => {
-          // Обновляем данные запроса напрямую
-          queryClient.setQueryData(query.queryKey, newData);
+          return [message, ...old];
         });
-        
+      });
+      
+      // КРИТИЧЕСКИ ВАЖНО: Принудительно обновляем все активные запросы (кроме тех, что с messageId)
+      // Это гарантирует, что React Query перерисует компоненты с новыми данными сразу
+      if (wasUpdated) {
         // Инвалидируем запросы без refetch - это заставит React Query обновить компоненты
+        // Но только для запросов БЕЗ messageId, чтобы не сломать поиск
         queryClient.invalidateQueries({
           queryKey: baseQueryKey,
           exact: false,
           refetchType: 'none', // Не делаем refetch, просто обновляем компоненты
+          predicate: (query) => {
+            // Исключаем запросы с messageId из инвалидации
+            const messageIdInQuery = query.queryKey[4] as string | undefined;
+            return !messageIdInQuery;
+          },
         });
       }
       
