@@ -104,7 +104,7 @@ export const getSocket = (forceReconnect = false): Socket | null => {
 
   // Создаем новый сокет только если его еще нет
   if (!socket) {
-    socket = io(API_URL, {
+    const newSocket = io(API_URL, {
       auth: {
         token: token,
       },
@@ -115,23 +115,25 @@ export const getSocket = (forceReconnect = false): Socket | null => {
       reconnectionAttempts: 5,
       autoConnect: true,
     });
+    
+    socket = newSocket;
 
     // Добавляем обработчики событий только один раз
-    socket.on('connect', () => {
+    newSocket.on('connect', () => {
       // WebSocket connected
       if (process.env.NODE_ENV === 'development') {
-        console.log('[WebSocket] Connected successfully, socket ID:', socket.id);
+        console.log('[WebSocket] Connected successfully, socket ID:', newSocket.id);
       }
     });
 
-    socket.on('disconnect', (reason) => {
+    newSocket.on('disconnect', (reason) => {
       // WebSocket disconnected
       if (process.env.NODE_ENV === 'development') {
         console.log('[WebSocket] Disconnected:', reason);
       }
     });
 
-    socket.on('connect_error', (error) => {
+    newSocket.on('connect_error', (error) => {
       // WebSocket connection error
       if (process.env.NODE_ENV === 'development') {
         console.error('[WebSocket] Connection error:', error);
