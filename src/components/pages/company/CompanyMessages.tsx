@@ -127,9 +127,23 @@ const CompanyMessages = () => {
   
   // Определяем, является ли поисковый запрос похожим на ID сообщения (FB-YYYY-XXXXXX)
   // Используем debounced версию для поиска на бэкенде
-  const isMessageIdSearch = /^FB[-_]?\d{4}[-_]?[A-Z0-9]{1,6}$/i.test(debouncedSearchQuery.trim());
-  const normalizedMessageId = isMessageIdSearch && debouncedSearchQuery.trim().length > 0
-    ? debouncedSearchQuery.trim().replace(/[-_]/g, '').toUpperCase() 
+  // Поддерживает форматы: FB-2024-ABC, FB2024ABC, FB_2024_ABC, fb-2024-abc и т.д.
+  const trimmedQuery = debouncedSearchQuery.trim();
+  
+  // Проверяем, начинается ли запрос с "FB" (в любом регистре) и содержит ли цифры
+  // Это признак того, что пользователь ищет по ID сообщения
+  const looksLikeMessageId = trimmedQuery.length > 0 && 
+    /^FB/i.test(trimmedQuery) && 
+    /\d/.test(trimmedQuery) &&
+    trimmedQuery.length >= 6; // Минимальная длина ID: FB + 4 цифры года
+  
+  // Если запрос похож на ID, используем поиск по ID на бэкенде
+  const isMessageIdSearch = looksLikeMessageId;
+  
+  // Нормализуем ID: убираем все дефисы, подчеркивания и пробелы, приводим к верхнему регистру
+  // Это нужно для того, чтобы поиск работал независимо от формата ввода (с дефисами или без)
+  const normalizedMessageId = isMessageIdSearch
+    ? trimmedQuery.replace(/[-_\s]/g, '').toUpperCase()
     : undefined;
   
   const { data: messages = [], isLoading, refetch } = useMessages(
