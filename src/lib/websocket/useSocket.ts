@@ -274,19 +274,38 @@ export const useSocketMessages = (companyCode?: string | null) => {
     // Переподключаемся при изменении companyCode или при монтировании
     const socket = getSocket(false);
     if (!socket) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[WebSocket] Socket not available - token may be missing');
+      }
       return;
     }
     
     const joinRoom = (code?: string | null) => {
       if (!socket) return;
+      
+      // Проверяем подключение перед попыткой join
+      if (!socket.connected) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[WebSocket] Cannot join room - socket not connected');
+        }
+        return;
+      }
+      
       const nextRoom = code ? code.toUpperCase() : null;
       if (roomRef.current && roomRef.current !== nextRoom) {
+        // Отправляем полное имя комнаты с префиксом для leave
         socket.emit('leave', `company:${roomRef.current}`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[WebSocket] Left room:', `company:${roomRef.current}`);
+        }
       }
       if (nextRoom && roomRef.current !== nextRoom) {
-        // Отправляем код компании, бэкенд сам добавит префикс "company:"
+        // Отправляем код компании без префикса, бэкенд сам добавит префикс "company:"
         socket.emit('join', nextRoom);
         roomRef.current = nextRoom;
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[WebSocket] Joining room with code:', nextRoom);
+        }
       }
     };
     
@@ -294,10 +313,18 @@ export const useSocketMessages = (companyCode?: string | null) => {
     const subscribeToEvents = () => {
       if (!socket) return;
       
+      // Проверяем подключение
+      if (!socket.connected) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[WebSocket] Cannot subscribe - socket not connected');
+        }
+        return;
+      }
+      
       // Подписываемся на события
       const onNewMessage = (msg: Message) => {
         if (process.env.NODE_ENV === 'development') {
-          console.log('[WebSocket] message:new event received:', msg.id);
+          console.log('[WebSocket] message:new event received:', msg.id, 'for company:', msg.companyCode);
         }
         handleNewMessage(msg);
       };
@@ -305,10 +332,23 @@ export const useSocketMessages = (companyCode?: string | null) => {
       socket.on('message:new', onNewMessage);
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('[WebSocket] Subscribed to message:new events, companyCode:', companyCode);
+        console.log('[WebSocket] Subscribed to message:new events, companyCode:', companyCode, 'socket connected:', socket.connected);
       }
       socket.on('message:updated', handleMessageUpdate);
       socket.on('message:deleted', handleMessageDelete);
+      
+      // Подписываемся на подтверждение подключения к комнате
+      socket.on('room:joined', (data: { room: string }) => {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[WebSocket] Successfully joined room:', data.room);
+        }
+      });
+      
+      socket.on('room:join:error', (data: { room: string; error: string }) => {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[WebSocket] Failed to join room:', data.room, 'error:', data.error);
+        }
+      });
       
       // Входим в комнату компании для получения только своих сообщений
       joinRoom(companyCode);
@@ -317,23 +357,49 @@ export const useSocketMessages = (companyCode?: string | null) => {
       (socket as any)._onNewMessage = onNewMessage;
     };
     
+    // Обработчик подключения
+    const onConnect = () => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[WebSocket] Connected, subscribing to events for companyCode:', companyCode);
+      }
+      subscribeToEvents();
+    };
+    
+    // Обработчик ошибки подключения
+    const onConnectError = (error: Error) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[WebSocket] Connection error:', error);
+      }
+    };
+    
+    // Обработчик отключения
+    const onDisconnect = (reason: string) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[WebSocket] Disconnected:', reason);
+      }
+    };
+    
     // Если уже подключен, подписываемся сразу
     if (socket.connected) {
       subscribeToEvents();
     } else {
       // Если не подключен, ждем подключения
-      const onConnect = () => {
-        subscribeToEvents();
-      };
-      
       socket.once('connect', onConnect);
     }
+    
+    // Подписываемся на события подключения/отключения для переподключения
+    socket.on('connect', onConnect);
+    socket.on('connect_error', onConnectError);
+    socket.on('disconnect', onDisconnect);
 
     // Очистка при размонтировании
     return () => {
       if (socket) {
-        if (roomRef.current) {
+        if (roomRef.current && socket.connected) {
           socket.emit('leave', `company:${roomRef.current}`);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[WebSocket] Left room on cleanup:', `company:${roomRef.current}`);
+          }
           roomRef.current = null;
         }
         const onNewMessage = (socket as any)._onNewMessage;
@@ -344,8 +410,11 @@ export const useSocketMessages = (companyCode?: string | null) => {
         }
         socket.off('message:updated', handleMessageUpdate);
         socket.off('message:deleted', handleMessageDelete);
-        socket.off('connect');
-        socket.off('connect_error');
+        socket.off('room:joined');
+        socket.off('room:join:error');
+        socket.off('connect', onConnect);
+        socket.off('connect_error', onConnectError);
+        socket.off('disconnect', onDisconnect);
       }
     };
   }, [companyCode, handleNewMessage, handleMessageUpdate, handleMessageDelete]);
