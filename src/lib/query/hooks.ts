@@ -683,11 +683,12 @@ export const useUpdateMessageStatus = (options?: Omit<UseMutationOptions<Message
       // Обновляем отдельное сообщение в кэше
       queryClient.setQueryData(queryKeys.message(data.id), data);
       
-      // Инвалидируем кэш для гарантии актуальности данных
-      queryClient.invalidateQueries({ queryKey: queryKeys.message(data.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.messages(data.companyCode) });
+      // Не инвалидируем кэш сообщений сразу, чтобы избежать мерцания из-за race condition (stale reads)
+      // Мы уже обновили кэш вручную выше данными от сервера
+      // queryClient.invalidateQueries({ queryKey: queryKeys.message(data.id) });
+      // queryClient.invalidateQueries({ queryKey: queryKeys.messages(data.companyCode) });
       
-      // Инвалидируем статистику и достижения
+      // Инвалидируем статистику и достижения (это безопасно)
       queryClient.invalidateQueries({ queryKey: ['stats'] });
       queryClient.invalidateQueries({ queryKey: ['message-distribution'] });
       queryClient.invalidateQueries({ queryKey: ['growth-metrics'] });

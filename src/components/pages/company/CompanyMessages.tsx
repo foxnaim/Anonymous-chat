@@ -217,21 +217,33 @@ const CompanyMessages = () => {
   // Обновляем selectedMessage когда сообщение обновляется в списке
   useEffect(() => {
     if (selectedMessage) {
-      // Проверка на "период благодати" после локального обновления
-      // Если мы недавно (менее 5 сек назад) обновили сообщение, игнорируем обновления из списка,
-      // так как они могут быть устаревшими (stale cache / replication lag)
-      if (Date.now() - lastLocalUpdateRef.current < 5000) {
-        // Если это "старый" список (без ответа), но мы его только что обновили,
-        // убеждаемся, что в selectedMessage остались наши данные.
-        // Если вдруг selectedMessage был перезаписан кем-то другим, восстанавливаем.
-        // Но здесь мы в цикле useEffect, который зависит от messages.
-        // Просто return предотвратит перезапись.
-        return;
-      }
-
       const updatedMessage = messages.find(m => m.id === selectedMessage.id);
       
       if (updatedMessage) {
+        // АГРЕССИВНАЯ ЗАЩИТА: Проверяем, не является ли пришедшее сообщение "старым" по сравнению с локальным
+        // 1. Если локально статус не "Новое", а пришло "Новое" - это явно старый кэш, игнорируем
+        const isStaleStatus = updatedMessage.status === "Новое" && selectedMessage.status !== "Новое";
+        
+        // 2. Если локально есть ответ, а пришло без ответа - это явно старый кэш, игнорируем
+        const isStaleResponse = !updatedMessage.companyResponse && selectedMessage.companyResponse;
+        
+        // 3. Grace period: если мы недавно обновили (менее 10 сек), полностью игнорируем обновления
+        const isInGracePeriod = Date.now() - lastLocalUpdateRef.current < 10000;
+        
+        // Если любое из условий "старости" выполнено, НЕ обновляем selectedMessage
+        if (isStaleStatus || isStaleResponse || isInGracePeriod) {
+          console.log("Blocking stale update", { 
+            isStaleStatus, 
+            isStaleResponse, 
+            isInGracePeriod,
+            localStatus: selectedMessage.status,
+            remoteStatus: updatedMessage.status,
+            localHasResponse: !!selectedMessage.companyResponse,
+            remoteHasResponse: !!updatedMessage.companyResponse
+          });
+          return;
+        }
+        
         // Сравниваем даты без учета времени для избежания проблем с форматами (ISO vs YYYY-MM-DD)
         const updatedDate = new Date(updatedMessage.updatedAt).toISOString().split('T')[0];
         const selectedDate = new Date(selectedMessage.updatedAt).toISOString().split('T')[0];
@@ -241,35 +253,18 @@ const CompanyMessages = () => {
           updatedMessage.status !== selectedMessage.status ||
           updatedDate !== selectedDate;
           
-        // Если данные изменились, обновляем выбранное сообщение
+        // Если данные изменились И они не "старые", обновляем выбранное сообщение
         if (hasChanges) {
-          // Дополнительная защита: не перезаписываем ответ, если в новом сообщении его нет, а у нас есть
-          // Это на случай, если 5 секунд не хватило или список "протух"
-          let messageToSet = updatedMessage;
-          
-          if (!updatedMessage.companyResponse && selectedMessage.companyResponse) {
-             console.log("Preserving optimistic response against stale update (extended check)");
-             messageToSet = {
-               ...updatedMessage,
-               companyResponse: selectedMessage.companyResponse
-             };
-             // Если мы сохраняем наш ответ, то и статус лучше оставить наш, если он "свежее"
-             // Например, если пришел "Новое", а у нас "В работе", то оставляем "В работе"
-             if (updatedMessage.status === "Новое" && selectedMessage.status !== "Новое") {
-                messageToSet.status = selectedMessage.status;
-             }
-          }
-          
-          setSelectedMessage(messageToSet);
+          setSelectedMessage(updatedMessage);
           // Обновляем текст ответа только если мы НЕ редактируем его в данный момент
           if (!isEditingResponse) {
-            setResponseText(messageToSet.companyResponse || "");
+            setResponseText(updatedMessage.companyResponse || "");
           }
         }
       }
     }
     prevSelectedMessageRef.current = selectedMessage;
-  }, [messages, selectedMessage]);
+  }, [messages, selectedMessage, isEditingResponse]);
 
   // При возврате вкладки/окна в фокус — обновляем список, чтобы новые сообщения подтянулись сразу
   useEffect(() => {
