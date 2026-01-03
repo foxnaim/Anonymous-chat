@@ -522,15 +522,22 @@ export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Om
     },
 
     onSuccess: (data, variables, context, mutation) => {
+      const targetCompanyCode = (context?.companyCode || data.companyCode)?.toUpperCase();
+      
+      // Обновляем все запросы для компании сообщения (включая варианты с page, limit, messageId)
+      // Используем только setQueryData - это обновляет кэш БЕЗ запросов в сеть
       const allQueries = queryClient.getQueriesData<Message[]>({
-        queryKey: queryKeys.messages(context?.companyCode || data.companyCode),
+        queryKey: queryKeys.messages(targetCompanyCode),
         exact: false,
       });
       let updatedAny = false;
       allQueries.forEach(([key, list]) => {
         if (list && Array.isArray(list)) {
+          // Удаляем временное сообщение, если оно есть
           const withoutTemp = list.filter(m => m.id !== context?.tempId);
+          // Проверяем, существует ли уже сообщение с таким ID
           const exists = withoutTemp.some(m => m.id === data.id);
+          // Если существует, обновляем его, иначе добавляем в начало
           const next = exists
             ? withoutTemp.map(m => (m.id === data.id ? data : m))
             : [data, ...withoutTemp];
@@ -538,15 +545,16 @@ export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Om
           updatedAny = true;
         }
       });
+      // Если кэша не было, создаем новую запись
       if (!updatedAny) {
-        queryClient.setQueryData<Message[]>(queryKeys.messages(data.companyCode), [data]);
+        queryClient.setQueryData<Message[]>(queryKeys.messages(targetCompanyCode), [data]);
       }
 
-      // Инвалидируем кэш сообщений и статистику/достижения
-      queryClient.invalidateQueries({ queryKey: queryKeys.messages(data.companyCode) });
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
-      queryClient.invalidateQueries({ queryKey: ['growth-metrics'] });
-      queryClient.invalidateQueries({ queryKey: ['achievements'] });
+      // Инвалидируем только статистику/достижения (они обновятся при следующем запросе)
+      // НЕ инвалидируем сообщения - мы уже обновили кэш напрямую, и WebSocket событие придет отдельно
+      queryClient.invalidateQueries({ queryKey: ['stats'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['growth-metrics'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['achievements'], refetchType: 'active' });
 
       if (userOnSuccess) {
         (userOnSuccess as any)(data, variables, context, mutation);

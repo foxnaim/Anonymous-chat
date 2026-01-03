@@ -73,96 +73,93 @@ export const useSocketMessages = (companyCode?: string | null) => {
 
   // Мемоизируем обработчики для избежания лишних переподписок
   const handleNewMessage = useCallback((message: Message) => {
-    // КРИТИЧЕСКИ ВАЖНО: Сначала инвалидируем ВСЕ запросы сообщений
-    // Это заставит React Query перерисовать компоненты
-    // Используем refetchType: 'all' чтобы обойти staleTime
-    queryClient.invalidateQueries({ 
-      queryKey: ['messages'],
-      exact: false,
-      refetchType: 'all', // Обновляем все запросы, не только активные
-    });
+    // КРИТИЧЕСКИ ВАЖНО: Обновляем кэш для компании, которой принадлежит сообщение
+    // Это гарантирует, что сообщение появится сразу в списке компании
+    const messageCompanyCode = message.companyCode?.toUpperCase();
     
-    // Затем обновляем кэш оптимистично для мгновенного отображения
-    const baseQueryKey = queryKeys.messages(companyCode || undefined);
+    // Функция для обновления кэша сообщений с проверкой на пустой кэш
+    const updateMessagesCache = (targetCompanyCode?: string | null): boolean => {
+      const targetCode = targetCompanyCode ? targetCompanyCode.toUpperCase() : undefined;
+      const baseQueryKey = queryKeys.messages(targetCode);
+      
+      let wasEmpty = false;
+      
+      // Обновляем все запросы, которые начинаются с базового ключа (включая варианты с page, limit, messageId)
+      queryClient.setQueriesData<Message[]>(
+        { queryKey: baseQueryKey, exact: false },
+        (old) => {
+          // Если кэш пустой, создаем новый массив с сообщением
+          if (!old || old.length === 0) {
+            wasEmpty = true;
+            return [message];
+          }
+          // Проверяем, существует ли уже сообщение с таким ID
+          const exists = old.some((m) => m.id === message.id);
+          if (exists) {
+            // Если существует, обновляем его
+            return old.map((m) => (m.id === message.id ? message : m));
+          }
+          // Если не существует, добавляем в начало списка
+          return [message, ...old];
+        }
+      );
+      
+      return wasEmpty;
+    };
     
-    // Обновляем все запросы, которые начинаются с базового ключа
-    queryClient.setQueriesData<Message[]>(
-      { queryKey: baseQueryKey, exact: false },
-      (old) => {
-        // Если кэш пустой, создаем новый массив с сообщением
-        if (!old || old.length === 0) {
-          return [message];
-        }
-        const exists = old.some((m) => m.id === message.id);
-        if (exists) {
-          return old.map((m) => (m.id === message.id ? message : m));
-        }
-        return [message, ...old];
+    // 1. ВСЕГДА обновляем кэш для компании, которой принадлежит сообщение
+    // Это критически важно для мгновенного отображения
+    let needsRefetch = false;
+    if (messageCompanyCode) {
+      const wasEmpty = updateMessagesCache(messageCompanyCode);
+      if (wasEmpty) {
+        needsRefetch = true;
       }
-    );
-    
-    // Также обновляем кэш для всех сообщений (для админов)
-    if (!companyCode && message.companyCode) {
-      queryClient.setQueriesData<Message[]>(
-        { queryKey: queryKeys.messages(message.companyCode), exact: false },
-        (old) => {
-          if (!old || old.length === 0) {
-            return [message];
-          }
-          const exists = old.some((m) => m.id === message.id);
-          if (exists) {
-            return old.map((m) => (m.id === message.id ? message : m));
-          }
-          return [message, ...old];
-        }
-      );
     }
     
-    // Обновляем общий список всех сообщений для админов
+    // 2. Если текущий companyCode совпадает с companyCode сообщения, также обновляем
+    // (это для случая, когда пользователь находится на странице своей компании)
+    if (companyCode && companyCode.toUpperCase() === messageCompanyCode) {
+      const wasEmpty = updateMessagesCache(companyCode);
+      if (wasEmpty) {
+        needsRefetch = true;
+      }
+    }
+    
+    // 3. Обновляем общий список всех сообщений для админов
     if (!companyCode) {
-      queryClient.setQueriesData<Message[]>(
-        { queryKey: queryKeys.messages(undefined), exact: false },
-        (old) => {
-          if (!old || old.length === 0) {
-            return [message];
-          }
-          const exists = old.some((m) => m.id === message.id);
-          if (exists) {
-            return old.map((m) => (m.id === message.id ? message : m));
-          }
-          return [message, ...old];
-        }
-      );
+      const wasEmpty = updateMessagesCache(undefined);
+      if (wasEmpty) {
+        needsRefetch = true;
+      }
     }
     
-    // ПРИНУДИТЕЛЬНО обновляем активные запросы для гарантированного обновления UI
-    // Используем refetchQueries для немедленного обновления, игнорируя staleTime
-    queryClient.refetchQueries({ 
-      queryKey: ['messages'],
-      exact: false,
-      type: 'active',
-    }, { 
-      cancelRefetch: false, // Не отменяем текущие запросы
-    });
-    
-    // Если сообщение для другой компании, также обновляем её запросы
-    if (message.companyCode && message.companyCode !== companyCode) {
-      queryClient.invalidateQueries({ 
-        queryKey: queryKeys.messages(message.companyCode),
-        exact: false,
-        refetchType: 'active',
-      });
+    // 4. ЗАЩИТА: Если кэш был пустой, делаем один точечный refetch для активных запросов
+    // Это гарантирует, что мы получим все сообщения, а не только одно
+    // Но делаем это только если кэш был действительно пустой (защита от пропущенных сообщений)
+    if (needsRefetch && messageCompanyCode) {
+      // Делаем refetch только для активных запросов этой компании
+      // Это один запрос, не массовый - только для того компонента, который сейчас отображается
       queryClient.refetchQueries({ 
-        queryKey: queryKeys.messages(message.companyCode),
+        queryKey: queryKeys.messages(messageCompanyCode),
         exact: false,
-        type: 'active',
+        type: 'active', // Только активные запросы (те, что используются в компонентах)
+      }, { 
+        cancelRefetch: false,
       });
     }
-
-    // Инвалидируем статистику
+    
+    // 5. Дополнительная защита: естественные refetch (mount, focus, reconnect) подхватят пропущенные сообщения
+    // Не делаем дополнительных запросов здесь - это защитит от лишней нагрузки
+    // Если WebSocket событие не пришло, данные обновятся при следующем:
+    // - refetchOnMount (при открытии страницы)
+    // - refetchOnWindowFocus (при возврате на вкладку)
+    // - refetchOnReconnect (при переподключении)
+    
+    // Инвалидируем статистику (она может обновиться позже, не критично)
     queryClient.invalidateQueries({ 
       queryKey: ['stats'],
-      refetchType: 'active',
+      refetchType: 'active', // Только активные запросы статистики
     });
 
     // Показываем уведомление браузера, если разрешено и вкладка неактивна

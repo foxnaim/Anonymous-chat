@@ -139,7 +139,7 @@ const CompanyMessages = () => {
     normalizedMessageId, // Передаем нормализованный ID для поиска на бэкенде
     {
       enabled: !!company?.code,
-      staleTime: 1000 * 15, // считаем свежими 15с
+      staleTime: 1000 * 5, // считаем свежими 5с - уменьшено для более быстрого обновления через WebSocket
       refetchOnMount: true,
       refetchOnWindowFocus: true, // гарантируем подтяжку при фокусе/новом устройстве
       refetchOnReconnect: true,
