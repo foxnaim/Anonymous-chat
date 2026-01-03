@@ -6,9 +6,27 @@
 import type { Socket } from 'socket.io-client';
 import { getToken } from '../utils/cookies';
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001');
+// Получаем URL бэкенда для WebSocket
+// WebSocket подключается напрямую к серверу, без /api
+const getApiUrl = (): string => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  
+  if (apiUrl) {
+    // Если URL содержит /api, убираем его для WebSocket
+    return apiUrl.replace(/\/api\/?$/, '');
+  }
+  
+  // Fallback для development
+  if (typeof window !== 'undefined') {
+    // В production используем тот же origin, но на другом порту для бэкенда
+    // В development обычно бэкенд на 3001, фронтенд на 3000
+    return 'http://localhost:3001';
+  }
+  
+  return 'http://localhost:3001';
+};
+
+const API_URL = getApiUrl();
 
 let socket: Socket | null = null;
 let socketIOModule: typeof import('socket.io-client') | null = null;
@@ -66,7 +84,14 @@ export const getSocket = (forceReconnect = false): Socket | null => {
 
   // Если нет токена, не создаем подключение
   if (!token) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[WebSocket] No token available, cannot create socket connection');
+    }
     return null;
+  }
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[WebSocket] Creating socket connection to:', API_URL);
   }
 
   // Загружаем socket.io-client только на клиенте
@@ -95,7 +120,7 @@ export const getSocket = (forceReconnect = false): Socket | null => {
     socket.on('connect', () => {
       // WebSocket connected
       if (process.env.NODE_ENV === 'development') {
-        console.log('[WebSocket] Connected successfully');
+        console.log('[WebSocket] Connected successfully, socket ID:', socket.id);
       }
     });
 

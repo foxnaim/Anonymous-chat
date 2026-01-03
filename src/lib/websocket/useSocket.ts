@@ -272,12 +272,30 @@ export const useSocketMessages = (companyCode?: string | null) => {
 
   useEffect(() => {
     // Переподключаемся при изменении companyCode или при монтировании
-    const socket = getSocket(false);
+    // Пытаемся получить сокет, если его нет - пытаемся создать
+    let socket = getSocket(false);
+    
+    // Если сокета нет, пытаемся создать его принудительно
     if (!socket) {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('[WebSocket] Socket not available - token may be missing');
+      // Проверяем, есть ли токен
+      const { getToken } = require('../utils/cookies');
+      const token = getToken();
+      
+      if (!token) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[WebSocket] Socket not available - token is missing');
+        }
+        return;
       }
-      return;
+      
+      // Если токен есть, но сокета нет - создаем его принудительно
+      socket = getSocket(true);
+      if (!socket) {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[WebSocket] Failed to create socket even with token');
+        }
+        return;
+      }
     }
     
     const joinRoom = (code?: string | null) => {
