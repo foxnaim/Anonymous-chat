@@ -20,6 +20,7 @@ import {
   FiSearch,
   FiPlus,
   FiEye,
+  FiEyeOff,
   FiX,
   FiCopy,
   FiEdit,
@@ -115,6 +116,7 @@ const AdminCompanies = () => {
   const [selectedStatus, setSelectedStatus] = useState<CompanyStatus>(COMPANY_STATUS.ACTIVE);
   const [selectedPlan, setSelectedPlan] = useState<PlanType>("Пробный");
   const [planEndDate, setPlanEndDate] = useState<string>("");
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
 
   const getCompanyId = (company?: Company | null) =>
     (company as any)?.id || (company as any)?._id || "";
@@ -970,16 +972,31 @@ const AdminCompanies = () => {
                   </div>
                   <div>
                     <Label>Пароль администратора</Label>
-                    <Input
-                      type="password"
-                      value={newCompany.password}
-                      onChange={(e) =>
-                        setNewCompany({ ...newCompany, password: e.target.value })
-                      }
-                      autoComplete="new-password"
-                      placeholder="Минимум 6 символов"
-                      minLength={8}
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showCreatePassword ? "text" : "password"}
+                        value={newCompany.password}
+                        onChange={(e) =>
+                          setNewCompany({ ...newCompany, password: e.target.value })
+                        }
+                        autoComplete="new-password"
+                        placeholder="Минимум 6 символов"
+                        minLength={8}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowCreatePassword((v) => !v)}
+                        aria-label={showCreatePassword ? "Скрыть пароль" : "Показать пароль"}
+                      >
+                        {showCreatePassword ? (
+                          <FiEyeOff className="h-5 w-5" />
+                        ) : (
+                          <FiEye className="h-5 w-5" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                   {newCompany.plan !== "Пробный" && (
                     <>
