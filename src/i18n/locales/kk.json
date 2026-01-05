@@ -416,7 +416,11 @@
     "saveChanges": "Өзгерістерді сақтау",
     "adminEmail": "Әкімші email-і",
     "updatePassword": "Құпия сөзді жаңарту",
-    "logoRequirements": "Логотип талаптары"
+    "logoRequirements": "Логотип талаптары",
+    "logoRequirementsHint": "5 МБ-қа дейін, JPG/PNG/GIF/WebP форматтары, мүмкіндігінше квадрат 1:1, ең аз 200x200",
+    "fileTooLarge": "Файл тым үлкен (ең көбі 5 МБ)",
+    "invalidFileType": "Файл форматы қате (рұқсат етілген: JPG/PNG/GIF/WebP)",
+    "imageProcessingError": "Суретті өңдеу кезінде қате. Басқа суретті қолданып көріңіз."
   },
   "admin": {
     "title": "Платформа әкімшілігі",

@@ -415,7 +415,11 @@
     "saveChanges": "Save Changes",
     "adminEmail": "Admin Email",
     "updatePassword": "Update Password",
-    "logoRequirements": "Logo requirements"
+    "logoRequirements": "Logo requirements",
+    "logoRequirementsHint": "Up to 5 MB, formats JPG/PNG/GIF/WebP, ideally square 1:1, minimum 200x200",
+    "fileTooLarge": "File is too large (max 5 MB)",
+    "invalidFileType": "Invalid file type (allowed: JPG/PNG/GIF/WebP)",
+    "imageProcessingError": "Error processing image. Please try another image."
   },
   "admin": {
     "title": "Platform Administration",

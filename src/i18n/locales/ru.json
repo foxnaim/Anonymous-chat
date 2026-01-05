@@ -417,7 +417,11 @@
     "saveChanges": "Сохранить изменения",
     "adminEmail": "Email администратора",
     "updatePassword": "Изменить пароль",
-    "logoRequirements": "Требования к логотипу"
+    "logoRequirements": "Требования к логотипу",
+    "logoRequirementsHint": "До 5 МБ, форматы JPG/PNG/GIF/WebP, желательно квадрат 1:1, минимум 200x200",
+    "fileTooLarge": "Файл слишком большой (максимум 5 МБ)",
+    "invalidFileType": "Неверный формат файла (доступны JPG/PNG/GIF/WebP)",
+    "imageProcessingError": "Ошибка при обработке изображения. Попробуйте другое изображение."
   },
   "admin": {
     "title": "Администрирование платформы",

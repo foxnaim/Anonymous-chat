@@ -116,10 +116,13 @@ const AdminCompanies = () => {
   const [selectedPlan, setSelectedPlan] = useState<PlanType>("Пробный");
   const [planEndDate, setPlanEndDate] = useState<string>("");
 
+  const getCompanyId = (company?: Company | null) =>
+    (company as any)?.id || (company as any)?._id || "";
+
   const { data: companies = [], isLoading, refetch } = useCompanies();
   const { data: plans = [] } = usePlans();
-  const { data: companyStats } = useCompanyStats(selectedCompany?.id || "", {
-    enabled: !!selectedCompany?.id,
+  const { data: companyStats } = useCompanyStats(getCompanyId(selectedCompany), {
+    enabled: !!getCompanyId(selectedCompany),
   });
 
   const { mutateAsync: createCompany, isPending: isCreating } = useCreateCompany({
@@ -435,7 +438,7 @@ const AdminCompanies = () => {
     }
 
     await updateCompany({
-      id: selectedCompany.id,
+      id: getCompanyId(selectedCompany),
       updates: editCompany,
     });
   };
@@ -443,7 +446,7 @@ const AdminCompanies = () => {
   const handleStatusChange = async () => {
     if (!selectedCompany) return;
     await updateStatus({
-      id: selectedCompany.id,
+      id: getCompanyId(selectedCompany),
       status: selectedStatus,
     });
   };
@@ -451,7 +454,7 @@ const AdminCompanies = () => {
   const handlePlanChange = async () => {
     if (!selectedCompany) return;
     await updatePlan({
-      id: selectedCompany.id,
+      id: getCompanyId(selectedCompany),
       plan: selectedPlan,
       planEndDate: planEndDate || undefined,
     });
@@ -1372,7 +1375,7 @@ const AdminCompanies = () => {
                           variant="destructive"
                           onClick={async () => {
                             await updateStatus({
-                              id: selectedCompany.id,
+                              id: getCompanyId(selectedCompany),
                               status: COMPANY_STATUS.BLOCKED,
                             });
                             setIsViewOpen(false);
@@ -1385,7 +1388,7 @@ const AdminCompanies = () => {
                         <Button
                           onClick={async () => {
                             await updateStatus({
-                              id: selectedCompany.id,
+                              id: getCompanyId(selectedCompany),
                               status: COMPANY_STATUS.ACTIVE,
                             });
                             setIsViewOpen(false);
@@ -1398,7 +1401,7 @@ const AdminCompanies = () => {
                         <Button
                           onClick={async () => {
                             await updateStatus({
-                              id: selectedCompany.id,
+                              id: getCompanyId(selectedCompany),
                               status: COMPANY_STATUS.ACTIVE,
                             });
                             setIsViewOpen(false);
@@ -1629,7 +1632,7 @@ const AdminCompanies = () => {
               onClick={async () => {
                 if (companyToDelete) {
                   try {
-                    await deleteCompany(companyToDelete.id);
+                    await deleteCompany(getCompanyId(companyToDelete));
                   } catch (error) {
                     // Ошибка уже обработана в onError хука
                     console.error("[AdminCompanies] Failed to delete company:", error);

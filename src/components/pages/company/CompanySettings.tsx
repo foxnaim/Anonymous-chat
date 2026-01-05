@@ -258,8 +258,9 @@ const CompanySettings = () => {
                     >
                       {isCompressing ? t("common.processing") : t("company.changeLogo")}
                     </Button>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {t("company.logoRequirements")}
+                    <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                      <span className="font-medium">{t("company.logoRequirements")}:</span>{" "}
+                      {t("company.logoRequirementsHint")}
                     </p>
                   </div>
                 </div>
@@ -361,6 +362,7 @@ const CompanySettings = () => {
                     <Input
                       id="currentPassword"
                       type="password"
+                      autoComplete="current-password"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                     />
@@ -372,6 +374,7 @@ const CompanySettings = () => {
                     <Input
                       id="newPassword"
                       type="password"
+                      autoComplete="new-password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                     />
@@ -383,6 +386,7 @@ const CompanySettings = () => {
                     <Input
                       id="confirmPassword"
                       type="password"
+                      autoComplete="new-password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                     />
