@@ -384,14 +384,18 @@ const AdminCompanies = () => {
   }, [totalPages, currentPage]);
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case t("admin.active"):
-        return "bg-success text-white";
-      case t("admin.blocked"):
-        return "bg-accent text-white";
-      default:
-        return "bg-muted text-muted-foreground";
+    // Сравниваем с реальными значениями статусов из бэкенда, а не с переводами
+    const normalizedStatus = String(status).trim();
+    if (normalizedStatus === COMPANY_STATUS.ACTIVE || normalizedStatus === "Активна") {
+      return "bg-success text-white";
     }
+    if (normalizedStatus === COMPANY_STATUS.BLOCKED || normalizedStatus === "Заблокирована") {
+      return "bg-accent text-white";
+    }
+    if (normalizedStatus === COMPANY_STATUS.TRIAL || normalizedStatus === "Пробная") {
+      return "bg-muted text-muted-foreground";
+    }
+    return "bg-muted text-muted-foreground";
   };
 
   const handleCreate = async () => {

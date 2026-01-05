@@ -41,8 +41,9 @@ if (!i18n.isInitialized) {
         }
       },
       detection: {
-        order: ['navigator'],
-        caches: [],
+        order: ['localStorage', 'navigator'],
+        caches: ['localStorage'],
+        lookupLocalStorage: 'i18nextLng',
       },
       react: {
         useSuspense: false, // Disable suspense to prevent hydration issues
@@ -54,25 +55,16 @@ if (!i18n.isInitialized) {
   if (typeof window !== 'undefined') {
     // Use requestAnimationFrame to ensure this runs after React hydration
     requestAnimationFrame(() => {
-      // Получаем язык из куки
-      const getCookie = (name: string): string | null => {
-        const nameEQ = `${name}=`;
-        const ca = document.cookie.split(';');
-        for (let i = 0; i < ca.length; i++) {
-          let c = ca[i];
-          while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-          if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-        }
-        return null;
-      };
-      
-      const stored = getCookie('i18nextLng');
-      if (stored && ['en', 'ru', 'kk'].includes(stored) && stored !== 'ru') {
+      // Получаем язык из localStorage (приоритет)
+      const stored = localStorage.getItem('i18nextLng');
+      if (stored && ['en', 'ru', 'kk'].includes(stored)) {
         i18n.changeLanguage(stored);
       } else {
+        // Если нет сохраненного языка, используем язык браузера
         const browserLang = navigator.language.split('-')[0];
-        if (['en', 'ru', 'kk'].includes(browserLang) && browserLang !== 'ru') {
+        if (['en', 'ru', 'kk'].includes(browserLang)) {
           i18n.changeLanguage(browserLang);
+          localStorage.setItem('i18nextLng', browserLang);
         }
       }
     });
