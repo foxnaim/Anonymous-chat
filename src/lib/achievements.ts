@@ -3,7 +3,7 @@
  * Достижения организованы по уровням внутри каждой категории
  */
 
-import type { Achievement, AchievementProgress, Message, Company } from "@/types";
+import type { Achievement, AchievementProgress, Message, Company, MessageStatus } from "@/types";
 import { MESSAGE_STATUSES } from "./utils/constants";
 
 /**
@@ -143,7 +143,8 @@ function calculateCompanyStats(
 ): CompanyAchievementData {
   const now = new Date();
   const totalMessages = messages.length;
-  const resolvedMessages = messages.filter((m) => m.status === MESSAGE_STATUSES.RESOLVED).length;
+  const resolvedStatus: MessageStatus = "Решено";
+  const resolvedMessages = messages.filter((m) => m.status === resolvedStatus).length;
 
   // Расчет скорости ответа
   let fast = 0; // В течение 1 дня
@@ -195,7 +196,7 @@ function calculateCompanyStats(
   // Расчет качества
   const complaints = messages.filter((m) => m.type === "complaint").length;
   const resolvedComplaints = messages.filter(
-    (m) => m.type === "complaint" && m.status === MESSAGE_STATUSES.RESOLVED
+    (m) => m.type === "complaint" && m.status === resolvedStatus
   ).length;
   const resolutionRate =
     complaints > 0 ? Math.round((resolvedComplaints / complaints) * 100) : 0;
