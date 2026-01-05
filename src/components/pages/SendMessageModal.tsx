@@ -313,8 +313,7 @@ const SendMessageModal = ({
             <Button
               type="button"
               variant="outline"
-              size="lg"
-              className="flex-1 text-sm sm:text-base md:text-lg h-10 sm:h-12"
+              className="flex-1 h-12 rounded-full text-sm sm:text-base md:text-lg"
               onClick={() => onOpenChange(false)}
             >
               <FiX className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
@@ -322,8 +321,7 @@ const SendMessageModal = ({
             </Button>
             <Button
               type="submit"
-              size="lg"
-              className="flex-1 text-sm sm:text-base md:text-lg h-10 sm:h-12"
+              className="flex-1 h-12 rounded-full text-sm sm:text-base md:text-lg"
               disabled={!message || !agreed || isSubmitting || isSubmittingLocal}
             >
               <FiSend className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
