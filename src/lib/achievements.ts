@@ -143,7 +143,7 @@ function calculateCompanyStats(
 ): CompanyAchievementData {
   const now = new Date();
   const totalMessages = messages.length;
-  const resolvedMessages = messages.filter((m) => m.status === MESSAGE_STATUSES.RESOLVED || m.status === "Решено").length;
+  const resolvedMessages = messages.filter((m) => m.status === MESSAGE_STATUSES.RESOLVED).length;
 
   // Расчет скорости ответа
   let fast = 0; // В течение 1 дня
@@ -195,7 +195,7 @@ function calculateCompanyStats(
   // Расчет качества
   const complaints = messages.filter((m) => m.type === "complaint").length;
   const resolvedComplaints = messages.filter(
-    (m) => m.type === "complaint" && (m.status === MESSAGE_STATUSES.RESOLVED || m.status === "Решено")
+    (m) => m.type === "complaint" && m.status === MESSAGE_STATUSES.RESOLVED
   ).length;
   const resolutionRate =
     complaints > 0 ? Math.round((resolvedComplaints / complaints) * 100) : 0;
