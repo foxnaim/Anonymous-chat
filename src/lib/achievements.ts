@@ -4,7 +4,6 @@
  */
 
 import type { Achievement, AchievementProgress, Message, Company, MessageStatus } from "@/types";
-import { MESSAGE_STATUSES } from "./utils/constants";
 
 /**
  * Структура уровней для каждой категории достижений
