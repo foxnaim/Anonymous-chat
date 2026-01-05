@@ -313,7 +313,8 @@ const SendMessageModal = ({
             <Button
               type="button"
               variant="outline"
-              className="flex-1 text-sm sm:text-base h-10 sm:h-12"
+              size="lg"
+              className="flex-1 text-sm sm:text-base md:text-lg h-10 sm:h-12"
               onClick={() => onOpenChange(false)}
             >
               <FiX className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
