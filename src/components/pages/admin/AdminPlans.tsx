@@ -16,7 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getTranslatedValue } from "@/lib/utils/translations";
 const AdminPlans = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isFreePlanSettingsOpen, setIsFreePlanSettingsOpen] = useState(false);
   const [freePlanSettings, setFreePlanSettings] = useState<{
     messagesLimit: number | "";
@@ -31,12 +31,22 @@ const AdminPlans = () => {
   const freeDaysNum = Number(
     freePlanSettings.freePeriodDays === "" ? 0 : freePlanSettings.freePeriodDays
   );
-  const freeDaysLabel =
-    freeDaysNum === 1
-      ? 'день'
-      : freeDaysNum > 1 && freeDaysNum < 5
-        ? 'дня'
-        : 'дней';
+
+  const getDaysLabel = (count: number) => {
+    const lang = i18n.language;
+    if (lang === "en") {
+      return count === 1 ? "day" : "days";
+    }
+    if (lang === "kk") {
+      return count === 1 ? "күн" : "күндер";
+    }
+    // ru default
+    if (count === 1) return "день";
+    if (count > 1 && count < 5) return "дня";
+    return "дней";
+  };
+
+  const freeDaysLabel = getDaysLabel(freeDaysNum);
 
   // Загружаем настройки бесплатного плана при монтировании
   useEffect(() => {
@@ -72,7 +82,7 @@ const AdminPlans = () => {
             <div>
               <h2 className="text-base sm:text-lg font-semibold text-foreground">{t("admin.plansAndPrices")}</h2>
               <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                Первые {freeDaysNum} {freeDaysLabel} после регистрации - полный доступ без ограничений
+                {t("admin.firstNDaysFullAccess", { count: freeDaysNum, label: freeDaysLabel })}
               </p>
             </div>
             <Button variant="outline" onClick={() => setIsFreePlanSettingsOpen(true)} size="sm" className="w-full sm:w-auto">
@@ -132,9 +142,9 @@ const AdminPlans = () => {
                         {isFree && plan.freePeriodDays ? (
                           <div className="flex flex-col">
                             <p className="text-3xl font-bold text-foreground mb-1">
-                              {plan.freePeriodDays} {plan.freePeriodDays === 1 ? 'день' : plan.freePeriodDays < 5 ? 'дня' : 'дней'}
+                              {plan.freePeriodDays} {getDaysLabel(Number(plan.freePeriodDays || 0))}
                             </p>
-                            <p className="text-sm text-muted-foreground">пробного доступа</p>
+                            <p className="text-sm text-muted-foreground">{t("admin.trialAccessLabel")}</p>
                           </div>
                         ) : (
                           <div className="flex items-baseline gap-1">

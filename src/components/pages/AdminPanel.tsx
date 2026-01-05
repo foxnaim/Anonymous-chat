@@ -77,6 +77,28 @@ const AdminPanel = () => {
     plan: "Пробный" as (typeof PLAN_OPTIONS)[number],
   });
 
+  const getStatusLabel = (status: CompanyStatus) => {
+    const value = String(status).toLowerCase();
+    if (value === COMPANY_STATUS.ACTIVE.toLowerCase()) return t("admin.active");
+    if (value === COMPANY_STATUS.TRIAL.toLowerCase()) return t("admin.trial");
+    if (value === COMPANY_STATUS.BLOCKED.toLowerCase()) return t("admin.blocked");
+    return status;
+  };
+
+  const getPlanLabel = (plan: string) => {
+    const normalized = plan?.toLowerCase?.() || "";
+    if (["пробный", "trial", "бесплатный", "free", "сынақ", "тегін"].includes(normalized)) {
+      return t("admin.planTrial", { defaultValue: t("admin.trial") });
+    }
+    if (["стандарт", "standard"].includes(normalized)) {
+      return t("admin.planStandard", { defaultValue: plan });
+    }
+    if (["про", "pro"].includes(normalized)) {
+      return t("admin.planPro", { defaultValue: plan });
+    }
+    return plan;
+  };
+
   const { data: companies = [], isLoading, refetch } = useCompanies();
   const { data: plans = [] } = usePlans();
   const { mutateAsync: createCompany, isPending: isCreating } = useCreateCompany({
@@ -375,11 +397,11 @@ const AdminPanel = () => {
                         </td>
                         <td className="p-4 text-sm text-muted-foreground">{company.adminEmail || "—"}</td>
                         <td className="p-4">
-                          <Badge className={getStatusColor(company.status)}>{company.status}</Badge>
+                          <Badge className={getStatusColor(company.status)}>{getStatusLabel(company.status)}</Badge>
                         </td>
                         <td className="p-4">
                           <Badge variant="outline" className="bg-muted text-muted-foreground border-muted-foreground/20">
-                            {company.plan}
+                            {getPlanLabel(company.plan)}
                           </Badge>
                         </td>
                         <td className="p-4">
@@ -435,9 +457,9 @@ const AdminPanel = () => {
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <Badge className={`${getStatusColor(company.status)} text-xs`}>{company.status}</Badge>
+                        <Badge className={`${getStatusColor(company.status)} text-xs`}>{getStatusLabel(company.status)}</Badge>
                         <Badge variant="outline" className="bg-muted text-muted-foreground border-muted-foreground/20 text-xs">
-                          {company.plan}
+                          {getPlanLabel(company.plan)}
                         </Badge>
                         <span className="text-xs text-muted-foreground ml-auto">{company.registered}</span>
                       </div>
@@ -499,13 +521,13 @@ const AdminPanel = () => {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">{t("admin.status")}</p>
                     <Badge className={getStatusColor(selectedCompanyData.status)}>
-                      {selectedCompanyData.status}
+                      {getStatusLabel(selectedCompanyData.status)}
                     </Badge>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">{t("admin.plan")}</p>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline">{selectedCompanyData.plan}</Badge>
+                        <Badge variant="outline">{getPlanLabel(selectedCompanyData.plan)}</Badge>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -727,13 +749,13 @@ const AdminPanel = () => {
                               <div>
                                 <p className="text-xs text-muted-foreground mb-1">{t("admin.status")}</p>
                                 <Badge className={getStatusColor(selectedCompanyData.status)}>
-                                  {selectedCompanyData.status}
+                                  {getStatusLabel(selectedCompanyData.status)}
                                 </Badge>
                               </div>
                               <div>
                                 <p className="text-xs text-muted-foreground mb-1">{t("admin.plan")}</p>
                                 <div className="flex items-center gap-2">
-                                  <Badge variant="outline">{selectedCompanyData.plan}</Badge>
+                                  <Badge variant="outline">{getPlanLabel(selectedCompanyData.plan)}</Badge>
                                   <Button
                                     variant="ghost"
                                     size="icon"
@@ -973,7 +995,7 @@ const AdminPanel = () => {
                         onChange={(e) => setNewCompany({ ...newCompany, plan: e.target.value as (typeof PLAN_OPTIONS)[number] })}
                       >
                         {PLAN_OPTIONS.map((plan) => (
-                          <option key={plan} value={plan}>{plan}</option>
+                          <option key={plan} value={plan}>{getPlanLabel(plan)}</option>
                         ))}
                       </select>
                     </div>
@@ -1106,7 +1128,7 @@ const AdminPanel = () => {
                           <Badge className={getStatusColor(selectedCompanyData.status)}>
                             {selectedCompanyData.status}
                           </Badge>
-                          <Badge variant="outline">{selectedCompanyData.plan}</Badge>
+                          <Badge variant="outline">{getPlanLabel(selectedCompanyData.plan)}</Badge>
                           <Badge variant="outline" className="text-xs">
                             {t("admin.registration")}: {selectedCompanyData.registered}
                           </Badge>
@@ -1161,7 +1183,7 @@ const AdminPanel = () => {
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">{t("admin.plan")}</span>
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline">{selectedCompanyData.plan}</Badge>
+                              <Badge variant="outline">{getPlanLabel(selectedCompanyData.plan)}</Badge>
                               <Button
                                 variant="ghost"
                                 size="icon"
