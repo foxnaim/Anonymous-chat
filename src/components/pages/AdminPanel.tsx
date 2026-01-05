@@ -968,7 +968,7 @@ const AdminPanel = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm text-foreground">Код компании</label>
+                      <label className="text-sm text-foreground">{t("admin.companyCode")}</label>
                       <div className="flex gap-2">
                         <Input
                           value={newCompany.code}
@@ -985,7 +985,7 @@ const AdminPanel = () => {
                           <FiRefreshCw className="h-4 w-4" />
                         </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground">8 символов, используйте буквы/цифры</p>
+                      <p className="text-xs text-muted-foreground">{t("admin.companyCodeDescription")}</p>
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm text-foreground">{t("admin.plan")}</label>
@@ -1000,13 +1000,13 @@ const AdminPanel = () => {
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm text-foreground">Пароль администратора</label>
+                      <label className="text-sm text-foreground">{t("admin.password")}</label>
                       <input
                         type="password"
                         className="w-full p-2 border rounded-md bg-background"
                         value={newCompany.password}
                         onChange={(e) => setNewCompany({ ...newCompany, password: e.target.value })}
-                        placeholder="Минимум 6 символов"
+                        placeholder={t("admin.passwordMinLengthPlaceholder")}
                         minLength={8}
                         autoComplete="new-password"
                       />
