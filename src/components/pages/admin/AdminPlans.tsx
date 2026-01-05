@@ -180,7 +180,23 @@ const AdminPlans = () => {
       </div>
       {/* Free Plan Settings Dialog */}
       <Transition show={isFreePlanSettingsOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-50" onClose={setIsFreePlanSettingsOpen}>
+        <Dialog 
+          as="div" 
+          className="relative z-50" 
+          onClose={(value) => {
+            setIsFreePlanSettingsOpen(value);
+            // Управляем фокусом при закрытии, чтобы избежать проблем с aria-hidden
+            if (!value) {
+              // Убираем фокус с активного элемента, чтобы избежать проблем с accessibility
+              requestAnimationFrame(() => {
+                const activeElement = document.activeElement as HTMLElement;
+                if (activeElement && activeElement !== document.body && activeElement.blur) {
+                  activeElement.blur();
+                }
+              });
+            }
+          }}
+        >
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"

@@ -661,7 +661,18 @@ const AdminPanel = () => {
           <Dialog
             as="div"
             className="lg:hidden relative z-50"
-            onClose={() => setSelectedCompanyId(null)}
+            onClose={(value) => {
+              setSelectedCompanyId(null);
+              // Управляем фокусом при закрытии
+              if (!value) {
+                requestAnimationFrame(() => {
+                  const activeElement = document.activeElement as HTMLElement;
+                  if (activeElement && activeElement !== document.body && activeElement.blur) {
+                    activeElement.blur();
+                  }
+                });
+              }
+            }}
             initialFocus={detailCloseRef}
           >
             <Transition.Child
@@ -889,7 +900,20 @@ const AdminPanel = () => {
         <Dialog
           as="div"
           className="relative z-50"
-          onClose={() => !isCreating && setIsCreateOpen(false)}
+          onClose={(value) => {
+            if (!isCreating) {
+              setIsCreateOpen(value);
+              // Управляем фокусом при закрытии
+              if (!value) {
+                requestAnimationFrame(() => {
+                  const activeElement = document.activeElement as HTMLElement;
+                  if (activeElement && activeElement !== document.body && activeElement.blur) {
+                    activeElement.blur();
+                  }
+                });
+              }
+            }
+          }}
           initialFocus={createCloseRef}
         >
           <Transition.Child
@@ -1042,7 +1066,19 @@ const AdminPanel = () => {
         <Dialog
           as="div"
           className="relative z-50"
-          onClose={() => setIsViewOpen(false)}
+          onClose={(value) => {
+            setIsViewOpen(value);
+            // Управляем фокусом при закрытии
+            if (!value) {
+              requestAnimationFrame(() => {
+                const activeElement = document.activeElement as HTMLElement;
+                if (activeElement && activeElement !== document.body) {
+                  activeElement.blur();
+                  document.body.focus();
+                }
+              });
+            }
+          }}
           initialFocus={viewCloseRef}
         >
           <Transition.Child
