@@ -326,7 +326,7 @@ export const adminService = {
     }
   },
 
-  createAdmin: async (data: { email: string; name: string; role?: 'admin' | 'super_admin' }): Promise<AdminUser> => {
+  createAdmin: async (data: { email: string; name: string; role?: 'admin' | 'super_admin'; password?: string }): Promise<AdminUser> => {
     const response = await apiClient.post<ApiResponse<any>>('/admins', data);
     return transformAdminUser(response.data);
   },

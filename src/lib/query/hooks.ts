@@ -225,7 +225,7 @@ export const useAdmins = (page?: number, limit?: number, options?: Omit<UseQuery
 /**
  * Хук для создания админа
  */
-export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { email: string; name: string; role?: 'admin' | 'super_admin' }>) => {
+export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { email: string; name: string; role?: 'admin' | 'super_admin'; password?: string }>) => {
   const queryClient = useQueryClient();
   const userOnSuccess = options?.onSuccess;
   const userOnError = options?.onError;
@@ -237,7 +237,7 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
     tempId: string;
   };
 
-  return useMutation<AdminUser, Error, { email: string; name: string; role?: 'admin' | 'super_admin' }, AdminOptimisticContext>({
+  return useMutation<AdminUser, Error, { email: string; name: string; role?: 'admin' | 'super_admin'; password?: string }, AdminOptimisticContext>({
     mutationFn: (data) => adminService.createAdmin(data),
 
     // Оптимистично добавляем админа в кэш сразу

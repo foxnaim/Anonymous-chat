@@ -371,14 +371,11 @@ const AdminAdmins = () => {
     // Готовим имя: если не указано, используем часть email до @
     const nameToSend = normalizedName || normalizedEmail.split("@")[0];
 
-    // Создаем админа через API (пароль не передается, бэкенд создаст дефолтный)
-    // Используем уже нормализованные данные
-    // Проверка на дубликаты выполняется на сервере - ошибка будет обработана в onError колбэке
-    // Используем mutateAsync - ошибка будет обработана в onError
     await createAdminMutation({
       email: normalizedEmail,
       name: nameToSend,
       role: "admin",
+      password: normalizedPassword,
     }).catch((error) => {
       // Дополнительная обработка, если onError не сработал
       // onError должен обработать, но на всякий случай показываем общую ошибку
