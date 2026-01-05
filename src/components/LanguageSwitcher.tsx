@@ -31,6 +31,7 @@ export const LanguageSwitcher = memo(() => {
 
   const changeLanguage = (code: string) => {
     i18n.changeLanguage(code);
+    localStorage.setItem('i18nextLng', code);
   };
 
   return (
