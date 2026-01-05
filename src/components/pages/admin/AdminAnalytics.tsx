@@ -326,8 +326,8 @@ const AdminAnalytics = () => {
               </h3>
               <div className="space-y-3">
                 {[
-                  { name: "Пробный", count: analytics.trialPlan, color: "bg-muted" },
-                  { name: "Стандарт", count: analytics.standardPlan, color: "bg-primary" },
+                  { name: t("admin.planTrial"), count: analytics.trialPlan, color: "bg-muted" },
+                  { name: t("admin.planStandard"), count: analytics.standardPlan, color: "bg-primary" },
                   { name: t("admin.planPro"), count: analytics.proPlan, color: "bg-secondary" },
                 ].map((plan) => {
                   const percent = analytics.totalCompanies > 0 
