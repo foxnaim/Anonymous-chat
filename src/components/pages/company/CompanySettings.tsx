@@ -27,7 +27,6 @@ const CompanySettings = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
@@ -85,9 +84,6 @@ const CompanySettings = () => {
       // Поэтому сохраняем оригинальный файл для отправки на сервер
       const compressedBase64String: string = await compressImage(file);
       
-      // Сохраняем оригинальный File объект для отправки на сервер
-      setLogoFile(file);
-      
       // Сохраняем base64 строку для preview
       setLogoPreview(compressedBase64String);
     } catch (error) {
@@ -99,7 +95,6 @@ const CompanySettings = () => {
   };
 
   const handleRemoveLogo = () => {
-    setLogoFile(null);
     setLogoPreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -110,46 +105,33 @@ const CompanySettings = () => {
     if (!user?.companyId) return;
 
     try {
-      const formData = new FormData();
-      if (logoFile) {
-        formData.append("logo", logoFile);
-      } else if (logoPreview === null && company?.logoUrl) {
-        // Если логотип был удален
-        formData.append("removeLogo", "true");
+      const updates: Record<string, any> = {};
+
+      // Имя компании
+      if (companyName && companyName !== company?.name) {
+        updates.name = companyName;
       }
 
-      if (companyName && companyName !== company?.name) {
-        formData.append("name", companyName);
+      // Логотип: отправляем base64, если меняли; если удалили — пустую строку
+      const hasBase64Logo = typeof logoPreview === "string" && logoPreview.startsWith("data:image/");
+      const removedLogo = logoPreview === null && company?.logoUrl;
+
+      if (hasBase64Logo) {
+        updates.logoUrl = logoPreview;
+      } else if (removedLogo) {
+        updates.logoUrl = "";
       }
-      
-      // Используем updateCompany, который принимает FormData
-      // Но так как useUpdateCompany ожидает объект с updates, нам нужно адаптировать вызов
-      // В данном случае, мы предполагаем, что API поддерживает FormData
-      // Если нет, нужно будет использовать другой метод или сервис
-      
-      // В текущей реализации useUpdateCompany использует JSON
-      // Для загрузки файлов нам нужен отдельный метод или изменение API
-      // Пока что просто обновляем текстовые данные
-      
+
       await updateCompany({
         id: user.companyId,
-        updates: {
-          name: companyName,
-          // logoUrl будет обновлен отдельно, если API поддерживает
-        },
+        updates,
       });
 
-      // Если есть файл, загружаем его отдельно (предполагаемая реализация)
-      /*
-      if (logoFile) {
-        await companyService.uploadLogo(user.companyId, logoFile);
-      } else if (logoPreview === null && company?.logoUrl) {
-        await companyService.deleteLogo(user.companyId);
-      }
-      */
-      
+      toast.success(t("company.settingsSaved"));
+      refetchCompany();
     } catch (error) {
       console.error(error);
+      toast.error(t("common.error"));
     }
   };
 
@@ -356,6 +338,15 @@ const CompanySettings = () => {
               }}
             >
               <div className="space-y-4">
+                {/* Hidden username field for accessibility/autocomplete context */}
+                <input
+                  type="email"
+                  className="sr-only"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  autoComplete="username"
+                  defaultValue={company?.adminEmail || user?.email || ""}
+                />
                 <div className="space-y-2">
                   <Label htmlFor="currentPassword">{t("company.currentPassword")}</Label>
                   <div className="relative">

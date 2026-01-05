@@ -107,7 +107,6 @@ export default function RootLayout({
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'} />
         <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'} />
         {/* Preload критичных ресурсов */}
-        <link rel="preload" href="/feedBack.svg" as="image" />
         {/* Ранняя загрузка утилиты для подавления ошибок расширений */}
         <script
           dangerouslySetInnerHTML={{
