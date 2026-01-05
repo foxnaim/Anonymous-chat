@@ -348,49 +348,56 @@ const CompanySettings = () => {
           {/* Password Change */}
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-6">{t("company.changePassword")}</h3>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">{t("company.currentPassword")}</Label>
-                <div className="relative">
-                  <Input
-                    id="currentPassword"
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                  />
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handlePasswordChange();
+              }}
+            >
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="currentPassword">{t("company.currentPassword")}</Label>
+                  <div className="relative">
+                    <Input
+                      id="currentPassword"
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">{t("company.newPassword")}</Label>
+                  <div className="relative">
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">{t("company.confirmNewPassword")}</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button 
+                    type="submit"
+                    disabled={!currentPassword || !newPassword || !confirmPassword}
+                  >
+                    {t("company.updatePassword")}
+                  </Button>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">{t("company.newPassword")}</Label>
-                <div className="relative">
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">{t("company.confirmNewPassword")}</Label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button 
-                  onClick={handlePasswordChange}
-                  disabled={!currentPassword || !newPassword || !confirmPassword}
-                >
-                  {t("company.updatePassword")}
-                </Button>
-              </div>
-            </div>
+            </form>
           </Card>
 
           {/* Project Settings */}

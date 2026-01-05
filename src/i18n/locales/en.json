@@ -412,7 +412,10 @@
     "dangerZone": "Danger Zone",
     "deleteCompany": "Delete Company",
     "deleteCompanyWarning": "This action cannot be undone. All company data will be permanently deleted.",
-    "saveChanges": "Save Changes"
+    "saveChanges": "Save Changes",
+    "adminEmail": "Admin Email",
+    "updatePassword": "Update Password",
+    "logoRequirements": "Logo requirements"
   },
   "admin": {
     "title": "Platform Administration",

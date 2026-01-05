@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FiEdit2, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { AdminHeader } from "@/components/AdminHeader";
@@ -17,12 +16,9 @@ import { authService } from "@/lib/api/auth";
 import { useDispatch } from "react-redux";
 import { validatePasswordStrength } from "@/lib/utils/validation";
 
-import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
-
 const AdminSettings = () => {
   const { t, i18n: i18nInstance } = useTranslation();
   const { user, isAuthenticated } = useAuth();
-  const { isFullscreen, setFullscreen } = useFullscreenContext();
   const dispatch = useDispatch();
   
   // States
@@ -54,9 +50,6 @@ const AdminSettings = () => {
       setIsLanguageChanging(false);
     },
   });
-
-  // Используем настройки из API для полноэкранного режима
-  // Примечание: полноэкранный режим применяется глобально через FullscreenProvider
 
   // Синхронизируем язык с API только при первой загрузке настроек или когда настройки обновляются
   useEffect(() => {
@@ -146,23 +139,6 @@ const AdminSettings = () => {
     }
   };
 
-  const handleFullscreenToggle = async (checked: boolean) => {
-    // Сразу применяем изменения в UI для мгновенной обратной связи
-    setFullscreen(checked);
-    
-    // Сохраняем в API
-    try {
-      await updateSettings({ fullscreenMode: checked });
-      // Принудительно обновляем настройки, чтобы FullscreenProvider подхватил изменения
-      await refetchSettings();
-      toast.success(t("admin.settingsSaved") || "Настройки сохранены");
-    } catch (error) {
-      // В случае ошибки откатываем изменения в UI
-      setFullscreen(!checked);
-      toast.error(t("common.error") || "Ошибка при сохранении настроек");
-    }
-  };
-
   const handleEmailEdit = () => {
     setIsEditingEmail(true);
     setNewEmail(user?.email || "");
@@ -237,26 +213,6 @@ const AdminSettings = () => {
       <AdminHeader />
       <div className="flex flex-col">
         <main className="container flex-1 p-6 space-y-6">
-          {/* Display Settings */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-6">{t("admin.displaySettings")}</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>{t("admin.fullscreenMode")}</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {t("admin.fullscreenModeDescription")}
-                  </p>
-                </div>
-                <Switch 
-                  checked={isFullscreen} 
-                  onCheckedChange={handleFullscreenToggle}
-                  disabled={settingsLoading || isUpdating}
-                />
-              </div>
-            </div>
-          </Card>
-
           {/* Change Email */}
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-6">{t("auth.email")}</h3>

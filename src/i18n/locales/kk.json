@@ -413,7 +413,10 @@
     "dangerZone": "Қауіпті аймақ",
     "deleteCompany": "Компанияны жою",
     "deleteCompanyWarning": "Бұл әрекетті болдырмауға болмайды. Компанияның барлық деректері мәңгі жойылады.",
-    "saveChanges": "Өзгерістерді сақтау"
+    "saveChanges": "Өзгерістерді сақтау",
+    "adminEmail": "Әкімші email-і",
+    "updatePassword": "Құпия сөзді жаңарту",
+    "logoRequirements": "Логотип талаптары"
   },
   "admin": {
     "title": "Платформа әкімшілігі",

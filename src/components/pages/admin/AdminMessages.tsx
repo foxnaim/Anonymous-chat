@@ -74,6 +74,19 @@ const AdminMessages = () => {
     return statusMap[status] || status;
   };
   
+  // Функция для перевода статуса из БД в переведенное значение
+  const translateStatus = (status: string): string => {
+    // MESSAGE_STATUSES уже содержат русские строки, поэтому используем их напрямую
+    const statusMap: Record<string, string> = {
+      [MESSAGE_STATUSES.NEW]: t("checkStatus.new"),
+      [MESSAGE_STATUSES.IN_PROGRESS]: t("checkStatus.inProgress"),
+      [MESSAGE_STATUSES.RESOLVED]: t("checkStatus.resolved"),
+      [MESSAGE_STATUSES.REJECTED]: t("checkStatus.rejected"),
+      [MESSAGE_STATUSES.SPAM]: t("checkStatus.spam"),
+    };
+    return statusMap[status] || status;
+  };
+  
   const filteredMessages = messages.filter((msg) => {
     const matchesSearch = msg.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
       msg.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -114,15 +127,21 @@ const AdminMessages = () => {
   };
 
   const getStatusColor = (status: MessageStatus) => {
+    // Используем константы для сравнения, так как статусы приходят с бэкенда на русском
     switch (status) {
+      case MESSAGE_STATUSES.NEW:
       case "Новое":
         return "bg-accent text-accent-foreground";
+      case MESSAGE_STATUSES.IN_PROGRESS:
       case "В работе":
         return "bg-secondary text-secondary-foreground";
+      case MESSAGE_STATUSES.RESOLVED:
       case "Решено":
         return "bg-success text-success-foreground";
+      case MESSAGE_STATUSES.REJECTED:
       case "Отклонено":
         return "bg-muted text-muted-foreground";
+      case MESSAGE_STATUSES.SPAM:
       case "Спам":
         return "bg-destructive text-destructive-foreground";
       default:
@@ -217,7 +236,7 @@ const AdminMessages = () => {
                       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                         <code className="text-xs sm:text-sm font-mono text-primary break-all">{message.id}</code>
                         <Badge variant="outline" className="text-xs whitespace-nowrap">{message.companyCode}</Badge>
-                        <Badge className="text-xs whitespace-nowrap">{message.status}</Badge>
+                        <Badge className="text-xs whitespace-nowrap">{translateStatus(message.status)}</Badge>
                       </div>
                       <p className="text-sm sm:text-base text-foreground break-words whitespace-pre-wrap overflow-wrap-anywhere">
                         {message.content}
@@ -279,7 +298,7 @@ const AdminMessages = () => {
                         <div className="flex items-center gap-2">
                           <p className="text-xs sm:text-sm text-muted-foreground">{t("checkStatus.status")}:</p>
                           <Badge className={`${getStatusColor(selectedMessage.status)} text-xs`}>
-                            {selectedMessage.status}
+                            {translateStatus(selectedMessage.status)}
                           </Badge>
                         </div>
                       </div>
