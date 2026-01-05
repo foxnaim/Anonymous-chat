@@ -1022,9 +1022,15 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
       );
       
       // Принудительно обновляем компоненты через небольшой refetch с задержкой
+      // Но только если компания действительно удалена, чтобы не вернуть её из БД
+      // Если мы оптимистично удалили, то refetch может вернуть её обратно, если бэкенд тормозит
+      // Поэтому лучше просто инвалидировать, но с задержкой, чтобы бэкенд успел обновиться
+      // Или не инвалидировать вовсе, так как мы уже обновили кэш вручную
+      /*
       setTimeout(() => {
-        queryClient.refetchQueries({ queryKey: queryKeys.companies, exact: false });
-      }, 100);
+        queryClient.invalidateQueries({ queryKey: queryKeys.companies, exact: false });
+      }, 500);
+      */
       
       if (userOnSuccess) {
         (userOnSuccess as any)(_, deletedId, context, mutation);
