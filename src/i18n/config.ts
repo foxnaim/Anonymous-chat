@@ -40,6 +40,7 @@ if (!i18n.isInitialized) {
       },
       lng: getInitialLanguage(),
       fallbackLng: 'ru',
+      supportedLngs: ['en', 'ru', 'kk'],
       defaultNS: 'translation',
       interpolation: {
         escapeValue: false,
@@ -54,8 +55,6 @@ if (!i18n.isInitialized) {
         order: ['localStorage', 'navigator'],
         caches: ['localStorage'],
         lookupLocalStorage: 'i18nextLng',
-        // Only detect on client side, not during SSR
-        checkWhitelist: true,
       },
       react: {
         useSuspense: false, // Disable suspense to prevent hydration issues
