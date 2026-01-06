@@ -31,7 +31,13 @@ export const LanguageSwitcher = memo(() => {
 
   const changeLanguage = (code: string) => {
     i18n.changeLanguage(code);
-    localStorage.setItem('i18nextLng', code);
+    // Language will be saved to localStorage automatically via i18n event listener
+    // But we also save it here as a backup
+    try {
+      localStorage.setItem('i18nextLng', code);
+    } catch (error) {
+      console.warn('Failed to save language to localStorage:', error);
+    }
   };
 
   return (
