@@ -182,7 +182,6 @@ const CompanySettings = () => {
   const handleLanguageChange = (value: string) => {
     i18nInstance.changeLanguage(value);
     localStorage.setItem('i18nextLng', value);
-    // Также можно сохранить предпочтение пользователя на бэкенде
   };
 
   return (
