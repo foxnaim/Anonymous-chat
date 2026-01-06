@@ -10,15 +10,35 @@ import ru from './locales/ru.json';
 import kk from './locales/kk.json';
 
 if (!i18n.isInitialized) {
-  // CRITICAL: Always use 'ru' for initial render to prevent hydration mismatches
-  // Language detection will happen AFTER hydration is complete
+  // Helper function to normalize language code (e.g., 'ru-RU' -> 'ru')
+  const normalizeLang = (lang: string | null | undefined): string => {
+    if (!lang) return 'ru';
+    const code = lang.split('-')[0].toLowerCase();
+    return ['en', 'ru', 'kk'].includes(code) ? code : 'ru';
+  };
+
+  // Get initial language: read from localStorage on client, default to 'ru' on server
+  // This ensures consistent initial render while preserving user preference
+  let initialLanguage = 'ru';
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('i18nextLng');
+      if (stored) {
+        initialLanguage = normalizeLang(stored);
+      }
+    } catch (error) {
+      // Ignore localStorage errors (private mode, etc.)
+      console.warn('Failed to read language from localStorage:', error);
+    }
+  }
+
   const initOptions: InitOptions = {
     resources: {
       en: { translation: en },
       ru: { translation: ru },
       kk: { translation: kk },
     },
-    lng: 'ru', // Always start with 'ru' to match server-side rendering
+    lng: initialLanguage, // Use stored language or 'ru' as fallback
     fallbackLng: 'ru',
     supportedLngs: ['en', 'ru', 'kk'],
     defaultNS: 'translation',
@@ -33,7 +53,7 @@ if (!i18n.isInitialized) {
     },
     detection: {
       // Disable automatic detection to prevent hydration mismatches
-      // Language will be applied manually after hydration
+      // Language is set manually from localStorage
       order: [],
       caches: ['localStorage'],
       lookupLocalStorage: 'i18nextLng',
@@ -49,67 +69,35 @@ if (!i18n.isInitialized) {
     .use(initReactI18next)
     .init(initOptions);
 
-  // Apply language from localStorage AFTER initialization and hydration
-  // This ensures server and client render the same initial content
+  // Listen for language changes and save to localStorage
   if (typeof window !== 'undefined') {
-    // Wait for DOM to be ready and React hydration to complete
-    const applyLanguage = () => {
-      try {
-        const stored = localStorage.getItem('i18nextLng');
-        if (stored && ['en', 'ru', 'kk'].includes(stored)) {
-          // Apply stored language if it's different from current
-          if (stored !== i18n.language) {
-            i18n.changeLanguage(stored);
-          }
-        } else {
-          // If no stored language, try to detect from navigator
-          const browserLang = navigator.language?.split('-')[0] || 'ru';
-          if (['en', 'ru', 'kk'].includes(browserLang) && browserLang !== 'ru') {
-            i18n.changeLanguage(browserLang);
-            localStorage.setItem('i18nextLng', browserLang);
-          } else {
-            // Default to 'ru' and save it
-            localStorage.setItem('i18nextLng', 'ru');
-          }
-        }
-      } catch (error) {
-        // Ignore localStorage errors (private mode, etc.)
-        console.warn('Failed to load language from localStorage:', error);
-      }
+    const normalizeLang = (lang: string | null | undefined): string => {
+      if (!lang) return 'ru';
+      const code = lang.split('-')[0].toLowerCase();
+      return ['en', 'ru', 'kk'].includes(code) ? code : 'ru';
     };
 
-    // Listen for language changes and save to localStorage
     i18n.on('languageChanged', (lng) => {
       try {
-        const langCode = lng.split('-')[0];
-        if (['en', 'ru', 'kk'].includes(langCode)) {
-          localStorage.setItem('i18nextLng', langCode);
-        }
+        const langCode = normalizeLang(lng);
+        localStorage.setItem('i18nextLng', langCode);
       } catch (error) {
         console.warn('Failed to save language to localStorage:', error);
       }
     });
 
-    // Use multiple strategies to ensure this runs after React hydration
-    // React hydration typically completes within 100-500ms after DOMContentLoaded
-    const waitForHydration = () => {
-      // Use requestIdleCallback if available for better performance, otherwise setTimeout
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => {
-          setTimeout(applyLanguage, 50);
-        }, { timeout: 200 });
-      } else {
-        // Fallback: wait a bit for React hydration
-        setTimeout(applyLanguage, 150);
+    // Ensure language is saved if not already saved
+    try {
+      const currentLang = normalizeLang(i18n.language);
+      const stored = localStorage.getItem('i18nextLng');
+      const normalizedStored = normalizeLang(stored);
+      
+      // Save if not stored or if stored language doesn't match current
+      if (!stored || normalizedStored !== currentLang) {
+        localStorage.setItem('i18nextLng', currentLang);
       }
-    };
-
-    if (document.readyState === 'loading') {
-      // Document is still loading, wait for DOMContentLoaded then hydration
-      document.addEventListener('DOMContentLoaded', waitForHydration, { once: true });
-    } else if (document.readyState === 'interactive' || document.readyState === 'complete') {
-      // Document is ready, just wait for React hydration
-      waitForHydration();
+    } catch (error) {
+      console.warn('Failed to save initial language to localStorage:', error);
     }
   }
 }
