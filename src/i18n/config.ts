@@ -9,13 +9,21 @@ import ru from './locales/ru.json';
 import kk from './locales/kk.json';
 
 if (!i18n.isInitialized) {
-  // Determine initial language: always 'ru' on server, 'ru' on client for first render
-  // This ensures server and client match during hydration
+  // Determine initial language: always 'ru' on server, detect from localStorage on client
   const getInitialLanguage = (): string => {
     if (typeof window === 'undefined') {
       return 'ru'; // Server-side: always use 'ru'
     }
-    // Client-side: use 'ru' initially to match server, then detect after mount
+    // Client-side: try to get from localStorage immediately (synchronously)
+    const stored = localStorage.getItem('i18nextLng');
+    if (stored && ['en', 'ru', 'kk'].includes(stored)) {
+      return stored;
+    }
+    // Fallback to browser language or 'ru'
+    const browserLang = navigator.language.split('-')[0];
+    if (['en', 'ru', 'kk'].includes(browserLang)) {
+      return browserLang;
+    }
     return 'ru';
   };
 
@@ -50,24 +58,12 @@ if (!i18n.isInitialized) {
       },
     });
 
-  // After initialization, detect and change language if needed (client-side only)
-  // This runs after the initial render to prevent hydration mismatch
+  // Ensure language is persisted in localStorage after initialization
   if (typeof window !== 'undefined') {
-    // Use requestAnimationFrame to ensure this runs after React hydration
-    requestAnimationFrame(() => {
-      // Получаем язык из localStorage (приоритет)
-      const stored = localStorage.getItem('i18nextLng');
-      if (stored && ['en', 'ru', 'kk'].includes(stored)) {
-        i18n.changeLanguage(stored);
-      } else {
-        // Если нет сохраненного языка, используем язык браузера
-        const browserLang = navigator.language.split('-')[0];
-        if (['en', 'ru', 'kk'].includes(browserLang)) {
-          i18n.changeLanguage(browserLang);
-          localStorage.setItem('i18nextLng', browserLang);
-        }
-      }
-    });
+    const currentLang = i18n.language.split('-')[0];
+    if (['en', 'ru', 'kk'].includes(currentLang)) {
+      localStorage.setItem('i18nextLng', currentLang);
+    }
   }
 }
 

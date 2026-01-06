@@ -51,12 +51,23 @@ const AdminSettings = () => {
     },
   });
 
-  // Синхронизируем язык с API только при первой загрузке настроек или когда настройки обновляются
+  // Синхронизируем язык с API только если он отличается от localStorage
+  // Приоритет у localStorage, так как пользователь мог изменить язык в другом месте
   useEffect(() => {
     if (settings?.language && !isLanguageChanging) {
+      const storedLang = localStorage.getItem('i18nextLng');
       const currentLang = i18nInstance.language.split('-')[0]; // Убираем регион (ru-RU -> ru)
-      if (settings.language !== currentLang) {
+      
+      // Если есть сохраненный язык в localStorage, используем его (приоритет)
+      if (storedLang && ['en', 'ru', 'kk'].includes(storedLang) && storedLang !== currentLang) {
+        i18nInstance.changeLanguage(storedLang);
+        return;
+      }
+      
+      // Если нет в localStorage, но есть в API и отличается от текущего - используем из API
+      if (!storedLang && settings.language !== currentLang) {
         i18nInstance.changeLanguage(settings.language);
+        localStorage.setItem('i18nextLng', settings.language);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,6 +127,8 @@ const AdminSettings = () => {
     
     // Сначала меняем язык локально для мгновенной обратной связи
     i18nInstance.changeLanguage(lang);
+    // Сохраняем в localStorage сразу
+    localStorage.setItem('i18nextLng', lang);
     
     // Затем сохраняем в API
     try {
@@ -125,6 +138,7 @@ const AdminSettings = () => {
       if (updatedSettings.language !== lang) {
         // Если язык не обновился, возвращаем предыдущий
         i18nInstance.changeLanguage(previousLang);
+        localStorage.setItem('i18nextLng', previousLang);
         toast.error(t("common.error") || "Ошибка при сохранении языка");
       } else {
         toast.success(t("admin.settingsSaved") || "Настройки сохранены");
@@ -132,6 +146,7 @@ const AdminSettings = () => {
     } catch (error: any) {
       // В случае ошибки возвращаем язык обратно
       i18nInstance.changeLanguage(previousLang);
+      localStorage.setItem('i18nextLng', previousLang);
       const errorMessage = error?.message || t("common.error") || "Ошибка при сохранении настроек";
       toast.error(errorMessage);
     } finally {
