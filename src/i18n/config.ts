@@ -32,10 +32,11 @@ if (!i18n.isInitialized) {
       }
     },
     detection: {
-      order: ['localStorage', 'navigator'],
+      // Disable automatic detection to prevent hydration mismatches
+      // Language will be applied manually after hydration
+      order: [],
       caches: ['localStorage'],
       lookupLocalStorage: 'i18nextLng',
-      // Disable automatic detection on init to prevent hydration issues
       checkWhitelist: false,
     } as any,
     react: {
@@ -51,8 +52,8 @@ if (!i18n.isInitialized) {
   // Apply language from localStorage AFTER initialization and hydration
   // This ensures server and client render the same initial content
   if (typeof window !== 'undefined') {
-    // Use requestAnimationFrame to ensure this runs after React hydration
-    requestAnimationFrame(() => {
+    // Wait for DOM to be ready and React hydration to complete
+    const applyLanguage = () => {
       try {
         const stored = localStorage.getItem('i18nextLng');
         if (stored && ['en', 'ru', 'kk'].includes(stored) && stored !== i18n.language) {
@@ -69,7 +70,22 @@ if (!i18n.isInitialized) {
         // Ignore localStorage errors (private mode, etc.)
         console.warn('Failed to load language from localStorage:', error);
       }
-    });
+    };
+
+    // Use multiple strategies to ensure this runs after React hydration
+    // React hydration typically completes within 100-500ms after DOMContentLoaded
+    const waitForHydration = () => {
+      // Wait longer to ensure React has fully hydrated
+      setTimeout(applyLanguage, 300);
+    };
+
+    if (document.readyState === 'loading') {
+      // Document is still loading, wait for DOMContentLoaded then hydration
+      document.addEventListener('DOMContentLoaded', waitForHydration, { once: true });
+    } else if (document.readyState === 'interactive' || document.readyState === 'complete') {
+      // Document is ready, just wait for React hydration
+      waitForHydration();
+    }
   }
 }
 
