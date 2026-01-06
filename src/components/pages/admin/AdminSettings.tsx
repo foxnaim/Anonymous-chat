@@ -51,7 +51,7 @@ const AdminSettings = () => {
     },
   });
 
-  // Синхронизируем язык с API только если он отличается от localStorage
+  // Синхронизируем язык с API только один раз при первой загрузке настроек
   // Приоритет у localStorage, так как пользователь мог изменить язык в другом месте
   useEffect(() => {
     // Пропускаем синхронизацию если идет изменение языка или нет настроек
@@ -59,33 +59,34 @@ const AdminSettings = () => {
       return;
     }
 
-    // Используем setTimeout чтобы избежать проблем с ре-рендерингом во время рендеринга
-    const timeoutId = setTimeout(() => {
-      try {
-        const storedLang = typeof window !== 'undefined' ? localStorage.getItem('i18nextLng') : null;
-        const currentLang = i18nInstance.language?.split('-')[0] || 'ru'; // Убираем регион (ru-RU -> ru)
-        
-        // Если есть сохраненный язык в localStorage, используем его (приоритет)
-        if (storedLang && ['en', 'ru', 'kk'].includes(storedLang) && storedLang !== currentLang) {
-          i18nInstance.changeLanguage(storedLang);
-          return;
-        }
-        
-        // Если нет в localStorage, но есть в API и отличается от текущего - используем из API
-        if (!storedLang && settings.language !== currentLang && ['en', 'ru', 'kk'].includes(settings.language)) {
+    // Синхронизируем только один раз при монтировании, чтобы избежать бесконечных циклов
+    const storedLang = typeof window !== 'undefined' ? localStorage.getItem('i18nextLng') : null;
+    const currentLang = i18nInstance.language?.split('-')[0] || 'ru';
+    
+    // Если есть сохраненный язык в localStorage, он уже должен быть установлен при инициализации i18n
+    // Поэтому просто проверяем, что он совпадает
+    if (storedLang && ['en', 'ru', 'kk'].includes(storedLang)) {
+      // Язык уже должен быть правильным из localStorage
+      return;
+    }
+    
+    // Если нет в localStorage, но есть в API - используем из API (только один раз)
+    if (!storedLang && settings.language !== currentLang && ['en', 'ru', 'kk'].includes(settings.language)) {
+      // Используем requestIdleCallback или setTimeout для отложенного выполнения
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        requestIdleCallback(() => {
           i18nInstance.changeLanguage(settings.language);
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('i18nextLng', settings.language);
-          }
-        }
-      } catch (error) {
-        console.error('Error syncing language:', error);
+          localStorage.setItem('i18nextLng', settings.language);
+        });
+      } else {
+        setTimeout(() => {
+          i18nInstance.changeLanguage(settings.language);
+          localStorage.setItem('i18nextLng', settings.language);
+        }, 100);
       }
-    }, 0);
-
-    return () => clearTimeout(timeoutId);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings?.language, isLanguageChanging]); // Добавляем isLanguageChanging, чтобы не конфликтовать с пользовательским изменением
+  }, []); // Запускаем только один раз при монтировании
 
   const handlePasswordChange = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
