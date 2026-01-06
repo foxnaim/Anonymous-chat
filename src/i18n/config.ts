@@ -59,11 +59,23 @@ if (!i18n.isInitialized) {
     });
 
   // Ensure language is persisted in localStorage after initialization
+  // Используем setTimeout чтобы избежать проблем с SSR и hydration
   if (typeof window !== 'undefined') {
-    const currentLang = i18n.language.split('-')[0];
-    if (['en', 'ru', 'kk'].includes(currentLang)) {
-      localStorage.setItem('i18nextLng', currentLang);
-    }
+    setTimeout(() => {
+      try {
+        const currentLang = i18n.language?.split('-')[0] || 'ru';
+        if (['en', 'ru', 'kk'].includes(currentLang)) {
+          const stored = localStorage.getItem('i18nextLng');
+          // Сохраняем только если еще не сохранен или отличается
+          if (!stored || stored !== currentLang) {
+            localStorage.setItem('i18nextLng', currentLang);
+          }
+        }
+      } catch (error) {
+        // Игнорируем ошибки localStorage (например, в приватном режиме)
+        console.warn('Failed to persist language to localStorage:', error);
+      }
+    }, 0);
   }
 }
 
