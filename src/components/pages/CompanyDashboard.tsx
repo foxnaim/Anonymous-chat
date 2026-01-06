@@ -62,16 +62,26 @@ const CompanyDashboard = () => {
 
   // Генерация ежедневного буквенно-цифрового пароля на основе даты (UTC, чтобы совпадало с бэкендом)
   // Пароль автоматически обновляется каждый день
-  // Используем текущую дату как зависимость, чтобы пароль пересчитывался при смене дня
-  const currentDate = React.useMemo(() => {
+  // Используем useState с функцией-инициализатором, чтобы избежать проблем с hydration
+  const getCurrentDate = () => {
+    if (typeof window === 'undefined') return '';
     const today = new Date();
     return `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, '0')}-${String(today.getUTCDate()).padStart(2, '0')}`;
-  }, []);
+  };
 
   // Обновляем дату каждый день через интервал
-  const [dateKey, setDateKey] = React.useState(currentDate);
+  const [dateKey, setDateKey] = React.useState(() => getCurrentDate());
+  const [mounted, setMounted] = React.useState(false);
   
   React.useEffect(() => {
+    // Устанавливаем mounted после монтирования компонента
+    setMounted(true);
+    // Устанавливаем правильную дату после монтирования
+    const initialDate = getCurrentDate();
+    if (initialDate) {
+      setDateKey(initialDate);
+    }
+    
     // Проверяем изменение даты каждую минуту (для надежности)
     const interval = setInterval(() => {
       const today = new Date();
@@ -85,8 +95,10 @@ const CompanyDashboard = () => {
   }, [dateKey]);
 
   const dailyPassword = React.useMemo(() => {
-    const today = new Date();
-    const dateStr = `${today.getUTCFullYear()}${String(today.getUTCMonth() + 1).padStart(2, '0')}${String(today.getUTCDate()).padStart(2, '0')}`;
+    // Только вычисляем пароль после монтирования, чтобы избежать hydration mismatch
+    if (!mounted || !dateKey) return '';
+    
+    const dateStr = dateKey.replace(/-/g, '');
     
     // Создаем seed на основе даты для детерминированной генерации
     const seed = dateStr.split('').reduce((acc, char) => ((acc << 5) - acc) + char.charCodeAt(0), 0);
@@ -104,7 +116,7 @@ const CompanyDashboard = () => {
     }
     
     return password;
-  }, []); // Пароль пересчитывается автоматически при каждом рендере, так как дата вычисляется внутри
+  }, [mounted, dateKey]);
 
   // Ссылка для отправки сообщений
   const shareLink = React.useMemo(() => {
@@ -339,10 +351,11 @@ const CompanyDashboard = () => {
                         <label className="text-xs sm:text-sm font-medium text-muted-foreground">{t("company.passwordForSendingMessages")}</label>
                         <div className="flex items-center gap-2">
                           <Input
-                            value={showSensitiveData ? dailyPassword : '••••••••••'}
+                            value={showSensitiveData && dailyPassword ? dailyPassword : '••••••••••'}
                             readOnly
                             className="font-mono text-xs sm:text-sm h-9 sm:h-10 min-w-0 flex-1"
                             autoComplete="off"
+                            suppressHydrationWarning
                           />
                           <Button
                             variant="outline"

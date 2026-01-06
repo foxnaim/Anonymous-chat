@@ -10,20 +10,22 @@ import kk from './locales/kk.json';
 
 if (!i18n.isInitialized) {
   // Determine initial language: always 'ru' on server, detect from localStorage on client
+  // IMPORTANT: Never access navigator or localStorage during SSR to prevent hydration mismatches
   const getInitialLanguage = (): string => {
     if (typeof window === 'undefined') {
       return 'ru'; // Server-side: always use 'ru'
     }
     // Client-side: try to get from localStorage immediately (synchronously)
-    const stored = localStorage.getItem('i18nextLng');
-    if (stored && ['en', 'ru', 'kk'].includes(stored)) {
-      return stored;
+    try {
+      const stored = localStorage.getItem('i18nextLng');
+      if (stored && ['en', 'ru', 'kk'].includes(stored)) {
+        return stored;
+      }
+    } catch (e) {
+      // localStorage might not be available (private mode, etc.)
     }
-    // Fallback to browser language or 'ru'
-    const browserLang = navigator.language.split('-')[0];
-    if (['en', 'ru', 'kk'].includes(browserLang)) {
-      return browserLang;
-    }
+    // Always default to 'ru' to match server-side rendering
+    // Browser language detection will happen after hydration via LanguageDetector
     return 'ru';
   };
 
@@ -52,6 +54,8 @@ if (!i18n.isInitialized) {
         order: ['localStorage', 'navigator'],
         caches: ['localStorage'],
         lookupLocalStorage: 'i18nextLng',
+        // Only detect on client side, not during SSR
+        checkWhitelist: true,
       },
       react: {
         useSuspense: false, // Disable suspense to prevent hydration issues

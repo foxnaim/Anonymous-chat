@@ -23,10 +23,13 @@ const ThemeInitializer = ({ children }: { children: ReactNode }) => {
   const initialized = useRef(false);
   
   useEffect(() => {
+    // Убеждаемся, что мы на клиенте
+    if (typeof window === 'undefined') return;
+    
     // При первой загрузке принудительно устанавливаем светлую тему
     // Используем requestIdleCallback для неблокирующей установки темы
     if (!initialized.current && theme !== 'light') {
-      if ('requestIdleCallback' in window) {
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
         requestIdleCallback(() => {
           setTheme('light');
           initialized.current = true;
