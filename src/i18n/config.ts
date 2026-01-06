@@ -3,6 +3,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import type { InitOptions } from 'i18next';
 
 import en from './locales/en.json';
 import ru from './locales/ru.json';
@@ -29,37 +30,39 @@ if (!i18n.isInitialized) {
     return 'ru';
   };
 
+  const initOptions: InitOptions = {
+    resources: {
+      en: { translation: en },
+      ru: { translation: ru },
+      kk: { translation: kk },
+    },
+    lng: getInitialLanguage(),
+    fallbackLng: 'ru',
+    supportedLngs: ['en', 'ru', 'kk'],
+    defaultNS: 'translation',
+    interpolation: {
+      escapeValue: false,
+      formatSeparator: ',',
+      format: function(value: any, format?: string) {
+        if (format === 'uppercase') return value.toUpperCase();
+        if (format === 'lowercase') return value.toLowerCase();
+        return value;
+      }
+    },
+    detection: {
+      order: ['localStorage', 'navigator'],
+      caches: ['localStorage'],
+      lookupLocalStorage: 'i18nextLng',
+    } as any,
+    react: {
+      useSuspense: false, // Disable suspense to prevent hydration issues
+    },
+  };
+
   i18n
     .use(LanguageDetector)
     .use(initReactI18next)
-    .init({
-      resources: {
-        en: { translation: en },
-        ru: { translation: ru },
-        kk: { translation: kk },
-      },
-      lng: getInitialLanguage(),
-      fallbackLng: 'ru',
-      supportedLngs: ['en', 'ru', 'kk'],
-      defaultNS: 'translation',
-      interpolation: {
-        escapeValue: false,
-        formatSeparator: ',',
-        format: function(value, format) {
-          if (format === 'uppercase') return value.toUpperCase();
-          if (format === 'lowercase') return value.toLowerCase();
-          return value;
-        }
-      },
-      detection: {
-        order: ['localStorage', 'navigator'],
-        caches: ['localStorage'],
-        lookupLocalStorage: 'i18nextLng',
-      },
-      react: {
-        useSuspense: false, // Disable suspense to prevent hydration issues
-      },
-    });
+    .init(initOptions);
 
   // Ensure language is persisted in localStorage after initialization
   // Используем setTimeout чтобы избежать проблем с SSR и hydration
