@@ -10,33 +10,15 @@ import ru from './locales/ru.json';
 import kk from './locales/kk.json';
 
 if (!i18n.isInitialized) {
-  // Determine initial language: always 'ru' on server, detect from localStorage on client
-  // IMPORTANT: Never access navigator or localStorage during SSR to prevent hydration mismatches
-  const getInitialLanguage = (): string => {
-    if (typeof window === 'undefined') {
-      return 'ru'; // Server-side: always use 'ru'
-    }
-    // Client-side: try to get from localStorage immediately (synchronously)
-    try {
-      const stored = localStorage.getItem('i18nextLng');
-      if (stored && ['en', 'ru', 'kk'].includes(stored)) {
-        return stored;
-      }
-    } catch (e) {
-      // localStorage might not be available (private mode, etc.)
-    }
-    // Always default to 'ru' to match server-side rendering
-    // Browser language detection will happen after hydration via LanguageDetector
-    return 'ru';
-  };
-
+  // CRITICAL: Always use 'ru' for initial render to prevent hydration mismatches
+  // Language detection will happen AFTER hydration is complete
   const initOptions: InitOptions = {
     resources: {
       en: { translation: en },
       ru: { translation: ru },
       kk: { translation: kk },
     },
-    lng: getInitialLanguage(),
+    lng: 'ru', // Always start with 'ru' to match server-side rendering
     fallbackLng: 'ru',
     supportedLngs: ['en', 'ru', 'kk'],
     defaultNS: 'translation',
@@ -53,6 +35,8 @@ if (!i18n.isInitialized) {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
       lookupLocalStorage: 'i18nextLng',
+      // Disable automatic detection on init to prevent hydration issues
+      checkWhitelist: false,
     } as any,
     react: {
       useSuspense: false, // Disable suspense to prevent hydration issues
@@ -64,24 +48,28 @@ if (!i18n.isInitialized) {
     .use(initReactI18next)
     .init(initOptions);
 
-  // Ensure language is persisted in localStorage after initialization
-  // Используем setTimeout чтобы избежать проблем с SSR и hydration
+  // Apply language from localStorage AFTER initialization and hydration
+  // This ensures server and client render the same initial content
   if (typeof window !== 'undefined') {
-    setTimeout(() => {
+    // Use requestAnimationFrame to ensure this runs after React hydration
+    requestAnimationFrame(() => {
       try {
-        const currentLang = i18n.language?.split('-')[0] || 'ru';
-        if (['en', 'ru', 'kk'].includes(currentLang)) {
-          const stored = localStorage.getItem('i18nextLng');
-          // Сохраняем только если еще не сохранен или отличается
-          if (!stored || stored !== currentLang) {
-            localStorage.setItem('i18nextLng', currentLang);
+        const stored = localStorage.getItem('i18nextLng');
+        if (stored && ['en', 'ru', 'kk'].includes(stored) && stored !== i18n.language) {
+          i18n.changeLanguage(stored);
+        } else {
+          // If no stored language, try to detect from navigator
+          const browserLang = navigator.language?.split('-')[0] || 'ru';
+          if (['en', 'ru', 'kk'].includes(browserLang) && browserLang !== 'ru') {
+            i18n.changeLanguage(browserLang);
+            localStorage.setItem('i18nextLng', browserLang);
           }
         }
       } catch (error) {
-        // Игнорируем ошибки localStorage (например, в приватном режиме)
-        console.warn('Failed to persist language to localStorage:', error);
+        // Ignore localStorage errors (private mode, etc.)
+        console.warn('Failed to load language from localStorage:', error);
       }
-    }, 0);
+    });
   }
 }
 
