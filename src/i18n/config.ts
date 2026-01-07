@@ -2,21 +2,20 @@
 
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
 import type { InitOptions } from 'i18next';
 
 import en from './locales/en.json';
 import ru from './locales/ru.json';
 import kk from './locales/kk.json';
 
-if (!i18n.isInitialized) {
-  // Helper function to normalize language code (e.g., 'ru-RU' -> 'ru')
-  const normalizeLang = (lang: string | null | undefined): string => {
-    if (!lang) return 'ru';
-    const code = lang.split('-')[0].toLowerCase();
-    return ['en', 'ru', 'kk'].includes(code) ? code : 'ru';
-  };
+// Helper function to normalize language code (e.g., 'ru-RU' -> 'ru')
+const normalizeLang = (lang: string | null | undefined): string => {
+  if (!lang) return 'ru';
+  const code = lang.split('-')[0].toLowerCase();
+  return ['en', 'ru', 'kk'].includes(code) ? code : 'ru';
+};
 
+if (!i18n.isInitialized) {
   // Get initial language: read from localStorage on client, default to 'ru' on server
   // This ensures consistent initial render while preserving user preference
   let initialLanguage = 'ru';
@@ -51,44 +50,21 @@ if (!i18n.isInitialized) {
         return value;
       }
     },
-    detection: {
-      // Disable automatic detection to prevent hydration mismatches
-      // Language is set manually from localStorage
-      order: [],
-      caches: ['localStorage'],
-      lookupLocalStorage: 'i18nextLng',
-      checkWhitelist: false,
-    } as any,
     react: {
       useSuspense: false, // Disable suspense to prevent hydration issues
     },
   };
 
+  // Initialize i18n WITHOUT LanguageDetector to have full control
   i18n
-    .use(LanguageDetector)
     .use(initReactI18next)
     .init(initOptions);
 
-  // Listen for language changes and save to localStorage
+  // Ensure language is saved to localStorage after initialization
   if (typeof window !== 'undefined') {
-    const normalizeLang = (lang: string | null | undefined): string => {
-      if (!lang) return 'ru';
-      const code = lang.split('-')[0].toLowerCase();
-      return ['en', 'ru', 'kk'].includes(code) ? code : 'ru';
-    };
-
-    i18n.on('languageChanged', (lng) => {
-      try {
-        const langCode = normalizeLang(lng);
-        localStorage.setItem('i18nextLng', langCode);
-      } catch (error) {
-        console.warn('Failed to save language to localStorage:', error);
-      }
-    });
-
-    // Ensure language is saved if not already saved
+    // Save initial language immediately
     try {
-      const currentLang = normalizeLang(i18n.language);
+      const currentLang = normalizeLang(initialLanguage);
       const stored = localStorage.getItem('i18nextLng');
       const normalizedStored = normalizeLang(stored);
       
@@ -99,6 +75,36 @@ if (!i18n.isInitialized) {
     } catch (error) {
       console.warn('Failed to save initial language to localStorage:', error);
     }
+  }
+
+  // Listen for language changes and save to localStorage
+  if (typeof window !== 'undefined') {
+    // Set up listener for language changes - this ensures language is always saved
+    i18n.on('languageChanged', (lng) => {
+      try {
+        const langCode = normalizeLang(lng);
+        // Always save to localStorage when language changes
+        localStorage.setItem('i18nextLng', langCode);
+      } catch (error) {
+        console.warn('Failed to save language to localStorage:', error);
+      }
+    });
+
+    // Override changeLanguage to ensure language is always saved
+    const originalChangeLanguage = i18n.changeLanguage.bind(i18n);
+    i18n.changeLanguage = function(lng: string | string[], ...args: any[]) {
+      const result = originalChangeLanguage(lng, ...args);
+      // Ensure language is saved after change
+      if (typeof window !== 'undefined') {
+        try {
+          const langCode = normalizeLang(typeof lng === 'string' ? lng : lng[0]);
+          localStorage.setItem('i18nextLng', langCode);
+        } catch (error) {
+          console.warn('Failed to save language to localStorage:', error);
+        }
+      }
+      return result;
+    };
   }
 }
 
