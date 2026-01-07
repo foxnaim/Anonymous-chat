@@ -77,6 +77,7 @@ export interface GrowthMetrics {
     responseSpeed: number;
     activityBonus: number;
     achievementsBonus: number;
+    praiseBonus: number;
   };
   nextLevel?: {
     current: number;
