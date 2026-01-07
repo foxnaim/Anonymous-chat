@@ -293,7 +293,11 @@ const AdminCompanies = () => {
   });
 
   const { mutateAsync: updateStatus, isPending: isUpdatingStatus } = useUpdateCompanyStatus({
-    onSuccess: async () => {
+    onSuccess: async (updatedCompany) => {
+      // Обновляем selectedCompany сразу с новыми данными
+      if (selectedCompany && getCompanyId(selectedCompany) === getCompanyId(updatedCompany)) {
+        setSelectedCompany(updatedCompany);
+      }
       await refetch();
       setIsStatusModalOpen(false);
       toast.success(t("common.success"));

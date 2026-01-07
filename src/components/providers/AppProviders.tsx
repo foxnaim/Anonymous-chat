@@ -9,13 +9,32 @@ import { SessionProvider } from "./SessionProvider";
 // AuthProvider удален - используем Redux auth
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import "@/i18n/config";
+import { restoreLanguageFromStorage } from "@/i18n/config";
 // Подавление ошибок Chrome-расширений
 import "@/lib/utils/suppressExtensionErrors";
 
 import { FullscreenProvider } from "./FullscreenProvider";
 import { NextAuthSync } from "./NextAuthSync";
 import { SessionChecker } from "./SessionChecker";
+
+// Компонент для восстановления языка из localStorage после гидратации
+const LanguageRestorer = ({ children }: { children: ReactNode }) => {
+  const restored = useRef(false);
+  
+  useEffect(() => {
+    // Восстанавливаем язык из localStorage после гидратации
+    // Это предотвращает ошибки гидратации, так как начальный рендер всегда с 'ru'
+    if (!restored.current) {
+      // Используем requestAnimationFrame для гарантии, что React завершил гидратацию
+      requestAnimationFrame(() => {
+        restoreLanguageFromStorage();
+        restored.current = true;
+      });
+    }
+  }, []);
+
+  return <>{children}</>;
+};
 
 // Компонент для принудительной установки светлой темы при первой загрузке
 const ThemeInitializer = ({ children }: { children: ReactNode }) => {
@@ -55,20 +74,22 @@ interface AppProvidersProps {
 const AppProviders = ({ children }: AppProvidersProps) => (
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
     <ThemeInitializer>
-      <SessionProvider>
-        <ReduxProvider>
-          <QueryProvider>
-            <SessionChecker />
-            <FullscreenProvider>
-              <NextAuthSync />
-              <TooltipProvider>
-                {children}
-                <Toaster />
-              </TooltipProvider>
-            </FullscreenProvider>
-          </QueryProvider>
-        </ReduxProvider>
-      </SessionProvider>
+      <LanguageRestorer>
+        <SessionProvider>
+          <ReduxProvider>
+            <QueryProvider>
+              <SessionChecker />
+              <FullscreenProvider>
+                <NextAuthSync />
+                <TooltipProvider>
+                  {children}
+                  <Toaster />
+                </TooltipProvider>
+              </FullscreenProvider>
+            </QueryProvider>
+          </ReduxProvider>
+        </SessionProvider>
+      </LanguageRestorer>
     </ThemeInitializer>
   </ThemeProvider>
 );

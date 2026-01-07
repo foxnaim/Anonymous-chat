@@ -9,35 +9,25 @@ import ru from './locales/ru.json';
 import kk from './locales/kk.json';
 
 // Helper function to normalize language code (e.g., 'ru-RU' -> 'ru')
-const normalizeLang = (lang: string | null | undefined): string => {
+export const normalizeLang = (lang: string | null | undefined): string => {
   if (!lang) return 'ru';
   const code = lang.split('-')[0].toLowerCase();
   return ['en', 'ru', 'kk'].includes(code) ? code : 'ru';
 };
 
-if (!i18n.isInitialized) {
-  // Get initial language: read from localStorage on client, default to 'ru' on server
-  // This ensures consistent initial render while preserving user preference
-  let initialLanguage = 'ru';
-  if (typeof window !== 'undefined') {
-    try {
-      const stored = localStorage.getItem('i18nextLng');
-      if (stored) {
-        initialLanguage = normalizeLang(stored);
-      }
-    } catch (error) {
-      // Ignore localStorage errors (private mode, etc.)
-      console.warn('Failed to read language from localStorage:', error);
-    }
-  }
+// Flag to track if language was restored after hydration
+let languageRestored = false;
 
+if (!i18n.isInitialized) {
+  // CRITICAL: Always use 'ru' for initial render to prevent hydration mismatches
+  // The actual language from localStorage will be applied AFTER hydration via useEffect
   const initOptions: InitOptions = {
     resources: {
       en: { translation: en },
       ru: { translation: ru },
       kk: { translation: kk },
     },
-    lng: initialLanguage, // Use stored language or 'ru' as fallback
+    lng: 'ru', // Always start with 'ru' to match server-side rendering
     fallbackLng: 'ru',
     supportedLngs: ['en', 'ru', 'kk'],
     defaultNS: 'translation',
@@ -60,38 +50,36 @@ if (!i18n.isInitialized) {
     .use(initReactI18next)
     .init(initOptions);
 
-  // Ensure language is saved to localStorage after initialization
-  if (typeof window !== 'undefined') {
-    // Save initial language immediately
-    try {
-      const currentLang = normalizeLang(initialLanguage);
-      const stored = localStorage.getItem('i18nextLng');
-      const normalizedStored = normalizeLang(stored);
-      
-      // Save if not stored or if stored language doesn't match current
-      if (!stored || normalizedStored !== currentLang) {
-        localStorage.setItem('i18nextLng', currentLang);
-      }
-    } catch (error) {
-      console.warn('Failed to save initial language to localStorage:', error);
-    }
-  }
-
   // Listen for language changes and save to localStorage
   if (typeof window !== 'undefined') {
-    // Set up listener for language changes - this ensures language is always saved
     i18n.on('languageChanged', (lng) => {
       try {
         const langCode = normalizeLang(lng);
-        // Always save to localStorage when language changes
         localStorage.setItem('i18nextLng', langCode);
       } catch (error) {
         console.warn('Failed to save language to localStorage:', error);
       }
     });
-
   }
 }
+
+// Function to restore language from localStorage - call this AFTER hydration
+export const restoreLanguageFromStorage = (): void => {
+  if (typeof window === 'undefined' || languageRestored) return;
+  
+  try {
+    const stored = localStorage.getItem('i18nextLng');
+    if (stored) {
+      const normalizedStored = normalizeLang(stored);
+      if (normalizedStored !== i18n.language) {
+        i18n.changeLanguage(normalizedStored);
+      }
+    }
+    languageRestored = true;
+  } catch (error) {
+    console.warn('Failed to restore language from localStorage:', error);
+  }
+};
 
 export default i18n;
 

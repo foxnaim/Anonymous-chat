@@ -889,15 +889,106 @@ export const useUpdateCompany = (options?: UseMutationOptions<Company, Error, { 
  */
 export const useUpdateCompanyStatus = (options?: UseMutationOptions<Company, Error, { id: string | number; status: Company["status"] }>) => {
   const queryClient = useQueryClient();
-  
-  return useMutation({
+  const userOnSuccess = options?.onSuccess;
+  const userOnError = options?.onError;
+  const userOnMutate = options?.onMutate;
+  const { onSuccess: _, onError: __, onMutate: ___, ...rest } = options ?? {};
+
+  type UpdateStatusContext = {
+    previousData: Array<[QueryKey, Company[] | undefined]>;
+  };
+
+  return useMutation<Company, Error, { id: string | number; status: Company["status"] }, UpdateStatusContext>({
     mutationFn: ({ id, status }) => companyService.updateStatus(id, status),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.companies });
-      queryClient.invalidateQueries({ queryKey: queryKeys.company(data.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.companyByCode(data.code) });
+
+    onMutate: async (variables) => {
+      // Отменяем исходящие запросы
+      await queryClient.cancelQueries({ queryKey: queryKeys.companies, exact: false });
+
+      // Сохраняем предыдущее состояние
+      const previousData = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
+
+      // Нормализуем ID
+      const targetIdStr = String(variables.id).trim();
+
+      // Оптимистично обновляем статус в кэше
+      queryClient.setQueriesData<Company[]>(
+        { queryKey: queryKeys.companies, exact: false },
+        (oldData) => {
+          if (!oldData || !Array.isArray(oldData)) {
+            return oldData;
+          }
+
+          return oldData.map(company => {
+            const companyId = company.id ? String(company.id).trim() : null;
+            const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
+
+            if (companyId === targetIdStr || company_id === targetIdStr) {
+              return { ...company, status: variables.status };
+            }
+            return company;
+          });
+        }
+      );
+
+      if (userOnMutate) {
+        (userOnMutate as any)(variables);
+      }
+
+      return { previousData };
     },
-    ...options,
+
+    onSuccess: (data, variables, context, mutation) => {
+      // Обновляем кэш с реальными данными от сервера
+      queryClient.setQueriesData<Company[]>(
+        { queryKey: queryKeys.companies, exact: false },
+        (oldData) => {
+          if (!oldData || !Array.isArray(oldData)) {
+            return oldData;
+          }
+
+          return oldData.map(company => {
+            const companyId = company.id ? String(company.id).trim() : null;
+            const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
+            const dataId = data.id ? String(data.id).trim() : null;
+            const data_id = (data as any)._id ? String((data as any)._id).trim() : null;
+
+            if (companyId === dataId || companyId === data_id || company_id === dataId || company_id === data_id) {
+              return data;
+            }
+            return company;
+          });
+        }
+      );
+
+      // Обновляем отдельные запросы для компании
+      queryClient.setQueryData(queryKeys.company(data.id), data);
+      queryClient.setQueryData(queryKeys.companyByCode(data.code), data);
+
+      // Инвалидируем для фоновой синхронизации
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies, refetchType: 'none' });
+      queryClient.invalidateQueries({ queryKey: queryKeys.company(data.id), refetchType: 'none' });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companyByCode(data.code), refetchType: 'none' });
+
+      if (userOnSuccess) {
+        (userOnSuccess as any)(data, variables, context, mutation);
+      }
+    },
+
+    onError: (error, variables, context, mutation) => {
+      // Откатываем изменения при ошибке
+      if (context?.previousData) {
+        context.previousData.forEach(([key, old]) => {
+          queryClient.setQueryData<Company[] | undefined>(key, old);
+        });
+      }
+
+      if (userOnError) {
+        (userOnError as any)(error, variables, context, mutation);
+      }
+    },
+
+    ...rest,
   });
 };
 
