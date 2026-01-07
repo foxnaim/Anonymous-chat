@@ -64,9 +64,10 @@ export const useCompanies = (page?: number, limit?: number, options?: Omit<UseQu
       }
       return result as Company[];
     },
-    staleTime: 1000 * 60 * 2, // 2 минуты - компании не меняются часто
+    staleTime: 1000 * 60 * 5, // 5 минут - чтобы не затирать оптимистичные обновления
     gcTime: 1000 * 60 * 10, // 10 минут в кэше
-    refetchOnMount: false, // Используем кэш для быстрого старта
+    structuralSharing: false, // Отключаем structural sharing для гарантии перерендера
+    refetchOnWindowFocus: false, // Не обновлять при фокусе окна
     ...options,
   });
 };
@@ -961,6 +962,8 @@ export const useUpdateCompanyStatus = (options?: UseMutationOptions<Company, Err
       queryClient.setQueryData(queryKeys.company(data.id), { ...data });
       queryClient.setQueryData(queryKeys.companyByCode(data.code), { ...data });
 
+      // НЕ делаем refetch - бэкенд может вернуть устаревшие данные и затереть оптимистичное обновление
+
       if (userOnSuccess) {
         (userOnSuccess as any)(data, variables, context, mutation);
       }
@@ -1063,6 +1066,8 @@ export const useUpdateCompanyPlan = (options?: UseMutationOptions<Company, Error
       // Обновляем отдельные запросы для компании
       queryClient.setQueryData(queryKeys.company(data.id), { ...data });
       queryClient.setQueryData(queryKeys.companyByCode(data.code), { ...data });
+
+      // НЕ делаем refetch - бэкенд может вернуть устаревшие данные и затереть оптимистичное обновление
 
       if (userOnSuccess) {
         (userOnSuccess as any)(data, variables, context, mutation);

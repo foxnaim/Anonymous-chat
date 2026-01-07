@@ -187,18 +187,12 @@ const AdminPanel = () => {
   });
 
   const { mutateAsync: updateStatus, isPending: isUpdatingStatus } = useUpdateCompanyStatus({
-    onSuccess: async () => {
-      await refetch();
-    },
     onError: (error: Error) => {
       toast.error(error.message || t("common.error"));
     },
   });
 
   const { mutateAsync: updatePlan, isPending: isUpdatingPlan } = useUpdateCompanyPlan({
-    onSuccess: async () => {
-      await refetch();
-    },
     onError: (error: Error) => {
       toast.error(error.message || t("admin.planUpdateError"));
     },
