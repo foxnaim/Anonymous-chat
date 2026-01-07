@@ -215,6 +215,7 @@ export const statsService = {
           responseSpeed: 0,
           activityBonus: 0,
           achievementsBonus: 0,
+          praiseBonus: 0,
         },
       };
     }
