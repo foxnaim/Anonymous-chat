@@ -911,15 +911,10 @@ export const useUpdateCompanyStatus = (options?: UseMutationOptions<Company, Err
       // Нормализуем ID
       const targetIdStr = String(variables.id).trim();
 
-      // Оптимистично обновляем статус в кэше
-      queryClient.setQueriesData<Company[]>(
-        { queryKey: queryKeys.companies, exact: false },
-        (oldData) => {
-          if (!oldData || !Array.isArray(oldData)) {
-            return oldData;
-          }
-
-          return oldData.map(company => {
+      // Оптимистично обновляем статус в кэше - создаём НОВЫЙ массив
+      previousData.forEach(([key, oldData]) => {
+        if (oldData && Array.isArray(oldData)) {
+          const newData = oldData.map(company => {
             const companyId = company.id ? String(company.id).trim() : null;
             const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
 
@@ -928,8 +923,10 @@ export const useUpdateCompanyStatus = (options?: UseMutationOptions<Company, Err
             }
             return company;
           });
+          // Устанавливаем новый массив напрямую
+          queryClient.setQueryData<Company[]>(key, [...newData]);
         }
-      );
+      });
 
       if (userOnMutate) {
         (userOnMutate as any)(variables);
@@ -939,36 +936,30 @@ export const useUpdateCompanyStatus = (options?: UseMutationOptions<Company, Err
     },
 
     onSuccess: (data, variables, context, mutation) => {
-      // Обновляем кэш с реальными данными от сервера
-      queryClient.setQueriesData<Company[]>(
-        { queryKey: queryKeys.companies, exact: false },
-        (oldData) => {
-          if (!oldData || !Array.isArray(oldData)) {
-            return oldData;
-          }
+      const dataId = data.id ? String(data.id).trim() : null;
+      const data_id = (data as any)._id ? String((data as any)._id).trim() : null;
 
-          return oldData.map(company => {
+      // Обновляем кэш с реальными данными от сервера - создаём НОВЫЙ массив
+      const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
+      allQueries.forEach(([key, oldData]) => {
+        if (oldData && Array.isArray(oldData)) {
+          const newData = oldData.map(company => {
             const companyId = company.id ? String(company.id).trim() : null;
             const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
-            const dataId = data.id ? String(data.id).trim() : null;
-            const data_id = (data as any)._id ? String((data as any)._id).trim() : null;
 
             if (companyId === dataId || companyId === data_id || company_id === dataId || company_id === data_id) {
-              return data;
+              return { ...data }; // Создаём новый объект
             }
             return company;
           });
+          // Устанавливаем новый массив напрямую
+          queryClient.setQueryData<Company[]>(key, [...newData]);
         }
-      );
+      });
 
       // Обновляем отдельные запросы для компании
-      queryClient.setQueryData(queryKeys.company(data.id), data);
-      queryClient.setQueryData(queryKeys.companyByCode(data.code), data);
-
-      // Инвалидируем для фоновой синхронизации
-      queryClient.invalidateQueries({ queryKey: queryKeys.companies, refetchType: 'none' });
-      queryClient.invalidateQueries({ queryKey: queryKeys.company(data.id), refetchType: 'none' });
-      queryClient.invalidateQueries({ queryKey: queryKeys.companyByCode(data.code), refetchType: 'none' });
+      queryClient.setQueryData(queryKeys.company(data.id), { ...data });
+      queryClient.setQueryData(queryKeys.companyByCode(data.code), { ...data });
 
       if (userOnSuccess) {
         (userOnSuccess as any)(data, variables, context, mutation);
@@ -1019,15 +1010,10 @@ export const useUpdateCompanyPlan = (options?: UseMutationOptions<Company, Error
       // Нормализуем ID
       const targetIdStr = String(variables.id).trim();
 
-      // Оптимистично обновляем план в кэше
-      queryClient.setQueriesData<Company[]>(
-        { queryKey: queryKeys.companies, exact: false },
-        (oldData) => {
-          if (!oldData || !Array.isArray(oldData)) {
-            return oldData;
-          }
-
-          return oldData.map(company => {
+      // Оптимистично обновляем план в кэше - создаём НОВЫЙ массив
+      previousData.forEach(([key, oldData]) => {
+        if (oldData && Array.isArray(oldData)) {
+          const newData = oldData.map(company => {
             const companyId = company.id ? String(company.id).trim() : null;
             const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
 
@@ -1040,8 +1026,10 @@ export const useUpdateCompanyPlan = (options?: UseMutationOptions<Company, Error
             }
             return company;
           });
+          // Устанавливаем новый массив напрямую
+          queryClient.setQueryData<Company[]>(key, [...newData]);
         }
-      );
+      });
 
       if (userOnMutate) {
         (userOnMutate as any)(variables);
@@ -1051,36 +1039,30 @@ export const useUpdateCompanyPlan = (options?: UseMutationOptions<Company, Error
     },
 
     onSuccess: (data, variables, context, mutation) => {
-      // Обновляем кэш с реальными данными от сервера
-      queryClient.setQueriesData<Company[]>(
-        { queryKey: queryKeys.companies, exact: false },
-        (oldData) => {
-          if (!oldData || !Array.isArray(oldData)) {
-            return oldData;
-          }
+      const dataId = data.id ? String(data.id).trim() : null;
+      const data_id = (data as any)._id ? String((data as any)._id).trim() : null;
 
-          return oldData.map(company => {
+      // Обновляем кэш с реальными данными от сервера - создаём НОВЫЙ массив
+      const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
+      allQueries.forEach(([key, oldData]) => {
+        if (oldData && Array.isArray(oldData)) {
+          const newData = oldData.map(company => {
             const companyId = company.id ? String(company.id).trim() : null;
             const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
-            const dataId = data.id ? String(data.id).trim() : null;
-            const data_id = (data as any)._id ? String((data as any)._id).trim() : null;
 
             if (companyId === dataId || companyId === data_id || company_id === dataId || company_id === data_id) {
-              return data;
+              return { ...data }; // Создаём новый объект
             }
             return company;
           });
+          // Устанавливаем новый массив напрямую
+          queryClient.setQueryData<Company[]>(key, [...newData]);
         }
-      );
+      });
 
       // Обновляем отдельные запросы для компании
-      queryClient.setQueryData(queryKeys.company(data.id), data);
-      queryClient.setQueryData(queryKeys.companyByCode(data.code), data);
-
-      // Инвалидируем для фоновой синхронизации
-      queryClient.invalidateQueries({ queryKey: queryKeys.companies, refetchType: 'none' });
-      queryClient.invalidateQueries({ queryKey: queryKeys.company(data.id), refetchType: 'none' });
-      queryClient.invalidateQueries({ queryKey: queryKeys.companyByCode(data.code), refetchType: 'none' });
+      queryClient.setQueryData(queryKeys.company(data.id), { ...data });
+      queryClient.setQueryData(queryKeys.companyByCode(data.code), { ...data });
 
       if (userOnSuccess) {
         (userOnSuccess as any)(data, variables, context, mutation);

@@ -231,14 +231,18 @@ const AdminPanel = () => {
   }, []);
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case t("admin.active"):
-        return "bg-success text-white"; /* Green */
-      case t("admin.blocked"):
-        return "bg-accent text-white"; /* #F64C72 */
-      default:
-        return "bg-muted text-muted-foreground"; /* #99738E */
+    // Сравниваем с реальными значениями статусов из БД, а не с переводами
+    const normalizedStatus = String(status).trim();
+    if (normalizedStatus === COMPANY_STATUS.ACTIVE || normalizedStatus === "Активна") {
+      return "bg-success text-white"; /* Green */
     }
+    if (normalizedStatus === COMPANY_STATUS.BLOCKED || normalizedStatus === "Заблокирована") {
+      return "bg-accent text-white"; /* #F64C72 */
+    }
+    if (normalizedStatus === COMPANY_STATUS.TRIAL || normalizedStatus === "Пробная") {
+      return "bg-muted text-muted-foreground"; /* #99738E */
+    }
+    return "bg-muted text-muted-foreground";
   };
 
   // Автовыбор первой компании при загрузке и после фильтра / поиска (только для десктопа)
