@@ -38,7 +38,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AdminHeader } from "@/components/AdminHeader";
-import { useCompanies, useCreateCompany, useDeleteCompany, usePlans, companyService } from "@/lib/query";
+import { useCompanies, useCreateCompany, useDeleteCompany, usePlans, useUpdateCompanyStatus, useUpdateCompanyPlan } from "@/lib/query";
 import { getTranslatedValue } from "@/lib/utils/translations";
 import { toast } from "sonner";
 import type { CompanyStatus, PlanType } from "@/types";
@@ -183,6 +183,24 @@ const AdminPanel = () => {
     },
     onError: (error: Error) => {
       toast.error(error.message || t("common.error"));
+    },
+  });
+
+  const { mutateAsync: updateStatus, isPending: isUpdatingStatus } = useUpdateCompanyStatus({
+    onSuccess: async () => {
+      await refetch();
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t("common.error"));
+    },
+  });
+
+  const { mutateAsync: updatePlan, isPending: isUpdatingPlan } = useUpdateCompanyPlan({
+    onSuccess: async () => {
+      await refetch();
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t("admin.planUpdateError"));
     },
   });
 
@@ -569,14 +587,10 @@ const AdminPanel = () => {
                     <Button
                       className="w-full"
                       variant="destructive"
+                      disabled={isUpdatingStatus}
                       onClick={async () => {
-                        try {
-                          await companyService.updateStatus(selectedCompanyData.id, COMPANY_STATUS.BLOCKED);
-                          toast.success(t("admin.companyBlocked"));
-                          refetch();
-                        } catch (error) {
-                          toast.error(t("admin.blockError"));
-                        }
+                        await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.BLOCKED });
+                        toast.success(t("admin.companyBlocked"));
                       }}
                     >
                       {t("admin.blockCompany")}
@@ -584,14 +598,10 @@ const AdminPanel = () => {
                   ) : selectedCompanyData.status === COMPANY_STATUS.BLOCKED ? (
                     <Button
                       className="w-full"
+                      disabled={isUpdatingStatus}
                       onClick={async () => {
-                        try {
-                          await companyService.updateStatus(selectedCompanyData.id, COMPANY_STATUS.ACTIVE);
-                          toast.success(t("admin.companyActivated"));
-                          refetch();
-                        } catch (error) {
-                          toast.error(t("admin.activateError"));
-                        }
+                        await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.ACTIVE });
+                        toast.success(t("admin.companyActivated"));
                       }}
                     >
                       {t("admin.activateCompany")}
@@ -599,14 +609,10 @@ const AdminPanel = () => {
                   ) : selectedCompanyData.status === COMPANY_STATUS.TRIAL ? (
                     <Button
                       className="w-full"
+                      disabled={isUpdatingStatus}
                       onClick={async () => {
-                        try {
-                          await companyService.updateStatus(selectedCompanyData.id, COMPANY_STATUS.ACTIVE);
-                          toast.success(t("admin.companyActivated"));
-                          refetch();
-                        } catch (error) {
-                          toast.error(t("admin.activateError"));
-                        }
+                        await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.ACTIVE });
+                        toast.success(t("admin.companyActivated"));
                       }}
                     >
                       {t("admin.activateCompany")}
@@ -802,15 +808,11 @@ const AdminPanel = () => {
                               <Button
                                 className="w-full"
                                 variant="destructive"
+                                disabled={isUpdatingStatus}
                                 onClick={async () => {
-                                  try {
-                                    await companyService.updateStatus(selectedCompanyData.id, COMPANY_STATUS.BLOCKED);
-                                    toast.success(t("admin.companyBlocked"));
-                                    setSelectedCompanyId(null);
-                                    refetch();
-                                  } catch (error) {
-                                    toast.error(t("admin.blockError"));
-                                  }
+                                  await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.BLOCKED });
+                                  toast.success(t("admin.companyBlocked"));
+                                  setSelectedCompanyId(null);
                                 }}
                               >
                                 {t("admin.blockCompany")}
@@ -818,15 +820,11 @@ const AdminPanel = () => {
                             ) : selectedCompanyData.status === COMPANY_STATUS.BLOCKED ? (
                               <Button
                                 className="w-full"
+                                disabled={isUpdatingStatus}
                                 onClick={async () => {
-                                  try {
-                                    await companyService.updateStatus(selectedCompanyData.id, COMPANY_STATUS.ACTIVE);
-                                    toast.success(t("admin.companyActivated"));
-                                    setSelectedCompanyId(null);
-                                    refetch();
-                                  } catch (error) {
-                                    toast.error(t("admin.activateError"));
-                                  }
+                                  await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.ACTIVE });
+                                  toast.success(t("admin.companyActivated"));
+                                  setSelectedCompanyId(null);
                                 }}
                               >
                                 {t("admin.activateCompany")}
@@ -834,15 +832,11 @@ const AdminPanel = () => {
                             ) : selectedCompanyData.status === COMPANY_STATUS.TRIAL ? (
                               <Button
                                 className="w-full"
+                                disabled={isUpdatingStatus}
                                 onClick={async () => {
-                                  try {
-                                    await companyService.updateStatus(selectedCompanyData.id, COMPANY_STATUS.ACTIVE);
-                                    toast.success(t("admin.companyActivated"));
-                                    setSelectedCompanyId(null);
-                                    refetch();
-                                  } catch (error) {
-                                    toast.error(t("admin.activateError"));
-                                  }
+                                  await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.ACTIVE });
+                                  toast.success(t("admin.companyActivated"));
+                                  setSelectedCompanyId(null);
                                 }}
                               >
                                 {t("admin.activateCompany")}
@@ -1255,15 +1249,11 @@ const AdminPanel = () => {
                             <Button
                               className="w-full"
                               variant="destructive"
+                              disabled={isUpdatingStatus}
                               onClick={async () => {
-                                try {
-                                  await companyService.updateStatus(selectedCompanyData.id, COMPANY_STATUS.BLOCKED);
-                                  toast.success(t("admin.companyBlocked"));
-                                  setIsViewOpen(false);
-                                  refetch();
-                                } catch (error) {
-                                  toast.error(t("admin.blockError"));
-                                }
+                                await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.BLOCKED });
+                                toast.success(t("admin.companyBlocked"));
+                                setIsViewOpen(false);
                               }}
                             >
                               {t("admin.blockCompany")}
@@ -1271,15 +1261,11 @@ const AdminPanel = () => {
                           ) : selectedCompanyData.status === COMPANY_STATUS.BLOCKED ? (
                             <Button
                               className="w-full"
+                              disabled={isUpdatingStatus}
                               onClick={async () => {
-                                try {
-                                  await companyService.updateStatus(selectedCompanyData.id, COMPANY_STATUS.ACTIVE);
-                                  toast.success(t("admin.companyActivated"));
-                                  setIsViewOpen(false);
-                                  refetch();
-                                } catch (error) {
-                                  toast.error(t("admin.activateError"));
-                                }
+                                await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.ACTIVE });
+                                toast.success(t("admin.companyActivated"));
+                                setIsViewOpen(false);
                               }}
                             >
                               {t("admin.activateCompany")}
@@ -1287,15 +1273,11 @@ const AdminPanel = () => {
                           ) : selectedCompanyData.status === COMPANY_STATUS.TRIAL ? (
                             <Button
                               className="w-full"
+                              disabled={isUpdatingStatus}
                               onClick={async () => {
-                                try {
-                                  await companyService.updateStatus(selectedCompanyData.id, COMPANY_STATUS.ACTIVE);
-                                  toast.success(t("admin.companyActivated"));
-                                  setIsViewOpen(false);
-                                  refetch();
-                                } catch (error) {
-                                  toast.error(t("admin.activateError"));
-                                }
+                                await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.ACTIVE });
+                                toast.success(t("admin.companyActivated"));
+                                setIsViewOpen(false);
                               }}
                             >
                               {t("admin.activateCompany")}
@@ -1412,28 +1394,24 @@ const AdminPanel = () => {
                     </Button>
                     <Button
                       className="flex-1"
+                      disabled={isUpdatingPlan}
                       onClick={async () => {
                         if (!selectedCompanyId || !selectedPlan) {
                           toast.error(t("common.fillAllFields"));
                           return;
                         }
-                        try {
-                          await companyService.updatePlan(
-                            selectedCompanyId,
-                            selectedPlan as PlanType,
-                            planEndDate || undefined
-                          );
-                          toast.success(t("admin.planUpdated"));
-                          setIsPlanModalOpen(false);
-                          setSelectedPlan("");
-                          setPlanEndDate("");
-                          refetch();
-                        } catch (error) {
-                          toast.error(t("admin.planUpdateError"));
-                        }
+                        await updatePlan({
+                          id: selectedCompanyId,
+                          plan: selectedPlan as PlanType,
+                          planEndDate: planEndDate || undefined
+                        });
+                        toast.success(t("admin.planUpdated"));
+                        setIsPlanModalOpen(false);
+                        setSelectedPlan("");
+                        setPlanEndDate("");
                       }}
                     >
-                      {t("common.save")}
+                      {isUpdatingPlan ? t("common.loading") : t("common.save")}
                     </Button>
                   </div>
                 </Dialog.Panel>
