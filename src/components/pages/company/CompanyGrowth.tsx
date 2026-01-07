@@ -8,21 +8,59 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { FiAward, FiStar, FiMessageSquare, FiCheckCircle, FiClock, FiHelpCircle } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
-import { useGrowthMetrics, useGroupedAchievements } from "@/lib/query";
+import { useGrowthMetrics, useGroupedAchievements, useCompanyStats, useMessages, useCompany } from "@/lib/query";
 import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
 
 const CompanyGrowth = () => {
   const { isFullscreen } = useFullscreenContext();
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { data: company } = useCompany(user?.companyId || 0, {
+    enabled: !!user?.companyId,
+  });
   const { data: metrics, isLoading: isLoadingMetrics } = useGrowthMetrics(user?.companyId || 0, {
     enabled: !!user?.companyId,
   });
   const { data: groupedAchievements = [], isLoading: isLoadingAchievements } = useGroupedAchievements(user?.companyId || 0, {
     enabled: !!user?.companyId,
   });
+  const { data: stats, isLoading: isLoadingStats } = useCompanyStats(user?.companyId || 0, {
+    enabled: !!user?.companyId,
+  });
+  const { data: messages = [], isLoading: isLoadingMessages } = useMessages(company?.code || null);
   
-  const isLoading = isLoadingMetrics || isLoadingAchievements;
+  const isLoading = isLoadingMetrics || isLoadingAchievements || isLoadingStats || isLoadingMessages;
+
+  // Вычисляем реальную статистику
+  const totalMessages = metrics?.pointsBreakdown?.totalMessages || messages.length || 0;
+  const resolvedCount = stats?.resolved || 0;
+  const totalProblems = (stats?.new || 0) + (stats?.inProgress || 0) + (stats?.resolved || 0);
+  const resolvedPercent = totalProblems > 0 ? Math.round((resolvedCount / totalProblems) * 100) : 0;
+  
+  // Вычисляем среднее время ответа
+  const getAverageResponseTime = () => {
+    const messagesWithResponse = messages.filter(m => m.companyResponse && m.updatedAt);
+    if (messagesWithResponse.length === 0) return 0;
+    
+    let totalHours = 0;
+    messagesWithResponse.forEach(msg => {
+      const created = new Date(msg.createdAt);
+      const updated = new Date(msg.updatedAt!);
+      totalHours += (updated.getTime() - created.getTime()) / (1000 * 60 * 60);
+    });
+    
+    const avgHours = totalHours / messagesWithResponse.length;
+    return Math.round(avgHours / 24 * 10) / 10; // В днях с 1 знаком после запятой
+  };
+  
+  const avgResponseDays = getAverageResponseTime();
+  
+  // Сообщений за текущий месяц
+  const currentMonthMessages = messages.filter(m => {
+    const date = new Date(m.createdAt);
+    const now = new Date();
+    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+  }).length;
 
   const getRatingDescription = (rating: number) => {
     if (rating >= 8) {
@@ -193,8 +231,8 @@ const CompanyGrowth = () => {
                       </div>
                       <p className="text-xs font-medium text-muted-foreground">{t("company.totalReviews")}</p>
                     </div>
-                    <p className="text-3xl font-bold mb-1" style={{ color: 'hsl(var(--primary))' }}>127</p>
-                    <p className="text-xs font-semibold" style={{ color: 'hsl(var(--primary))' }}>+12 {t("company.perMonth")}</p>
+                    <p className="text-3xl font-bold mb-1" style={{ color: 'hsl(var(--primary))' }}>{totalMessages}</p>
+                    <p className="text-xs font-semibold" style={{ color: 'hsl(var(--primary))' }}>+{currentMonthMessages} {t("company.perMonth")}</p>
                   </div>
                 </Card>
                 <Card className="p-6 border-border shadow-lg relative overflow-hidden w-full" style={{ background: 'linear-gradient(to bottom right, hsl(var(--success) / 0.08), hsl(var(--success) / 0.03))' }}>
@@ -206,8 +244,8 @@ const CompanyGrowth = () => {
                       </div>
                       <p className="text-xs font-medium text-muted-foreground">{t("company.resolvedProblems")}</p>
                     </div>
-                    <p className="text-3xl font-bold mb-1" style={{ color: 'hsl(var(--success))' }}>89</p>
-                    <p className="text-xs font-semibold" style={{ color: 'hsl(var(--success))' }}>70% {t("company.resolved")}</p>
+                    <p className="text-3xl font-bold mb-1" style={{ color: 'hsl(var(--success))' }}>{resolvedCount}</p>
+                    <p className="text-xs font-semibold" style={{ color: 'hsl(var(--success))' }}>{resolvedPercent}% {t("company.resolved")}</p>
                   </div>
                 </Card>
                 <Card className="p-6 border-border shadow-lg relative overflow-hidden w-full" style={{ background: 'linear-gradient(to bottom right, hsl(var(--secondary) / 0.08), hsl(var(--secondary) / 0.03))' }}>
@@ -219,7 +257,7 @@ const CompanyGrowth = () => {
                       </div>
                       <p className="text-xs font-medium text-muted-foreground">{t("company.averageResponse")}</p>
                     </div>
-                    <p className="text-3xl font-bold mb-1" style={{ color: 'hsl(var(--secondary))' }}>2.5</p>
+                    <p className="text-3xl font-bold mb-1" style={{ color: 'hsl(var(--secondary))' }}>{avgResponseDays || "—"}</p>
                     <p className="text-xs font-semibold" style={{ color: 'hsl(var(--secondary))' }}>{t("company.days")}</p>
                   </div>
                 </Card>
