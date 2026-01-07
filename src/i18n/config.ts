@@ -90,21 +90,6 @@ if (!i18n.isInitialized) {
       }
     });
 
-    // Override changeLanguage to ensure language is always saved
-    const originalChangeLanguage = i18n.changeLanguage.bind(i18n);
-    i18n.changeLanguage = function(lng: string | string[], ...args: any[]) {
-      const result = originalChangeLanguage(lng, ...args);
-      // Ensure language is saved after change
-      if (typeof window !== 'undefined') {
-        try {
-          const langCode = normalizeLang(typeof lng === 'string' ? lng : lng[0]);
-          localStorage.setItem('i18nextLng', langCode);
-        } catch (error) {
-          console.warn('Failed to save language to localStorage:', error);
-        }
-      }
-      return result;
-    };
   }
 }
 
