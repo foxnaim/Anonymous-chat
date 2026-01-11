@@ -117,6 +117,8 @@ const AdminCompanies = () => {
   const [selectedPlan, setSelectedPlan] = useState<PlanType>("Пробный");
   const [planEndDate, setPlanEndDate] = useState<string>("");
   const [showCreatePassword, setShowCreatePassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const getCompanyId = (company?: Company | null) =>
     (company as any)?.id || (company as any)?._id || "";
@@ -359,6 +361,9 @@ const AdminCompanies = () => {
       messagesLimit: 10,
       storageLimit: 1,
     });
+    setConfirmPassword("");
+    setShowCreatePassword(false);
+    setShowConfirmPassword(false);
   };
 
   const filteredCompanies = companies.filter((company) => {
@@ -407,13 +412,19 @@ const AdminCompanies = () => {
   };
 
   const handleCreate = async () => {
-    if (!newCompany.name || !newCompany.adminEmail || !newCompany.code || !newCompany.password) {
+    if (!newCompany.name || !newCompany.adminEmail || !newCompany.code || !newCompany.password || !confirmPassword) {
       toast.error(t("common.fillAllFields"));
       return;
     }
 
     if (newCompany.code.length !== 8) {
       toast.error(t("auth.companyCodeLength"));
+      return;
+    }
+
+    // Проверка совпадения паролей
+    if (newCompany.password !== confirmPassword) {
+      toast.error(t("auth.passwordMismatch"));
       return;
     }
 
@@ -992,7 +1003,7 @@ const AdminCompanies = () => {
                           setNewCompany({ ...newCompany, password: e.target.value })
                         }
                         autoComplete="new-password"
-                        placeholder="Минимум 6 символов"
+                        placeholder="Минимум 8 символов"
                         minLength={8}
                         className="pr-10"
                       />
@@ -1003,6 +1014,32 @@ const AdminCompanies = () => {
                         aria-label={showCreatePassword ? "Скрыть пароль" : "Показать пароль"}
                       >
                         {showCreatePassword ? (
+                          <FiEyeOff className="h-5 w-5" />
+                        ) : (
+                          <FiEye className="h-5 w-5" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <Label>{t("auth.confirmPassword")}</Label>
+                    <div className="relative">
+                      <Input
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        autoComplete="new-password"
+                        placeholder={t("auth.confirmPassword")}
+                        minLength={8}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowConfirmPassword((v) => !v)}
+                        aria-label={showConfirmPassword ? "Скрыть пароль" : "Показать пароль"}
+                      >
+                        {showConfirmPassword ? (
                           <FiEyeOff className="h-5 w-5" />
                         ) : (
                           <FiEye className="h-5 w-5" />
