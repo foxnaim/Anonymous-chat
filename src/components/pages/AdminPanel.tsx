@@ -26,6 +26,8 @@ import {
   FiCheck,
   FiTrash2,
   FiRefreshCw,
+  FiEye,
+  FiEyeOff,
 } from "react-icons/fi";
 import {
   AlertDialog,
@@ -76,6 +78,9 @@ const AdminPanel = () => {
     password: "",
     plan: "Пробный" as (typeof PLAN_OPTIONS)[number],
   });
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const getStatusLabel = (status: CompanyStatus) => {
     const value = String(status).toLowerCase();
@@ -292,7 +297,16 @@ const AdminPanel = () => {
                 </p>
               </div>
               <Button size="sm" className="w-full sm:w-auto" onClick={() => {
-                setNewCompany((prev) => ({ ...prev, code: generateCode() }));
+                setNewCompany({
+                  name: "",
+                  adminEmail: "",
+                  code: generateCode(),
+                  password: "",
+                  plan: "Пробный",
+                });
+                setConfirmPassword("");
+                setShowCreatePassword(false);
+                setShowConfirmPassword(false);
                 setIsCreateOpen(true);
               }}>
                 <FiPlus className="h-4 w-4 mr-2" />
@@ -895,8 +909,19 @@ const AdminPanel = () => {
           onClose={(value) => {
             if (!isCreating) {
               setIsCreateOpen(value);
-              // Управляем фокусом при закрытии
+              // Сбрасываем форму при закрытии
               if (!value) {
+                setNewCompany({
+                  name: "",
+                  adminEmail: "",
+                  code: generateCode(),
+                  password: "",
+                  plan: "Пробный",
+                });
+                setConfirmPassword("");
+                setShowCreatePassword(false);
+                setShowConfirmPassword(false);
+                // Управляем фокусом при закрытии
                 requestAnimationFrame(() => {
                   const activeElement = document.activeElement as HTMLElement;
                   if (activeElement && activeElement !== document.body && activeElement.blur) {
@@ -937,8 +962,13 @@ const AdminPanel = () => {
                   <form
                     onSubmit={async (e) => {
                       e.preventDefault();
-                      if (!newCompany.name.trim() || !newCompany.adminEmail.trim() || newCompany.code.length !== 8 || !newCompany.password.trim()) {
+                      if (!newCompany.name.trim() || !newCompany.adminEmail.trim() || newCompany.code.length !== 8 || !newCompany.password.trim() || !confirmPassword.trim()) {
                         toast.error(t("common.fillAllFields") || "Заполните все поля");
+                        return;
+                      }
+                      // Проверка совпадения паролей
+                      if (newCompany.password !== confirmPassword) {
+                        toast.error(t("auth.passwordMismatch"));
                         return;
                       }
                       // Проверка надежности пароля
@@ -962,6 +992,9 @@ const AdminPanel = () => {
                         password: "",
                         plan: "Пробный",
                       });
+                      setConfirmPassword("");
+                      setShowCreatePassword(false);
+                      setShowConfirmPassword(false);
                     }}
                   >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1017,15 +1050,55 @@ const AdminPanel = () => {
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm text-foreground">{t("admin.password")}</label>
-                      <input
-                        type="password"
-                        className="w-full p-2 border rounded-md bg-background"
-                        value={newCompany.password}
-                        onChange={(e) => setNewCompany({ ...newCompany, password: e.target.value })}
-                        placeholder={t("admin.passwordMinLengthPlaceholder")}
-                        minLength={8}
-                        autoComplete="new-password"
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showCreatePassword ? "text" : "password"}
+                          value={newCompany.password}
+                          onChange={(e) => setNewCompany({ ...newCompany, password: e.target.value })}
+                          placeholder={t("admin.passwordMinLengthPlaceholder") || "Минимум 8 символов"}
+                          minLength={8}
+                          autoComplete="new-password"
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
+                          onClick={() => setShowCreatePassword((v) => !v)}
+                          aria-label={showCreatePassword ? "Скрыть пароль" : "Показать пароль"}
+                        >
+                          {showCreatePassword ? (
+                            <FiEyeOff className="h-5 w-5" />
+                          ) : (
+                            <FiEye className="h-5 w-5" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm text-foreground">{t("auth.confirmPassword")}</label>
+                      <div className="relative">
+                        <Input
+                          type={showConfirmPassword ? "text" : "password"}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder={t("auth.confirmPassword")}
+                          minLength={8}
+                          autoComplete="new-password"
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
+                          onClick={() => setShowConfirmPassword((v) => !v)}
+                          aria-label={showConfirmPassword ? "Скрыть пароль" : "Показать пароль"}
+                        >
+                          {showConfirmPassword ? (
+                            <FiEyeOff className="h-5 w-5" />
+                          ) : (
+                            <FiEye className="h-5 w-5" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                   <div className="flex justify-end gap-3 pt-2 mt-4">
