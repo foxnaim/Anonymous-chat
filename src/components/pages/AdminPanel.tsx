@@ -275,6 +275,34 @@ const AdminPanel = () => {
   // Для мобильных: определяем, показывать ли модальное окно (только при явном выборе)
   const shouldShowMobileModal = selectedCompanyId !== null && isMobile;
 
+  // Функция для вычисления дней до истечения тарифа
+  const calculateDaysUntilExpiry = (trialEndDate?: string): { days: number; expired: boolean } | null => {
+    if (!trialEndDate) return null;
+    try {
+      const endDate = new Date(trialEndDate);
+      const now = new Date();
+      const diffTime = endDate.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return {
+        days: diffDays > 0 ? diffDays : 0,
+        expired: diffDays <= 0
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  // Функция для получения правильной формы слова "день/дня/дней"
+  const getDaysText = (days: number): string => {
+    if (days === 1) return t("admin.day");
+    if (days > 1 && days < 5) return t("admin.days2");
+    return t("admin.days");
+  };
+
+  const expiryInfo = selectedCompanyData?.trialEndDate 
+    ? calculateDaysUntilExpiry(selectedCompanyData.trialEndDate)
+    : null;
+
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden">
       <AdminHeader />
@@ -648,26 +676,31 @@ const AdminPanel = () => {
                 key={`usage-${selectedCompanyData?.id ?? "none"}`}
                 className="p-4 bg-muted transition"
               >
-              <h5 className="font-semibold text-sm mb-3">{t("admin.usageStats")}</h5>
+              <h5 className="font-semibold text-sm mb-3">{t("admin.tariffExpiry")}</h5>
               <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-muted-foreground">{t("admin.messagesThisMonth")}</span>
-                    <span className="font-semibold">
-                      {selectedCompanyData?.messagesThisMonth ?? "—"} / {selectedCompanyData?.messagesLimit ?? "—"}
-                    </span>
+                {expiryInfo ? (
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-muted-foreground">{t("admin.daysUntilExpiry")}</span>
+                      <span className={`font-semibold ${expiryInfo.expired ? "text-destructive" : ""}`}>
+                        {expiryInfo.expired ? (
+                          <Badge variant="destructive" className="text-xs">
+                            {t("admin.tariffExpired")}
+                          </Badge>
+                        ) : (
+                          t("admin.daysRemaining", { 
+                            count: expiryInfo.days, 
+                            days: getDaysText(expiryInfo.days) 
+                          })
+                        )}
+                      </span>
+                    </div>
                   </div>
-                  <div className="h-2 bg-background rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-primary" 
-                      style={{ 
-                        width: selectedCompanyData?.messagesLimit 
-                          ? `${Math.min(100, Math.round(((selectedCompanyData.messagesThisMonth || 0) / selectedCompanyData.messagesLimit) * 100))}%` 
-                          : "0%" 
-                      }}
-                    ></div>
+                ) : (
+                  <div className="text-sm text-muted-foreground">
+                    {t("admin.noExpiryDate") || "Дата окончания не установлена"}
                   </div>
-                </div>
+                )}
               </div>
             </Card>
           </aside>
@@ -809,6 +842,38 @@ const AdminPanel = () => {
                                 <span className="text-sm text-muted-foreground">{t("admin.registration")}</span>
                                 <span className="text-sm font-semibold">{selectedCompanyData.registered}</span>
                               </div>
+                            </div>
+                          </Card>
+
+                          <Card
+                            key={`usage-mobile-${selectedCompanyData?.id ?? "none"}`}
+                            className="p-4 bg-muted transition"
+                          >
+                            <h5 className="font-semibold text-sm mb-3">{t("admin.tariffExpiry")}</h5>
+                            <div className="space-y-3">
+                              {expiryInfo ? (
+                                <div>
+                                  <div className="flex justify-between text-sm mb-1">
+                                    <span className="text-muted-foreground">{t("admin.daysUntilExpiry")}</span>
+                                    <span className={`font-semibold ${expiryInfo.expired ? "text-destructive" : ""}`}>
+                                      {expiryInfo.expired ? (
+                                        <Badge variant="destructive" className="text-xs">
+                                          {t("admin.tariffExpired")}
+                                        </Badge>
+                                      ) : (
+                                        t("admin.daysRemaining", { 
+                                          count: expiryInfo.days, 
+                                          days: getDaysText(expiryInfo.days) 
+                                        })
+                                      )}
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-sm text-muted-foreground">
+                                  {t("admin.noExpiryDate") || "Дата окончания не установлена"}
+                                </div>
+                              )}
                             </div>
                           </Card>
 
