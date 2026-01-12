@@ -31,10 +31,7 @@ const AdminPlans = () => {
 
   const { data: plans = [], isLoading, refetch } = usePlans();
   const queryClient = useQueryClient();
-  const freeDaysNum = Number(
-    freePlanSettings.freePeriodDays === "" ? 0 : freePlanSettings.freePeriodDays
-  );
-
+  
   const getDaysLabel = (count: number) => {
     const lang = i18n.language;
     if (lang === "en") {
@@ -49,6 +46,10 @@ const AdminPlans = () => {
     return "дней";
   };
 
+  // Вычисляем значения динамически, чтобы они обновлялись при изменении состояния
+  const freeDaysNum = Number(
+    freePlanSettings.freePeriodDays === "" ? 0 : freePlanSettings.freePeriodDays
+  );
   const freeDaysLabel = getDaysLabel(freeDaysNum);
 
   // Загружаем настройки бесплатного плана при монтировании
