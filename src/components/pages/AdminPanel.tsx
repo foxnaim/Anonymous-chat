@@ -617,7 +617,7 @@ const AdminPanel = () => {
                         className="h-7 w-7"
                         onClick={() => {
                           // Проверяем, может ли пользователь редактировать план
-                          if (user?.role === "admin" && user?.role !== "super_admin" && isTrialPlan(selectedCompanyData.plan)) {
+                          if (user?.role === "admin" && isTrialPlan(selectedCompanyData.plan)) {
                             toast.error(t("admin.cannotEditTrialPlan") || "Обычные админы не могут редактировать пробный/бесплатный план");
                             return;
                           }
@@ -1486,7 +1486,7 @@ const AdminPanel = () => {
                           {plans
                             .filter((plan) => {
                               // Обычные админы не могут выбирать пробные/бесплатные планы
-                              if (user?.role === "admin" && user?.role !== "super_admin") {
+                              if (user?.role === "admin") {
                                 const planName = getTranslatedValue(plan.name);
                                 return !isTrialPlan(planName);
                               }
@@ -1540,12 +1540,12 @@ const AdminPanel = () => {
                         // Проверяем, может ли пользователь редактировать план
                         const company = getCompanyById(selectedCompanyId);
                         if (company) {
-                          if (user?.role === "admin" && user?.role !== "super_admin" && isTrialPlan(company.plan)) {
+                          if (user?.role === "admin" && isTrialPlan(company.plan)) {
                             toast.error(t("admin.cannotEditTrialPlan") || "Обычные админы не могут редактировать пробный/бесплатный план");
                             return;
                           }
                           // Проверяем, не пытается ли обычный админ установить пробный план
-                          if (user?.role === "admin" && user?.role !== "super_admin" && isTrialPlan(selectedPlan)) {
+                          if (user?.role === "admin" && isTrialPlan(selectedPlan)) {
                             toast.error(t("admin.cannotEditTrialPlan") || "Обычные админы не могут редактировать пробный/бесплатный план");
                             return;
                           }
