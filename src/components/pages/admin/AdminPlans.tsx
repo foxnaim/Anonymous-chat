@@ -64,12 +64,18 @@ const AdminPlans = () => {
 
   const { mutate: updateFreePlan } = useMutation({
     mutationFn: plansService.updateFreePlanSettings,
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success(t("admin.freePlanSettingsUpdated"));
       setIsFreePlanSettingsOpen(false);
       // Инвалидируем кэш планов и настроек бесплатного плана
       queryClient.invalidateQueries({ queryKey: queryKeys.plans });
       queryClient.invalidateQueries({ queryKey: queryKeys.freePlanSettings });
+      // Обновляем локальное состояние после успешного сохранения
+      const updatedSettings = await plansService.getFreePlanSettings();
+      setFreePlanSettings({
+        messagesLimit: updatedSettings.messagesLimit ?? 10,
+        freePeriodDays: updatedSettings.freePeriodDays ?? 60,
+      });
       refetch();
     },
     onError: () => {
@@ -145,11 +151,19 @@ const AdminPlans = () => {
                         </div>
                       </div>
                       <div className="mb-4">
-                        {isFree && plan.freePeriodDays ? (
+                        {isFree && (plan.freePeriodDays || freePlanSettings.freePeriodDays !== "") ? (
                           <div className="flex flex-col">
-                            <p className="text-3xl font-bold text-foreground mb-1">
-                              {plan.freePeriodDays} {getDaysLabel(Number(plan.freePeriodDays || 0))}
-                            </p>
+                            {(() => {
+                              // Используем значение из локального состояния, если оно было изменено, иначе из данных плана
+                              const displayDays = freePlanSettings.freePeriodDays !== "" 
+                                ? freeDaysNum 
+                                : Number(plan.freePeriodDays || 0);
+                              return (
+                                <p className="text-3xl font-bold text-foreground mb-1">
+                                  {displayDays} {getDaysLabel(displayDays)}
+                                </p>
+                              );
+                            })()}
                             <p className="text-sm text-muted-foreground">{t("admin.trialAccessLabel")}</p>
                           </div>
                         ) : (
