@@ -544,6 +544,8 @@
     "dataExported": "Data exported",
     "deleteCompany": "Delete Company",
     "deleteCompanyWarning": "Are you sure you want to delete this company? This action cannot be undone. All company data will be permanently deleted.",
+    "blockCompanyWarning": "Are you sure you want to block this company? The company will not be able to use the service until unblocked.",
+    "unblockCompanyWarning": "Are you sure you want to unblock this company? The company will be able to use the service again.",
     "companyDeleted": "Company deleted successfully",
     "companyCreated": "Company created successfully",
     "overview": "Overview",

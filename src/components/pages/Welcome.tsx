@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FiMessageSquare, FiCheckCircle, FiSend, FiLogIn, FiHome, FiX, FiKey, FiHash, FiEye, FiEyeOff, FiSearch, FiUserPlus, FiChevronDown, FiLayout } from "react-icons/fi";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/lib/redux";
@@ -38,6 +38,7 @@ export interface WelcomeProps {
 
 function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
   const { t } = useTranslation();
+  const router = useRouter();
   const searchParams = useSearchParams(); // Get search params from URL
   const { isAuthenticated, user } = useAuth();
   const { isAuthenticated: isNextAuthAuthenticated, session } = useNextAuth();
@@ -208,10 +209,19 @@ function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
                 
                 // Показываем кнопку только для пользователей с ролью admin, super_admin или company
                 if (hasValidAuth && currentUser && (currentUser.role === "admin" || currentUser.role === "super_admin" || currentUser.role === "company")) {
+                  const handleControlPanelClick = () => {
+                    if (currentUser.role === "admin" || currentUser.role === "super_admin") {
+                      router.push("/admin");
+                    } else if (currentUser.role === "company") {
+                      router.push("/company");
+                    }
+                  };
+                  
                   return (
                     <Button 
                       variant="ghost" 
                       className="h-8 sm:h-9 md:h-10 text-[10px] sm:text-xs md:text-sm min-w-[100px] sm:min-w-[120px] md:min-w-[140px] px-2 sm:px-3"
+                      onClick={handleControlPanelClick}
                     >
                       <FiLayout className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       <span className="truncate">{t("common.controlPanel")}</span>

@@ -65,6 +65,8 @@ const AdminPanel = () => {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isBlockDialogOpen, setIsBlockDialogOpen] = useState(false);
+  const [isUnblockDialogOpen, setIsUnblockDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [planEndDate, setPlanEndDate] = useState<string>("");
   const detailCloseRef = useRef<HTMLButtonElement | null>(null);
@@ -600,9 +602,8 @@ const AdminPanel = () => {
                       className="w-full"
                       variant="destructive"
                       disabled={isUpdatingStatus}
-                      onClick={async () => {
-                        await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.BLOCKED });
-                        toast.success(t("admin.companyBlocked"));
+                      onClick={() => {
+                        setIsBlockDialogOpen(true);
                       }}
                     >
                       {t("admin.blockCompany")}
@@ -611,9 +612,8 @@ const AdminPanel = () => {
                     <Button
                       className="w-full"
                       disabled={isUpdatingStatus}
-                      onClick={async () => {
-                        await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.ACTIVE });
-                        toast.success(t("admin.companyActivated"));
+                      onClick={() => {
+                        setIsUnblockDialogOpen(true);
                       }}
                     >
                       {t("admin.activateCompany")}
@@ -622,9 +622,8 @@ const AdminPanel = () => {
                     <Button
                       className="w-full"
                       disabled={isUpdatingStatus}
-                      onClick={async () => {
-                        await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.ACTIVE });
-                        toast.success(t("admin.companyActivated"));
+                      onClick={() => {
+                        setIsUnblockDialogOpen(true);
                       }}
                     >
                       {t("admin.activateCompany")}
@@ -821,10 +820,8 @@ const AdminPanel = () => {
                                 className="w-full"
                                 variant="destructive"
                                 disabled={isUpdatingStatus}
-                                onClick={async () => {
-                                  await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.BLOCKED });
-                                  toast.success(t("admin.companyBlocked"));
-                                  setSelectedCompanyId(null);
+                                onClick={() => {
+                                  setIsBlockDialogOpen(true);
                                 }}
                               >
                                 {t("admin.blockCompany")}
@@ -833,10 +830,8 @@ const AdminPanel = () => {
                               <Button
                                 className="w-full"
                                 disabled={isUpdatingStatus}
-                                onClick={async () => {
-                                  await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.ACTIVE });
-                                  toast.success(t("admin.companyActivated"));
-                                  setSelectedCompanyId(null);
+                                onClick={() => {
+                                  setIsUnblockDialogOpen(true);
                                 }}
                               >
                                 {t("admin.activateCompany")}
@@ -845,10 +840,8 @@ const AdminPanel = () => {
                               <Button
                                 className="w-full"
                                 disabled={isUpdatingStatus}
-                                onClick={async () => {
-                                  await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.ACTIVE });
-                                  toast.success(t("admin.companyActivated"));
-                                  setSelectedCompanyId(null);
+                                onClick={() => {
+                                  setIsUnblockDialogOpen(true);
                                 }}
                               >
                                 {t("admin.activateCompany")}
@@ -1321,10 +1314,8 @@ const AdminPanel = () => {
                               className="w-full"
                               variant="destructive"
                               disabled={isUpdatingStatus}
-                              onClick={async () => {
-                                await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.BLOCKED });
-                                toast.success(t("admin.companyBlocked"));
-                                setIsViewOpen(false);
+                              onClick={() => {
+                                setIsBlockDialogOpen(true);
                               }}
                             >
                               {t("admin.blockCompany")}
@@ -1333,10 +1324,8 @@ const AdminPanel = () => {
                             <Button
                               className="w-full"
                               disabled={isUpdatingStatus}
-                              onClick={async () => {
-                                await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.ACTIVE });
-                                toast.success(t("admin.companyActivated"));
-                                setIsViewOpen(false);
+                              onClick={() => {
+                                setIsUnblockDialogOpen(true);
                               }}
                             >
                               {t("admin.activateCompany")}
@@ -1345,10 +1334,8 @@ const AdminPanel = () => {
                             <Button
                               className="w-full"
                               disabled={isUpdatingStatus}
-                              onClick={async () => {
-                                await updateStatus({ id: selectedCompanyData.id, status: COMPANY_STATUS.ACTIVE });
-                                toast.success(t("admin.companyActivated"));
-                                setIsViewOpen(false);
+                              onClick={() => {
+                                setIsUnblockDialogOpen(true);
                               }}
                             >
                               {t("admin.activateCompany")}
@@ -1527,6 +1514,93 @@ const AdminPanel = () => {
               disabled={isDeleting}
             >
               {isDeleting ? t("common.loading") : (t("admin.deleteCompany") || "Удалить")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Block Company Confirmation Dialog */}
+      <AlertDialog open={isBlockDialogOpen} onOpenChange={setIsBlockDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("admin.blockCompany") || "Заблокировать компанию"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("admin.blockCompanyWarning") || "Вы уверены, что хотите заблокировать эту компанию? Компания не сможет использовать сервис до разблокировки."}
+              {selectedCompanyId && companies.find(c => c.id === selectedCompanyId) && (
+                <span className="block mt-2 font-semibold text-foreground">
+                  {companies.find(c => c.id === selectedCompanyId)?.name}
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setIsBlockDialogOpen(false);
+            }}>
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (selectedCompanyId && selectedCompanyData) {
+                  try {
+                    await updateStatus({ id: selectedCompanyId, status: COMPANY_STATUS.BLOCKED });
+                    toast.success(t("admin.companyBlocked"));
+                    setIsBlockDialogOpen(false);
+                    if (isViewOpen) {
+                      setIsViewOpen(false);
+                    }
+                  } catch (error) {
+                    toast.error(t("common.error"));
+                  }
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isUpdatingStatus}
+            >
+              {isUpdatingStatus ? t("common.loading") : (t("admin.blockCompany") || "Заблокировать")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Unblock Company Confirmation Dialog */}
+      <AlertDialog open={isUnblockDialogOpen} onOpenChange={setIsUnblockDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("admin.activateCompany") || "Разблокировать компанию"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("admin.unblockCompanyWarning") || "Вы уверены, что хотите разблокировать эту компанию? Компания снова сможет использовать сервис."}
+              {selectedCompanyId && companies.find(c => c.id === selectedCompanyId) && (
+                <span className="block mt-2 font-semibold text-foreground">
+                  {companies.find(c => c.id === selectedCompanyId)?.name}
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setIsUnblockDialogOpen(false);
+            }}>
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (selectedCompanyId && selectedCompanyData) {
+                  try {
+                    await updateStatus({ id: selectedCompanyId, status: COMPANY_STATUS.ACTIVE });
+                    toast.success(t("admin.companyActivated"));
+                    setIsUnblockDialogOpen(false);
+                    if (isViewOpen) {
+                      setIsViewOpen(false);
+                    }
+                  } catch (error) {
+                    toast.error(t("common.error"));
+                  }
+                }
+              }}
+              disabled={isUpdatingStatus}
+            >
+              {isUpdatingStatus ? t("common.loading") : (t("admin.activateCompany") || "Разблокировать")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

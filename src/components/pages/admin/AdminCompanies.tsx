@@ -90,7 +90,11 @@ const AdminCompanies = () => {
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isBlockDialogOpen, setIsBlockDialogOpen] = useState(false);
+  const [isUnblockDialogOpen, setIsUnblockDialogOpen] = useState(false);
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
+  const [companyToBlock, setCompanyToBlock] = useState<Company | null>(null);
+  const [companyToUnblock, setCompanyToUnblock] = useState<Company | null>(null);
   
   // Формы
   const [newCompany, setNewCompany] = useState({
@@ -1439,12 +1443,9 @@ const AdminCompanies = () => {
                       {selectedCompany.status === COMPANY_STATUS.ACTIVE ? (
                         <Button
                           variant="destructive"
-                          onClick={async () => {
-                            await updateStatus({
-                              id: getCompanyId(selectedCompany),
-                              status: COMPANY_STATUS.BLOCKED,
-                            });
-                            setIsViewOpen(false);
+                          onClick={() => {
+                            setCompanyToBlock(selectedCompany);
+                            setIsBlockDialogOpen(true);
                           }}
                           disabled={isUpdatingStatus}
                         >
@@ -1452,12 +1453,9 @@ const AdminCompanies = () => {
                         </Button>
                       ) : selectedCompany.status === COMPANY_STATUS.BLOCKED ? (
                         <Button
-                          onClick={async () => {
-                            await updateStatus({
-                              id: getCompanyId(selectedCompany),
-                              status: COMPANY_STATUS.ACTIVE,
-                            });
-                            setIsViewOpen(false);
+                          onClick={() => {
+                            setCompanyToUnblock(selectedCompany);
+                            setIsUnblockDialogOpen(true);
                           }}
                           disabled={isUpdatingStatus}
                         >
@@ -1465,12 +1463,9 @@ const AdminCompanies = () => {
                         </Button>
                       ) : selectedCompany.status === COMPANY_STATUS.TRIAL ? (
                         <Button
-                          onClick={async () => {
-                            await updateStatus({
-                              id: getCompanyId(selectedCompany),
-                              status: COMPANY_STATUS.ACTIVE,
-                            });
-                            setIsViewOpen(false);
+                          onClick={() => {
+                            setCompanyToUnblock(selectedCompany);
+                            setIsUnblockDialogOpen(true);
                           }}
                           disabled={isUpdatingStatus}
                         >
@@ -1709,6 +1704,101 @@ const AdminCompanies = () => {
               disabled={isDeleting}
             >
               {isDeleting ? t("common.loading") : (t("admin.deleteCompany") || "Удалить")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Block Company Confirmation Dialog */}
+      <AlertDialog open={isBlockDialogOpen} onOpenChange={setIsBlockDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("admin.blockCompany") || "Заблокировать компанию"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("admin.blockCompanyWarning") || "Вы уверены, что хотите заблокировать эту компанию? Компания не сможет использовать сервис до разблокировки."}
+              {companyToBlock && (
+                <span className="block mt-2 font-semibold text-foreground">
+                  {companyToBlock.name}
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setIsBlockDialogOpen(false);
+              setCompanyToBlock(null);
+            }}>
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (companyToBlock) {
+                  try {
+                    await updateStatus({
+                      id: getCompanyId(companyToBlock),
+                      status: COMPANY_STATUS.BLOCKED,
+                    });
+                    setIsBlockDialogOpen(false);
+                    setCompanyToBlock(null);
+                    if (isViewOpen) {
+                      setIsViewOpen(false);
+                    }
+                  } catch (error) {
+                    toast.error(t("common.error"));
+                  }
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isUpdatingStatus}
+            >
+              {isUpdatingStatus ? t("common.loading") : (t("admin.blockCompany") || "Заблокировать")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Unblock Company Confirmation Dialog */}
+      <AlertDialog open={isUnblockDialogOpen} onOpenChange={setIsUnblockDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("admin.activateCompany") || "Разблокировать компанию"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("admin.unblockCompanyWarning") || "Вы уверены, что хотите разблокировать эту компанию? Компания снова сможет использовать сервис."}
+              {companyToUnblock && (
+                <span className="block mt-2 font-semibold text-foreground">
+                  {companyToUnblock.name}
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setIsUnblockDialogOpen(false);
+              setCompanyToUnblock(null);
+            }}>
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (companyToUnblock) {
+                  try {
+                    await updateStatus({
+                      id: getCompanyId(companyToUnblock),
+                      status: COMPANY_STATUS.ACTIVE,
+                    });
+                    setIsUnblockDialogOpen(false);
+                    setCompanyToUnblock(null);
+                    if (isViewOpen) {
+                      setIsViewOpen(false);
+                    }
+                  } catch (error) {
+                    toast.error(t("common.error"));
+                  }
+                }
+              }}
+              disabled={isUpdatingStatus}
+            >
+              {isUpdatingStatus ? t("common.loading") : (t("admin.activateCompany") || "Разблокировать")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
