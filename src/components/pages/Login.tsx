@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import Image from "next/image";
@@ -24,6 +24,17 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
+
+  // Обработка ошибок NextAuth (например, при блокировке компании через OAuth)
+  useEffect(() => {
+    const error = searchParams?.get('error');
+    if (error === 'AccessDenied') {
+      // Показываем сообщение об ошибке доступа
+      toast.error("Компания заблокирована администратором. Свяжитесь с нами по почте.");
+      // Удаляем параметр error из URL
+      router.replace('/login');
+    }
+  }, [searchParams, router]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);

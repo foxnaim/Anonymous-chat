@@ -95,7 +95,17 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!syncResponse.ok) {
-            console.error("OAuth sign in denied by API:", await syncResponse.text());
+            const errorText = await syncResponse.text();
+            console.error("OAuth sign in denied by API:", errorText);
+            
+            // Проверяем, заблокирована ли компания
+            if (syncResponse.status === 403 && 
+                (errorText.includes("COMPANY_BLOCKED") || errorText.includes("company blocked"))) {
+              // Если компания заблокирована, отклоняем вход
+              // Пользователь увидит ошибку на странице входа
+              return false;
+            }
+            
             // Если доступ запрещен (не зарегистрирован), перенаправляем на главную с параметром открытия регистрации
             // Используем специальный URL, который NextAuth обработает как редирект на ошибку,
             // но мы можем перехватить его на клиенте или использовать query params
@@ -114,66 +124,103 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async jwt({ token, user, account }) {
-      // При первом входе через OAuth
-      if (account && user) {
-        token.accessToken = account.access_token;
-        token.refreshToken = account.refresh_token;
-        token.id = user.id;
-        token.role = (user as any).role;
-        token.companyId = (user as any).companyId;
-        
-        // Для OAuth создаем/обновляем пользователя в БД
-        if (account.provider === "google") {
-          try {
-            // Синхронизируем пользователя с БД через API
-            const syncResponse = await fetch(`${API_CONFIG.BASE_URL}/auth/oauth-sync`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                email: user.email,
-                name: user.name,
-                provider: account.provider,
-              }),
-            });
+      try {
+        // При первом входе через OAuth
+        if (account && user) {
+          token.accessToken = account.access_token;
+          token.refreshToken = account.refresh_token;
+          token.id = user.id;
+          token.role = (user as any).role;
+          token.companyId = (user as any).companyId;
+          
+          // Для OAuth создаем/обновляем пользователя в БД
+          if (account.provider === "google") {
+            try {
+              // Синхронизируем пользователя с БД через API с таймаутом
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд таймаут
+              
+              const syncResponse = await fetch(`${API_CONFIG.BASE_URL}/auth/oauth-sync`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  email: user.email,
+                  name: user.name,
+                  provider: account.provider,
+                }),
+                signal: controller.signal,
+              });
 
-            if (syncResponse.ok) {
-              const syncData = await syncResponse.json();
-              if (syncData.success && syncData.data) {
-                // Сохраняем данные из API
-                token.id = syncData.data.user.id;
-                token.role = syncData.data.user.role;
-                token.companyId = syncData.data.user.companyId;
-                token.apiToken = syncData.data.token; // JWT токен для текущей системы
-                token.email = syncData.data.user.email;
-                token.name = syncData.data.user.name;
+              clearTimeout(timeoutId);
+
+              if (syncResponse.ok) {
+                const syncData = await syncResponse.json();
+                if (syncData.success && syncData.data) {
+                  // Сохраняем данные из API
+                  token.id = syncData.data.user.id;
+                  token.role = syncData.data.user.role;
+                  token.companyId = syncData.data.user.companyId;
+                  token.apiToken = syncData.data.token; // JWT токен для текущей системы
+                  token.email = syncData.data.user.email;
+                  token.name = syncData.data.user.name;
+                }
+              } else {
+                console.warn("OAuth sync failed with status:", syncResponse.status);
               }
+            } catch (error) {
+              // Если это ошибка отмены запроса (таймаут), логируем отдельно
+              if (error instanceof Error && error.name === 'AbortError') {
+                console.error("OAuth user sync timeout - API не отвечает");
+              } else {
+                console.error("OAuth user sync error:", error);
+              }
+              // Продолжаем работу с данными из OAuth провайдера, даже если синхронизация не удалась
             }
-          } catch (error) {
-            console.error("OAuth user sync error:", error);
+          }
+          
+          // Для Credentials сохраняем токен из API
+          if (account.provider === "credentials" && (user as any).token) {
+            token.apiToken = (user as any).token;
           }
         }
-        
-        // Для Credentials сохраняем токен из API
-        if (account.provider === "credentials" && (user as any).token) {
-          token.apiToken = (user as any).token;
-        }
-      }
 
-      return token;
+        return token;
+      } catch (error) {
+        console.error("JWT callback error:", error);
+        // Возвращаем токен даже при ошибке, чтобы не ломать сессию
+        return token;
+      }
     },
     async session({ session, token }) {
-      // Добавляем данные пользователя в сессию
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
-        session.user.companyId = token.companyId as string | undefined;
-        session.accessToken = token.accessToken as string | undefined;
-        session.apiToken = token.apiToken as string | undefined;
-      }
+      try {
+        // Добавляем данные пользователя в сессию
+        if (session.user && token) {
+          // Безопасно добавляем данные только если они есть в токене
+          if (token.id) {
+            session.user.id = token.id as string;
+          }
+          if (token.role) {
+            session.user.role = token.role as string;
+          }
+          if (token.companyId) {
+            session.user.companyId = token.companyId as string | undefined;
+          }
+          if (token.accessToken) {
+            session.accessToken = token.accessToken as string | undefined;
+          }
+          if (token.apiToken) {
+            session.apiToken = token.apiToken as string | undefined;
+          }
+        }
 
-      return session;
+        return session;
+      } catch (error) {
+        console.error("Session callback error:", error);
+        // Возвращаем сессию без дополнительных данных в случае ошибки
+        return session;
+      }
     },
     async redirect({ url, baseUrl }) {
       // После OAuth входа перенаправляем на правильную страницу

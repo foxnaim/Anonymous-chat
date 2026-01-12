@@ -266,7 +266,7 @@ const CompanyBilling = () => {
                           </div>
                         )}
                         {/* Статистика по тарифу */}
-                        {(plan.companiesCount !== undefined || plan.avgDaysUntilExpiry !== undefined) && (
+                        {(plan.companiesCount !== undefined || plan.avgDaysUntilExpiry !== undefined || (isCurrent && company?.trialEndDate)) && (
                           <div className="mt-3 pt-3 border-t border-border/50">
                             {plan.companiesCount !== undefined && (
                               <div className="flex items-center justify-between text-xs mb-1">
@@ -274,6 +274,23 @@ const CompanyBilling = () => {
                                 <span className="font-semibold text-foreground">{plan.companiesCount}</span>
                               </div>
                             )}
+                            {isCurrent && company?.trialEndDate && (() => {
+                              const endDate = new Date(company.trialEndDate);
+                              const now = new Date();
+                              const diffTime = endDate.getTime() - now.getTime();
+                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                              return (
+                                <div className="flex items-center justify-between text-xs mb-1">
+                                  <span className="text-muted-foreground">{t("admin.daysUntilExpiry")}:</span>
+                                  <span className={`font-semibold ${diffDays <= 0 ? "text-destructive" : "text-foreground"}`}>
+                                    {diffDays > 0 
+                                      ? `${diffDays} ${diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'}`
+                                      : t("admin.tariffExpired")
+                                    }
+                                  </span>
+                                </div>
+                              );
+                            })()}
                             {plan.avgDaysUntilExpiry !== null && plan.avgDaysUntilExpiry !== undefined && (
                               <div className="flex items-center justify-between text-xs">
                                 <span className="text-muted-foreground">Среднее время до окончания:</span>

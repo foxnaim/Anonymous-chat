@@ -488,6 +488,7 @@
     "messagesLimitDescription": "Maximum number of messages a company can receive on the trial plan per month",
     "storageLimit": "Storage limit (GB)",
     "freePeriodDays": "Trial access period (days)",
+    "trialAccessLabel": "Trial access",
     "createPlan": "Create New Plan",
     "planName": "Plan Name",
     "price": "Price (₸)",

@@ -14,7 +14,12 @@ import { toast } from "sonner";
  * Синхронизирует сессию NextAuth с состоянием Redux
  */
 export const useNextAuth = () => {
-  const { data: session, status } = useSession();
+  // Используем useSession с обработкой ошибок
+  const { data: session, status } = useSession({
+    // Отключаем автоматический refetch при ошибках, чтобы избежать спама запросов
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
   const dispatch = useDispatch();
   const router = useRouter();
   const hasSynced = useRef<string | null>(null);
