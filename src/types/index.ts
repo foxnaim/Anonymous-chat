@@ -98,6 +98,8 @@ export interface SubscriptionPlan {
   features: string[] | TranslatedString[]; // Может быть массивом строк или массивом объектов с переводами
   isFree?: boolean; // Является ли план бесплатным (настраивается админом)
   freePeriodDays?: number; // Количество дней бесплатного доступа (для бесплатного плана)
+  companiesCount?: number; // Количество компаний на этом тарифе
+  avgDaysUntilExpiry?: number | null; // Среднее количество дней до окончания тарифа
 }
 
 export interface AdminUser {

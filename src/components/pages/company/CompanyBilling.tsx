@@ -120,18 +120,38 @@ const CompanyBilling = () => {
                       </p>
                     </div>
                   </div>
-                  {company.status === t("admin.trial") && company.trialEndDate && (
+                  {company.trialEndDate && (
                     <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
-                      <p className="text-sm font-medium text-foreground mb-1">
-                        {t("company.trialPeriodActive")}
+                      <p className="text-sm font-medium text-foreground mb-2">
+                        {company.status === t("admin.trial") ? t("company.trialPeriodActive") : "Срок действия тарифа"}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {t("company.trialPeriodDescription", { date: new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric"
-                        }) })}
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground">
+                          {t("company.trialPeriodDescription", { date: new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric"
+                          }) })}
+                        </p>
+                        {(() => {
+                          const endDate = new Date(company.trialEndDate);
+                          const now = new Date();
+                          const diffTime = endDate.getTime() - now.getTime();
+                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                          if (diffDays > 0) {
+                            return (
+                              <Badge className="bg-primary text-white text-xs ml-2">
+                                Осталось: {diffDays} {diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'}
+                              </Badge>
+                            );
+                          }
+                          return (
+                            <Badge className="bg-destructive text-white text-xs ml-2">
+                              Истек
+                            </Badge>
+                          );
+                        })()}
+                      </div>
                     </div>
                   )}
                   {company.status === t("admin.trial") ? (
@@ -243,6 +263,25 @@ const CompanyBilling = () => {
                               {plan.price} ₸
                             </p>
                             <span className="text-xs text-muted-foreground">/{t("admin.perMonth")}</span>
+                          </div>
+                        )}
+                        {/* Статистика по тарифу */}
+                        {(plan.companiesCount !== undefined || plan.avgDaysUntilExpiry !== undefined) && (
+                          <div className="mt-3 pt-3 border-t border-border/50">
+                            {plan.companiesCount !== undefined && (
+                              <div className="flex items-center justify-between text-xs mb-1">
+                                <span className="text-muted-foreground">Компаний на тарифе:</span>
+                                <span className="font-semibold text-foreground">{plan.companiesCount}</span>
+                              </div>
+                            )}
+                            {plan.avgDaysUntilExpiry !== null && plan.avgDaysUntilExpiry !== undefined && (
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-muted-foreground">Среднее время до окончания:</span>
+                                <span className="font-semibold text-foreground">
+                                  {plan.avgDaysUntilExpiry} {plan.avgDaysUntilExpiry === 1 ? 'день' : plan.avgDaysUntilExpiry < 5 ? 'дня' : 'дней'}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
