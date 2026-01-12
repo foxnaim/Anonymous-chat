@@ -65,6 +65,7 @@ import { getTranslatedValue } from "@/lib/utils/translations";
 import { toast } from "sonner";
 import type { Company, CompanyStatus, PlanType } from "@/types";
 import { validatePasswordStrength } from "@/lib/utils/validation";
+import { useAuth } from "@/lib/redux";
 
 // Константы
 const COMPANY_STATUS: Record<string, CompanyStatus> = {
@@ -127,8 +128,32 @@ const AdminCompanies = () => {
   const getCompanyId = (company?: Company | null) =>
     (company as any)?.id || (company as any)?._id || "";
 
+  const { user } = useAuth();
   const { data: companies = [], isLoading, refetch } = useCompanies();
   const { data: plans = [] } = usePlans();
+
+  // Проверка, является ли план пробным/бесплатным
+  const isTrialPlan = (planName?: string): boolean => {
+    if (!planName) return false;
+    const trialPlanNames = ['Пробный', 'Trial', 'Бесплатный', 'Free', 'Тегін', 'Сынақ'];
+    const normalized = planName.toLowerCase();
+    return trialPlanNames.some(name => name.toLowerCase() === normalized) || 
+           plans.some(p => {
+             const pName = typeof p.name === "string" ? p.name : getTranslatedValue(p.name);
+             return pName === planName && p.isFree === true;
+           });
+  };
+
+  // Проверка, может ли пользователь редактировать план компании
+  const canEditPlan = (company: Company): boolean => {
+    // Суперадмины могут редактировать все планы
+    if (user?.role === "super_admin") return true;
+    // Обычные админы не могут редактировать пробные/бесплатные планы
+    if (user?.role === "admin") {
+      return !isTrialPlan(company.plan);
+    }
+    return false;
+  };
   const { data: companyStats } = useCompanyStats(getCompanyId(selectedCompany), {
     enabled: !!getCompanyId(selectedCompany),
   });
@@ -482,6 +507,19 @@ const AdminCompanies = () => {
 
   const handlePlanChange = async () => {
     if (!selectedCompany) return;
+    
+    // Проверяем, может ли пользователь редактировать план
+    if (!canEditPlan(selectedCompany)) {
+      toast.error(t("admin.cannotEditTrialPlan") || "Обычные админы не могут редактировать пробный/бесплатный план");
+      return;
+    }
+    
+    // Проверяем, не пытается ли обычный админ установить пробный план
+    if (user?.role === "admin" && user?.role !== "super_admin" && isTrialPlan(selectedPlan)) {
+      toast.error(t("admin.cannotEditTrialPlan") || "Обычные админы не могут редактировать пробный/бесплатный план");
+      return;
+    }
+    
     await updatePlan({
       id: getCompanyId(selectedCompany),
       plan: selectedPlan,
@@ -510,11 +548,30 @@ const AdminCompanies = () => {
   }, []);
 
   const openPlanModal = useCallback((company: Company) => {
+    // Проверяем, может ли пользователь редактировать план
+    // Суперадмины могут редактировать все планы
+    if (user?.role === "super_admin") {
+      setSelectedCompany(company);
+      setSelectedPlan(company.plan as PlanType);
+      setPlanEndDate(company.trialEndDate || "");
+      setIsPlanModalOpen(true);
+      return;
+    }
+    
+    // Обычные админы не могут редактировать пробные/бесплатные планы
+    if (user?.role === "admin") {
+      const isTrial = isTrialPlan(company.plan);
+      if (isTrial) {
+        toast.error(t("admin.cannotEditTrialPlan") || "Обычные админы не могут редактировать пробный/бесплатный план");
+        return;
+      }
+    }
+    
     setSelectedCompany(company);
     setSelectedPlan(company.plan as PlanType);
     setPlanEndDate(company.trialEndDate || "");
     setIsPlanModalOpen(true);
-  }, []);
+  }, [user, plans, t]);
 
   const openViewModal = useCallback((company: Company) => {
     setSelectedCompany(company);
@@ -808,10 +865,12 @@ const AdminCompanies = () => {
                                   <FiAlertCircle className="h-4 w-4 mr-2" />
                                   {t("admin.changeStatus")}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => openPlanModal(company)}>
-                                  <FiSettings className="h-4 w-4 mr-2" />
-                                  {t("admin.changePlan")}
-                                </DropdownMenuItem>
+                                {canEditPlan(company) ? (
+                                  <DropdownMenuItem onClick={() => openPlanModal(company)}>
+                                    <FiSettings className="h-4 w-4 mr-2" />
+                                    {t("admin.changePlan")}
+                                  </DropdownMenuItem>
+                                ) : null}
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   onClick={() => copyToClipboard(company.code)}
@@ -1629,14 +1688,23 @@ const AdminCompanies = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {plans.map((plan) => (
-                            <SelectItem
-                              key={plan.id}
-                              value={getTranslatedValue(plan.name)}
-                            >
-                              {getTranslatedValue(plan.name)}
-                            </SelectItem>
-                          ))}
+                          {plans
+                            .filter((plan) => {
+                              // Обычные админы не могут выбирать пробные/бесплатные планы
+                              if (user?.role === "admin" && user?.role !== "super_admin") {
+                                const planName = getTranslatedValue(plan.name);
+                                return !isTrialPlan(planName);
+                              }
+                              return true;
+                            })
+                            .map((plan) => (
+                              <SelectItem
+                                key={plan.id}
+                                value={getTranslatedValue(plan.name)}
+                              >
+                                {getTranslatedValue(plan.name)}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                     </div>

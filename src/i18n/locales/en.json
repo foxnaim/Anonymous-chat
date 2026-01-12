@@ -520,6 +520,7 @@
     "firstNDaysFullAccess": "First {{count}} {{label}} after registration - full access without restrictions",
     "freePlanSettingsUpdated": "Trial plan settings updated",
     "settingsUpdateError": "Error updating settings",
+    "cannotEditTrialPlan": "Regular admins cannot edit trial/free plans",
     "planCreated": "Plan \"{{name}}\" created",
     "planCreateError": "Error creating plan",
     "planDeleted": "Plan deleted",

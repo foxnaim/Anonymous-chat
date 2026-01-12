@@ -45,6 +45,7 @@ import { getTranslatedValue } from "@/lib/utils/translations";
 import { toast } from "sonner";
 import type { CompanyStatus, PlanType } from "@/types";
 import { validatePasswordStrength } from "@/lib/utils/validation";
+import { useAuth } from "@/lib/redux";
 
 // Константы статусов компании
 const COMPANY_STATUS: Record<string, CompanyStatus> = {
@@ -106,8 +107,30 @@ const AdminPanel = () => {
     return plan;
   };
 
+  const { user } = useAuth();
   const { data: companies = [], isLoading, refetch } = useCompanies();
   const { data: plans = [] } = usePlans();
+
+  // Проверка, является ли план пробным/бесплатным
+  const isTrialPlan = (planName?: string): boolean => {
+    if (!planName) return false;
+    const trialPlanNames = ['Пробный', 'Trial', 'Бесплатный', 'Free', 'Тегін', 'Сынақ'];
+    const normalized = planName.toLowerCase();
+    return trialPlanNames.some(name => name.toLowerCase() === normalized) || 
+           plans.some(p => {
+             const pName = typeof p.name === "string" ? p.name : getTranslatedValue(p.name);
+             return pName === planName && p.isFree === true;
+           });
+  };
+
+  // Получить компанию по ID
+  const getCompanyById = (id: string | number | null) => {
+    if (!id) return null;
+    return companies.find(c => {
+      const companyId = (c as any)?.id || (c as any)?._id;
+      return String(companyId) === String(id);
+    });
+  };
   const { mutateAsync: createCompany, isPending: isCreating } = useCreateCompany({
     onSuccess: async (data) => {
       await refetch();
@@ -593,6 +616,11 @@ const AdminPanel = () => {
                         size="icon"
                         className="h-7 w-7"
                         onClick={() => {
+                          // Проверяем, может ли пользователь редактировать план
+                          if (user?.role === "admin" && user?.role !== "super_admin" && isTrialPlan(selectedCompanyData.plan)) {
+                            toast.error(t("admin.cannotEditTrialPlan") || "Обычные админы не могут редактировать пробный/бесплатный план");
+                            return;
+                          }
                           setSelectedPlan(selectedCompanyData.plan);
                           setPlanEndDate(selectedCompanyData.trialEndDate || "");
                           setIsPlanModalOpen(true);
@@ -1455,14 +1483,23 @@ const AdminPanel = () => {
                           <SelectValue placeholder={t("admin.selectPlan")} />
                         </SelectTrigger>
                         <SelectContent>
-                          {plans.map((plan) => {
-                            const planName = getTranslatedValue(plan.name);
-                            return (
-                              <SelectItem key={plan.id} value={planName}>
-                                {planName}
-                              </SelectItem>
-                            );
-                          })}
+                          {plans
+                            .filter((plan) => {
+                              // Обычные админы не могут выбирать пробные/бесплатные планы
+                              if (user?.role === "admin" && user?.role !== "super_admin") {
+                                const planName = getTranslatedValue(plan.name);
+                                return !isTrialPlan(planName);
+                              }
+                              return true;
+                            })
+                            .map((plan) => {
+                              const planName = getTranslatedValue(plan.name);
+                              return (
+                                <SelectItem key={plan.id} value={planName}>
+                                  {planName}
+                                </SelectItem>
+                              );
+                            })}
                         </SelectContent>
                       </Select>
                     </div>
@@ -1499,6 +1536,21 @@ const AdminPanel = () => {
                           toast.error(t("common.fillAllFields"));
                           return;
                         }
+                        
+                        // Проверяем, может ли пользователь редактировать план
+                        const company = getCompanyById(selectedCompanyId);
+                        if (company) {
+                          if (user?.role === "admin" && user?.role !== "super_admin" && isTrialPlan(company.plan)) {
+                            toast.error(t("admin.cannotEditTrialPlan") || "Обычные админы не могут редактировать пробный/бесплатный план");
+                            return;
+                          }
+                          // Проверяем, не пытается ли обычный админ установить пробный план
+                          if (user?.role === "admin" && user?.role !== "super_admin" && isTrialPlan(selectedPlan)) {
+                            toast.error(t("admin.cannotEditTrialPlan") || "Обычные админы не могут редактировать пробный/бесплатный план");
+                            return;
+                          }
+                        }
+                        
                         await updatePlan({
                           id: selectedCompanyId,
                           plan: selectedPlan as PlanType,

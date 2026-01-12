@@ -522,6 +522,7 @@
     "firstNDaysFullAccess": "Первые {{count}} {{label}} после регистрации - полный доступ без ограничений",
     "freePlanSettingsUpdated": "Настройки пробного плана обновлены",
     "settingsUpdateError": "Ошибка при обновлении настроек",
+    "cannotEditTrialPlan": "Обычные админы не могут редактировать пробный/бесплатный план",
     "planCreated": "План \"{{name}}\" создан",
     "planCreateError": "Ошибка при создании плана",
     "planDeleted": "План удален",

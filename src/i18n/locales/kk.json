@@ -522,6 +522,7 @@
     "firstNDaysFullAccess": "Тіркелгеннен кейінгі алғашқы {{count}} {{label}} - шектеусіз толық қол жетімділік",
     "freePlanSettingsUpdated": "Сынақ жоспары баптаулары жаңартылды",
     "settingsUpdateError": "Баптауларды жаңарту кезінде қате",
+    "cannotEditTrialPlan": "Жәдігөй админдер сынақ/тегін жоспарларды өңдей алмайды",
     "planCreated": "\"{{name}}\" жоспары құрылды",
     "planCreateError": "Жоспар құру кезінде қате",
     "planDeleted": "Жоспар жойылды",
