@@ -257,10 +257,20 @@ const AdminPlans = () => {
                         value={freePlanSettings.freePeriodDays}
                         onChange={(e) => {
                           const value = e.target.value;
-                          setFreePlanSettings({
-                            ...freePlanSettings,
-                            freePeriodDays: value === "" ? "" : Number(value),
-                          });
+                          if (value === "") {
+                            setFreePlanSettings({
+                              ...freePlanSettings,
+                              freePeriodDays: "",
+                            });
+                          } else {
+                            const numValue = Number(value);
+                            if (!isNaN(numValue)) {
+                              setFreePlanSettings({
+                                ...freePlanSettings,
+                                freePeriodDays: numValue,
+                              });
+                            }
+                          }
                         }}
                         placeholder={t("admin.unlimitedTimePlaceholder")}
                         min="0"
@@ -269,6 +279,11 @@ const AdminPlans = () => {
                       <p className="text-xs text-muted-foreground">
                         {t("admin.unlimitedTimeDescription")}
                       </p>
+                      {freePlanSettings.freePeriodDays !== "" && (
+                        <p className="text-sm text-foreground font-medium mt-2">
+                          {t("admin.preview")}: {freeDaysNum} {getDaysLabel(freeDaysNum)}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-3 pt-4">
