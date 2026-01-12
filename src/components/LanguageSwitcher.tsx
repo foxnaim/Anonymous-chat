@@ -36,7 +36,7 @@ export const LanguageSwitcher = memo(() => {
     try {
       localStorage.setItem('i18nextLng', code);
     } catch (error) {
-      console.warn('Failed to save language to localStorage:', error);
+      // Failed to save language
     }
   };
 

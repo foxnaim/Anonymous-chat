@@ -1260,7 +1260,6 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
            }
          );
       } else {
-         // console.log('[useDeleteCompany] Other error - rolling back');
          // Для других ошибок откатываем изменения
          if (context?.previousData) {
            context.previousData.forEach(([key, old]) => {

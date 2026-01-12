@@ -166,8 +166,6 @@ export const authOptions: NextAuthOptions = {
                   token.email = syncData.data.user.email;
                   token.name = syncData.data.user.name;
                 }
-              } else {
-                console.warn("OAuth sync failed with status:", syncResponse.status);
               }
             } catch (error) {
               // Если это ошибка отмены запроса (таймаут), логируем отдельно

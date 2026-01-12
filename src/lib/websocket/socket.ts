@@ -52,9 +52,7 @@ const loadSocketIO = (): typeof import('socket.io-client') | null => {
     socketIOModule = require('socket.io-client');
     return socketIOModule;
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[WebSocket] Failed to load socket.io-client:', error);
-    }
+    console.error('[WebSocket] Failed to load socket.io-client:', error);
     return null;
   }
 };
@@ -84,14 +82,7 @@ export const getSocket = (forceReconnect = false): Socket | null => {
 
   // Если нет токена, не создаем подключение
   if (!token) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[WebSocket] No token available, cannot create socket connection');
-    }
     return null;
-  }
-  
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[WebSocket] Creating socket connection to:', API_URL);
   }
 
   // Загружаем socket.io-client только на клиенте
@@ -119,23 +110,14 @@ export const getSocket = (forceReconnect = false): Socket | null => {
     // Добавляем обработчики событий только один раз
     newSocket.on('connect', () => {
       // WebSocket connected
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[WebSocket] Connected successfully');
-      }
     });
 
-    newSocket.on('disconnect', (reason) => {
+    newSocket.on('disconnect', () => {
       // WebSocket disconnected
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[WebSocket] Disconnected:', reason);
-      }
     });
 
     newSocket.on('connect_error', (error) => {
-      // WebSocket connection error
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[WebSocket] Connection error:', error);
-      }
+      console.error('[WebSocket] Connection error:', error);
     });
 
     socket = newSocket;

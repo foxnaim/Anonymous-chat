@@ -68,7 +68,6 @@ const CompanyMessages = () => {
       // форсируем использование отправленного текста.
       let messageToSet = updatedMessage;
       if (!updatedMessage.companyResponse && responseText && responseText.trim().length > 0) {
-         console.warn("Server returned empty response, using local text");
          messageToSet = {
             ...updatedMessage,
             companyResponse: responseText
@@ -248,10 +247,7 @@ const CompanyMessages = () => {
         const isInGracePeriod = Date.now() - lastLocalUpdateRef.current < 10000;
         
         // Если любое из условий "старости" выполнено, НЕ обновляем selectedMessage
-        if (isStaleStatus || isStaleResponse || isInGracePeriod) {
-          console.log("Blocking stale update", { 
-            isStaleStatus, 
-            isStaleResponse, 
+        if (isStaleStatus || isStaleResponse || isInGracePeriod) { 
             isInGracePeriod,
             localStatus: selectedMessage.status,
             remoteStatus: updatedMessage.status,

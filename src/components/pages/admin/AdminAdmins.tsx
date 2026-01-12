@@ -302,11 +302,6 @@ const AdminAdmins = () => {
 
   const handleDeleteConfirm = () => {
     if (adminToDelete) {
-      console.log(`[AdminAdmins] Confirming delete for admin:`, {
-        id: adminToDelete.id,
-        email: adminToDelete.email,
-        name: adminToDelete.name
-      });
       
       // Проверяем, что ID существует и валиден
       if (!adminToDelete.id) {

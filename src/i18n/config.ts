@@ -57,7 +57,7 @@ if (!i18n.isInitialized) {
         const langCode = normalizeLang(lng);
         localStorage.setItem('i18nextLng', langCode);
       } catch (error) {
-        console.warn('Failed to save language to localStorage:', error);
+        // Failed to save language
       }
     });
   }
@@ -77,7 +77,7 @@ export const restoreLanguageFromStorage = (): void => {
     }
     languageRestored = true;
   } catch (error) {
-    console.warn('Failed to restore language from localStorage:', error);
+    // Failed to restore language
   }
 };
 

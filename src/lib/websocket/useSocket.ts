@@ -73,14 +73,6 @@ export const useSocketMessages = (companyCode?: string | null) => {
 
   // Мемоизируем обработчики для избежания лишних переподписок
   const handleNewMessage = useCallback((message: Message) => {
-    // Логирование для отладки (только в development)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[WebSocket] New message received:', {
-        messageId: message.id,
-        companyCode: message.companyCode,
-        currentCompanyCode: companyCode,
-      });
-    }
     
     // КРИТИЧЕСКИ ВАЖНО: Обновляем кэш для компании, которой принадлежит сообщение
     // Это гарантирует, что сообщение появится сразу в списке компании
@@ -333,18 +325,13 @@ export const useSocketMessages = (companyCode?: string | null) => {
       const token = getToken();
       
       if (!token) {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('[WebSocket] Socket not available - token is missing');
-        }
         return;
       }
       
       // Если токен есть, но сокета нет - создаем его принудительно
       socket = getSocket(true);
       if (!socket) {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('[WebSocket] Failed to create socket even with token');
-        }
+        console.error('[WebSocket] Failed to create socket even with token');
         return;
       }
     }
@@ -354,9 +341,6 @@ export const useSocketMessages = (companyCode?: string | null) => {
       
       // Проверяем подключение перед попыткой join
       if (!socket.connected) {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('[WebSocket] Cannot join room - socket not connected');
-        }
         return;
       }
       
@@ -364,17 +348,11 @@ export const useSocketMessages = (companyCode?: string | null) => {
       if (roomRef.current && roomRef.current !== nextRoom) {
         // Отправляем полное имя комнаты с префиксом для leave
         socket.emit('leave', `company:${roomRef.current}`);
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[WebSocket] Left room:', `company:${roomRef.current}`);
-        }
       }
       if (nextRoom && roomRef.current !== nextRoom) {
         // Отправляем код компании без префикса, бэкенд сам добавит префикс "company:"
         socket.emit('join', nextRoom);
         roomRef.current = nextRoom;
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[WebSocket] Joining room with code:', nextRoom);
-        }
       }
     };
     
@@ -384,39 +362,26 @@ export const useSocketMessages = (companyCode?: string | null) => {
       
       // Проверяем подключение
       if (!socket.connected) {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('[WebSocket] Cannot subscribe - socket not connected');
-        }
         return;
       }
       
       // Подписываемся на события
       const onNewMessage = (msg: Message) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[WebSocket] message:new event received:', msg.id, 'for company:', msg.companyCode);
-        }
         handleNewMessage(msg);
       };
       
       socket.on('message:new', onNewMessage);
       
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[WebSocket] Subscribed to message:new events, companyCode:', companyCode, 'socket connected:', socket.connected);
-      }
       socket.on('message:updated', handleMessageUpdate);
       socket.on('message:deleted', handleMessageDelete);
       
       // Подписываемся на подтверждение подключения к комнате
-      socket.on('room:joined', (data: { room: string }) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[WebSocket] Successfully joined room:', data.room);
-        }
+      socket.on('room:joined', () => {
+        // Room joined successfully
       });
       
       socket.on('room:join:error', (data: { room: string; error: string }) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('[WebSocket] Failed to join room:', data.room, 'error:', data.error);
-        }
+        console.error('[WebSocket] Failed to join room:', data.room, 'error:', data.error);
       });
       
       // Входим в комнату компании для получения только своих сообщений
@@ -428,24 +393,17 @@ export const useSocketMessages = (companyCode?: string | null) => {
     
     // Обработчик подключения
     const onConnect = () => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[WebSocket] Connected, subscribing to events for companyCode:', companyCode);
-      }
       subscribeToEvents();
     };
     
     // Обработчик ошибки подключения
     const onConnectError = (error: Error) => {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[WebSocket] Connection error:', error);
-      }
+      console.error('[WebSocket] Connection error:', error);
     };
     
     // Обработчик отключения
-    const onDisconnect = (reason: string) => {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('[WebSocket] Disconnected:', reason);
-      }
+    const onDisconnect = () => {
+      // Disconnected
     };
     
     // Если уже подключен, подписываемся сразу
@@ -466,9 +424,6 @@ export const useSocketMessages = (companyCode?: string | null) => {
       if (socket) {
         if (roomRef.current && socket.connected) {
           socket.emit('leave', `company:${roomRef.current}`);
-          if (process.env.NODE_ENV === 'development') {
-            console.log('[WebSocket] Left room on cleanup:', `company:${roomRef.current}`);
-          }
           roomRef.current = null;
         }
         const onNewMessage = (socket as any)._onNewMessage;

@@ -98,16 +98,7 @@ export class PerformanceMonitor {
    * Логировать метрики производительности
    */
   static logMetrics(): void {
-    if (process.env.NODE_ENV === 'development') {
-      const vitals = this.getWebVitals();
-      console.group('📊 Performance Metrics');
-      if (vitals.ttfb) console.log(`TTFB: ${vitals.ttfb.toFixed(2)}ms`);
-      if (vitals.fcp) console.log(`FCP: ${vitals.fcp.toFixed(2)}ms`);
-      if (vitals.lcp) console.log(`LCP: ${vitals.lcp.toFixed(2)}ms`);
-      if (vitals.fid) console.log(`FID: ${vitals.fid.toFixed(2)}ms`);
-      if (vitals.cls) console.log(`CLS: ${vitals.cls.toFixed(4)}`);
-      console.groupEnd();
-    }
+    // Metrics logging removed
   }
 }
 
