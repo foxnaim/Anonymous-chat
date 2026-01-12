@@ -15,8 +15,11 @@ import { usePlans, plansService, queryKeys } from "@/lib/query";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getTranslatedValue } from "@/lib/utils/translations";
+import { useAuth } from "@/lib/redux";
+
 const AdminPlans = () => {
   const { t, i18n } = useTranslation();
+  const { user } = useAuth();
   const [isFreePlanSettingsOpen, setIsFreePlanSettingsOpen] = useState(false);
   const [freePlanSettings, setFreePlanSettings] = useState<{
     messagesLimit: number | "";
@@ -85,11 +88,13 @@ const AdminPlans = () => {
                 {t("admin.firstNDaysFullAccess", { count: freeDaysNum, label: freeDaysLabel })}
               </p>
             </div>
-            <Button variant="outline" onClick={() => setIsFreePlanSettingsOpen(true)} size="sm" className="w-full sm:w-auto">
-              <FiSettings className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">{t("admin.freePlanSettings")}</span>
-              <span className="sm:hidden">{t("company.settings")}</span>
-            </Button>
+            {user?.role === "super_admin" && (
+              <Button variant="outline" onClick={() => setIsFreePlanSettingsOpen(true)} size="sm" className="w-full sm:w-auto">
+                <FiSettings className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">{t("admin.freePlanSettings")}</span>
+                <span className="sm:hidden">{t("company.settings")}</span>
+              </Button>
+            )}
           </div>
           {isLoading ? (
             <div className="text-center py-12">
