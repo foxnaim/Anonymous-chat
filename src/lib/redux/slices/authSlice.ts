@@ -137,7 +137,7 @@ export const checkSessionAsync = createAsyncThunk<
   { rejectValue: string }
 >(
   'auth/checkSession',
-  async () => {
+  async (_, { rejectWithValue }) => {
     if (typeof window === 'undefined') return null;
     
     // Получаем токен из куки
@@ -162,7 +162,17 @@ export const checkSessionAsync = createAsyncThunk<
 
       return user;
     } catch (error) {
-      // Если токен невалиден, удаляем его из куки
+      const apiError = error as ApiError;
+      const errorMessage = apiError?.message || "";
+      
+      // Если компания заблокирована, передаем ошибку дальше
+      if (errorMessage.includes("COMPANY_BLOCKED") || 
+          errorMessage.includes("company blocked") ||
+          apiError?.status === 403) {
+        return rejectWithValue(errorMessage);
+      }
+      
+      // Если токен невалиден, удаляем его из куки и возвращаем null
       removeToken();
       return null;
     }
@@ -252,7 +262,7 @@ const authSlice = createSlice({
         // 2. Проверка заблокированной компании
         else if (backendMessage.includes("COMPANY_BLOCKED") || 
                  backendMessage.includes("company blocked")) {
-          errorMessage = "Компания заблокирована администратором. Подробности будут отправлены по почте.";
+          errorMessage = "Компания заблокирована администратором. Свяжитесь с нами по почте.";
         }
         // 3. Проверка неверных учетных данных
         else if (backendMessage.includes("Invalid email or password") || 
@@ -280,7 +290,13 @@ const authSlice = createSlice({
         state.isAuthenticated = !!action.payload;
         state.isLoading = false;
       })
-      .addCase(checkSessionAsync.rejected, (state) => {
+      .addCase(checkSessionAsync.rejected, (state, action) => {
+        // Проверяем, является ли ошибка блокировкой компании
+        const errorMessage = String(action.payload || action.error?.message || "").trim();
+        if (errorMessage.includes("COMPANY_BLOCKED") || 
+            errorMessage.includes("company blocked")) {
+          toast.error("Компания заблокирована администратором. Свяжитесь с нами по почте.");
+        }
         state.user = null;
         state.isAuthenticated = false;
         state.isLoading = false;

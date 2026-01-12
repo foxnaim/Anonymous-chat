@@ -268,7 +268,7 @@ const CompanyDashboard = () => {
                           {t("company.blockedTitle") || "Компания заблокирована"}
                         </h3>
                         <p className="text-sm text-foreground mb-2">
-                          {t("company.blockedMessage") || "Ваша компания была заблокирована администратором. Доступ к сервису ограничен. Для получения дополнительной информации свяжитесь с администратором."}
+                          {t("company.blockedMessage") || "Ваша компания была заблокирована администратором. Доступ к сервису ограничен. Свяжитесь с нами по почте."}
                         </p>
                         <Badge variant="destructive" className="mt-2">
                           {t("admin.blocked")}

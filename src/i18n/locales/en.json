@@ -362,7 +362,7 @@
     "trialAccessLabel": "Trial access",
     "trialAccessFeatures": "All features for {{days}} {{daysLabel}}",
     "blockedTitle": "Company Blocked",
-    "blockedMessage": "Your company has been blocked by an administrator. Access to the service is restricted. For more information, please contact the administrator.",
+    "blockedMessage": "Your company has been blocked by an administrator. Access to the service is restricted. Please contact us by email.",
     "deletedTitle": "Company Deleted",
     "deletedMessage": "Your company has been deleted by an administrator. Your account no longer has access to the service. For more information, please contact the administrator.",
     "cultureExcellent": "Feedback culture in your company is excellent",

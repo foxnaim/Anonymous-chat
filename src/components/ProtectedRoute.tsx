@@ -7,6 +7,7 @@ import { useNextAuth } from "@/lib/hooks/useNextAuth";
 import { UserRole } from "@/types";
 import { useEffect, useMemo } from "react";
 import { getToken } from "@/lib/utils/cookies";
+import { useCompany } from "@/lib/query";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -31,6 +32,17 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     } : null);
   }, [user, session?.user]);
   const authLoading = isLoading || isNextAuthLoading;
+
+  // Загружаем данные компании для проверки блокировки (только для роли company)
+  const { data: company, isLoading: companyLoading } = useCompany(
+    currentUser?.companyId || 0,
+    {
+      enabled: !!currentUser?.companyId && currentUser?.role === 'company',
+    }
+  );
+
+  // Проверяем, заблокирована ли компания
+  const isCompanyBlocked = company?.status === "Заблокирована";
 
   useEffect(() => {
     // Проверяем наличие токена или NextAuth сессии
@@ -66,9 +78,25 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
         }
       }
     }
-  }, [hasAuth, currentUser, authLoading, requiredRole, router, isNextAuthAuthenticated]);
 
-  if (authLoading) {
+    // Если компания заблокирована и пользователь пытается перейти на страницы компании (кроме главной),
+    // перенаправляем на главную страницу компании
+    if (
+      !authLoading &&
+      !companyLoading &&
+      hasAuth &&
+      currentUser?.role === "company" &&
+      isCompanyBlocked &&
+      requiredRole === "company"
+    ) {
+      const currentPath = window.location.pathname;
+      if (currentPath !== "/company") {
+        router.replace("/company");
+      }
+    }
+  }, [hasAuth, currentUser, authLoading, requiredRole, router, isNextAuthAuthenticated, companyLoading, isCompanyBlocked]);
+
+  if (authLoading || (currentUser?.role === "company" && companyLoading)) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -97,6 +125,19 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     
     if (!allowedRoles.includes(userRole)) {
       // Если роль не подходит, не рендерим (редирект уже произошел в useEffect)
+      return null;
+    }
+  }
+
+  // Если компания заблокирована и пользователь пытается перейти на страницы компании (кроме главной),
+  // не рендерим содержимое (редирект уже произошел в useEffect)
+  if (
+    currentUser?.role === "company" &&
+    isCompanyBlocked &&
+    requiredRole === "company"
+  ) {
+    const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+    if (currentPath !== "/company") {
       return null;
     }
   }

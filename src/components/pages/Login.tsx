@@ -74,7 +74,7 @@ const Login = () => {
       else if (backendMessage.includes("COMPANY_BLOCKED") || 
                backendMessage.includes("company blocked") ||
                errorStatus === 403) {
-        errorMessage = "Компания заблокирована администратором. Подробности будут отправлены по почте.";
+        errorMessage = "Компания заблокирована администратором. Свяжитесь с нами по почте.";
       }
       // 3. Проверка неверных учетных данных
       else if (backendMessage.includes("Invalid email or password") || 

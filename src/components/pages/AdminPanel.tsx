@@ -859,30 +859,6 @@ const AdminPanel = () => {
                               {t("admin.deleteCompany") || "Удалить компанию"}
                             </Button>
                           </div>
-
-                          <Card className="p-4 bg-muted">
-                            <h5 className="font-semibold text-sm mb-3">{t("admin.usageStats")}</h5>
-                            <div className="space-y-3">
-                              <div>
-                                <div className="flex justify-between text-sm mb-1">
-                                  <span className="text-muted-foreground">{t("admin.messagesThisMonth")}</span>
-                                  <span className="font-semibold">
-                                    {selectedCompanyData?.messagesThisMonth ?? "—"} / {selectedCompanyData?.messagesLimit ?? "—"}
-                                  </span>
-                                </div>
-                                <div className="h-2 bg-background rounded-full overflow-hidden">
-                                  <div 
-                                    className="h-full bg-primary" 
-                                    style={{ 
-                                      width: selectedCompanyData?.messagesLimit 
-                                        ? `${Math.min(100, Math.round(((selectedCompanyData.messagesThisMonth || 0) / selectedCompanyData.messagesLimit) * 100))}%` 
-                                        : "0%" 
-                                    }}
-                                  ></div>
-                                </div>
-                              </div>
-                            </div>
-                          </Card>
                         </>
                       )}
                     </div>

@@ -39,6 +39,9 @@ export const CompanyHeader = () => {
     enabled: !!user?.companyId && (user?.role === 'company' || user?.role === 'admin' || user?.role === 'super_admin'),
   });
 
+  // Проверяем, заблокирована ли компания
+  const isCompanyBlocked = company?.status === "Заблокирована";
+
   // Проверяем, был ли вход выполнен под админом
   useEffect(() => {
     // Показываем стрелку назад только если вход был выполнен как admin или super_admin
@@ -85,33 +88,35 @@ export const CompanyHeader = () => {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-1">
-          {navigation.map((item, index) => {
-            const isActive = pathname === item.path;
-            const Icon = item.icon;
-            return (
-              <motion.div
-                key={item.path}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Link
-                  href={item.path as any}
-                  className={cn(
-                    "flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
+        {!isCompanyBlocked && (
+          <nav className="hidden lg:flex items-center gap-1">
+            {navigation.map((item, index) => {
+              const isActive = pathname === item.path;
+              const Icon = item.icon;
+              return (
+                <motion.div
+                  key={item.path}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
                 >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.name}</span>
-                </Link>
-              </motion.div>
-            );
-          })}
-        </nav>
+                  <Link
+                    href={item.path as any}
+                    className={cn(
+                      "flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{item.name}</span>
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </nav>
+        )}
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
@@ -227,21 +232,23 @@ export const CompanyHeader = () => {
             )}
           </HeadlessMenu>
           
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden"
-          >
-            {mobileMenuOpen ? <FiX className="h-5 w-5" /> : <FiMenu className="h-5 w-5" />}
-          </Button>
+          {/* Mobile Menu Button - скрываем для заблокированных компаний */}
+          {!isCompanyBlocked && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden"
+            >
+              {mobileMenuOpen ? <FiX className="h-5 w-5" /> : <FiMenu className="h-5 w-5" />}
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Mobile Navigation */}
       <AnimatePresence>
-        {mobileMenuOpen && (
+        {mobileMenuOpen && !isCompanyBlocked && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
