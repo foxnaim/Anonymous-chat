@@ -427,14 +427,19 @@
     "dangerZone": "Danger Zone",
     "deleteCompany": "Delete Company",
     "deleteCompanyWarning": "This action cannot be undone. All company data will be permanently deleted.",
+    "enterPasswordToDelete": "Enter password to confirm deletion",
+    "passwordRequiredToDelete": "Password confirmation is required to delete the company",
     "saveChanges": "Save Changes",
     "adminEmail": "Admin Email",
+    "newEmail": "New Email",
     "updatePassword": "Update Password",
     "logoRequirements": "Logo requirements",
     "logoRequirementsHint": "Up to 5 MB, formats JPG/PNG/GIF/WebP, ideally square 1:1, minimum 200x200",
     "fileTooLarge": "File is too large (max 5 MB)",
     "invalidFileType": "Invalid file type (allowed: JPG/PNG/GIF/WebP)",
-    "imageProcessingError": "Error processing image. Please try another image."
+    "imageProcessingError": "Error processing image. Please try another image.",
+    "trialAccess": "trial access",
+    "trialPeriodLabel": "Trial period"
   },
   "admin": {
     "title": "Platform Administration",

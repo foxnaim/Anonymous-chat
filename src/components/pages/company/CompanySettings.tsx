@@ -46,6 +46,7 @@ const CompanySettings = () => {
   const [emailPassword, setEmailPassword] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
   
   const { data: company, refetch: refetchCompany } = useCompany(user?.companyId || 0, {
     enabled: !!user?.companyId,
@@ -96,6 +97,15 @@ const CompanySettings = () => {
             msgLower.includes("forbidden") ||
             errorStatus === 403) {
           errorMessage = t("auth.accessDenied") || "Доступ запрещен. У вас нет прав для выполнения этого действия.";
+        } else if (backendMessage.includes("Invalid password") || 
+                   msgLower.includes("invalid password") ||
+                   errorStatus === 401) {
+          errorMessage = t("auth.invalidPassword") || t("auth.loginError") || "Неверный пароль";
+          // Очищаем поле пароля при ошибке
+          setDeletePassword("");
+        } else if (backendMessage.includes("Password is required") || 
+                   msgLower.includes("password is required")) {
+          errorMessage = t("company.passwordRequired") || t("auth.passwordRequired") || "Пароль обязателен";
         }
         
         toast.error(errorMessage);
@@ -499,7 +509,12 @@ const CompanySettings = () => {
       </div>
 
       {/* Delete Company Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={(open) => {
+        setIsDeleteDialogOpen(open);
+        if (!open) {
+          setDeletePassword("");
+        }
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("company.deleteCompany") || t("admin.deleteCompany") || "Удалить компанию"}</AlertDialogTitle>
@@ -512,15 +527,45 @@ const CompanySettings = () => {
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            {user?.role === "company" && (
+              <div className="space-y-2">
+                <Label htmlFor="deletePassword">{t("company.currentPassword") || "Текущий пароль"}</Label>
+                <Input
+                  id="deletePassword"
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  placeholder={t("company.enterPasswordToDelete") || "Введите пароль для подтверждения удаления"}
+                  autoComplete="current-password"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t("company.passwordRequiredToDelete") || "Для удаления компании требуется подтверждение паролем"}
+                </p>
+              </div>
+            )}
+          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
+            <AlertDialogCancel onClick={() => {
+              setIsDeleteDialogOpen(false);
+              setDeletePassword("");
+            }}>
               {t("common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
                 if (user?.companyId) {
+                  // Проверяем пароль для администраторов компании
+                  if (user.role === "company" && !deletePassword) {
+                    toast.error(t("company.passwordRequired") || t("auth.passwordRequired") || "Пароль обязателен");
+                    return;
+                  }
+                  
                   try {
-                    await deleteCompany(user.companyId);
+                    await deleteCompany({
+                      id: user.companyId,
+                      password: user.role === "company" ? deletePassword : undefined,
+                    });
                   } catch (error) {
                     // Ошибка уже обработана в onError хука
                     console.error("[CompanySettings] Failed to delete company:", error);
@@ -528,7 +573,7 @@ const CompanySettings = () => {
                 }
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={isDeleting}
+              disabled={isDeleting || (user?.role === "company" && !deletePassword)}
             >
               {isDeleting ? t("common.loading") : (t("company.deleteCompany") || t("admin.deleteCompany") || "Удалить")}
             </AlertDialogAction>

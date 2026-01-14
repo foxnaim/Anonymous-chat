@@ -428,14 +428,19 @@
     "dangerZone": "Қауіпті аймақ",
     "deleteCompany": "Компанияны жою",
     "deleteCompanyWarning": "Бұл әрекетті болдырмауға болмайды. Компанияның барлық деректері мәңгі жойылады.",
+    "enterPasswordToDelete": "Жоюды растау үшін құпия сөзді енгізіңіз",
+    "passwordRequiredToDelete": "Компанияны жою үшін құпия сөзді растау қажет",
     "saveChanges": "Өзгерістерді сақтау",
     "adminEmail": "Әкімші email-і",
+    "newEmail": "Жаңа email",
     "updatePassword": "Құпия сөзді жаңарту",
     "logoRequirements": "Логотип талаптары",
     "logoRequirementsHint": "5 МБ-қа дейін, JPG/PNG/GIF/WebP форматтары, мүмкіндігінше квадрат 1:1, ең аз 200x200",
     "fileTooLarge": "Файл тым үлкен (ең көбі 5 МБ)",
     "invalidFileType": "Файл форматы қате (рұқсат етілген: JPG/PNG/GIF/WebP)",
-    "imageProcessingError": "Суретті өңдеу кезінде қате. Басқа суретті қолданып көріңіз."
+    "imageProcessingError": "Суретті өңдеу кезінде қате. Басқа суретті қолданып көріңіз.",
+    "trialAccess": "сынақ қолжетімділігі",
+    "trialPeriodLabel": "Сынақ кезеңі"
   },
   "admin": {
     "title": "Платформа әкімшілігі",

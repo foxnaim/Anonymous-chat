@@ -429,14 +429,19 @@
     "dangerZone": "Опасная зона",
     "deleteCompany": "Удалить компанию",
     "deleteCompanyWarning": "Это действие нельзя отменить. Все данные компании будут безвозвратно удалены.",
+    "enterPasswordToDelete": "Введите пароль для подтверждения удаления",
+    "passwordRequiredToDelete": "Для удаления компании требуется подтверждение паролем",
     "saveChanges": "Сохранить изменения",
     "adminEmail": "Email администратора",
+    "newEmail": "Новый email",
     "updatePassword": "Изменить пароль",
     "logoRequirements": "Требования к логотипу",
     "logoRequirementsHint": "До 5 МБ, форматы JPG/PNG/GIF/WebP, желательно квадрат 1:1, минимум 200x200",
     "fileTooLarge": "Файл слишком большой (максимум 5 МБ)",
     "invalidFileType": "Неверный формат файла (доступны JPG/PNG/GIF/WebP)",
-    "imageProcessingError": "Ошибка при обработке изображения. Попробуйте другое изображение."
+    "imageProcessingError": "Ошибка при обработке изображения. Попробуйте другое изображение.",
+    "trialAccess": "пробного доступа",
+    "trialPeriodLabel": "Пробный период"
   },
   "admin": {
     "title": "Администрирование платформы",

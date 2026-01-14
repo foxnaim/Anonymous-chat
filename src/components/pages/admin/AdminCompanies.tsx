@@ -231,7 +231,7 @@ const AdminCompanies = () => {
   });
 
   const { mutateAsync: deleteCompany, isPending: isDeleting } = useDeleteCompany({
-    onSuccess: async (_, deletedId) => {
+    onSuccess: async (_, { id: deletedId }) => {
       // Закрываем диалог и очищаем состояние
       setIsDeleteDialogOpen(false);
       setCompanyToDelete(null);
@@ -1761,7 +1761,7 @@ const AdminCompanies = () => {
               onClick={async () => {
                 if (companyToDelete) {
                   try {
-                    await deleteCompany(getCompanyId(companyToDelete));
+                    await deleteCompany({ id: getCompanyId(companyToDelete) });
                   } catch (error) {
                     // Ошибка уже обработана в onError хука
                     console.error("[AdminCompanies] Failed to delete company:", error);

@@ -59,8 +59,16 @@ class ApiClient {
   /**
    * Базовый метод для DELETE запросов
    */
-  async delete<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    return this.request<T>(endpoint, { ...options, method: 'DELETE' });
+  async delete<T>(endpoint: string, data?: unknown, options?: RequestInit): Promise<T> {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'DELETE',
+      body: data ? JSON.stringify(data) : undefined,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+    });
   }
 
   /**

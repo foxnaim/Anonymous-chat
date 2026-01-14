@@ -1094,17 +1094,17 @@ export const useUpdateCompanyPlan = (options?: UseMutationOptions<Company, Error
 /**
  * Хук для удаления компании
  */
-export const useDeleteCompany = (options?: UseMutationOptions<void, Error, string | number>) => {
+export const useDeleteCompany = (options?: UseMutationOptions<void, Error, { id: string | number; password?: string }>) => {
   const queryClient = useQueryClient();
   const userOnSuccess = options?.onSuccess;
   const userOnError = options?.onError;
   const userOnMutate = options?.onMutate;
   const { onSuccess: _, onError: __, onMutate: ___, ...rest } = options ?? {};
   
-  return useMutation<void, Error, string | number, { previousData: Array<[QueryKey, Company[] | undefined]> }>({
-    mutationFn: (id: string | number) => companyService.delete(id),
+  return useMutation<void, Error, { id: string | number; password?: string }, { previousData: Array<[QueryKey, Company[] | undefined]> }>({
+    mutationFn: ({ id, password }) => companyService.delete(id, password),
 
-    onMutate: async (deletedId) => {
+    onMutate: async ({ id: deletedId }) => {
       // Отменяем исходящие запросы
       await queryClient.cancelQueries({ queryKey: queryKeys.companies, exact: false });
 
@@ -1154,7 +1154,7 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
       return { previousData };
     },
 
-    onSuccess: (_, deletedId, context, mutation) => {
+    onSuccess: (_, { id: deletedId }, context, mutation) => {
       // Нормализуем ID
       const deletedIdStr = String(deletedId).trim();
       
@@ -1206,7 +1206,7 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
       */
       
       if (userOnSuccess) {
-        (userOnSuccess as any)(_, deletedId, context, mutation);
+        (userOnSuccess as any)(_, { id: deletedId }, context, mutation);
       }
     },
 
@@ -1215,7 +1215,7 @@ export const useDeleteCompany = (options?: UseMutationOptions<void, Error, strin
       
       const errorStatus = (error as any)?.status || (error as any)?.response?.status;
       const errorMessage = (error as any)?.message || "";
-      const deletedIdStr = String(variables).trim();
+      const deletedIdStr = String(variables.id).trim();
       
       const isNotFound = 
         errorStatus === 404 || 

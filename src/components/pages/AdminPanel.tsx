@@ -1596,7 +1596,7 @@ const AdminPanel = () => {
               onClick={async () => {
                 if (selectedCompanyId) {
                   try {
-                    await deleteCompany(selectedCompanyId);
+                    await deleteCompany({ id: selectedCompanyId });
                     setSelectedCompanyId(null);
                   } catch (error) {
                     toast.error(t("common.error"));

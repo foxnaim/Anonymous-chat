@@ -14,7 +14,22 @@ import { useFullscreenContext } from "@/components/providers/FullscreenProvider"
 
 const CompanyBilling = () => {
   const { isFullscreen } = useFullscreenContext();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  
+  // Helper function to get the correct day form in Russian
+  const getDaysText = (days: number): string => {
+    const lang = i18n.language || "ru";
+    if (lang.startsWith("ru")) {
+      if (days === 1) return t("admin.day");
+      if (days > 1 && days < 5) return t("admin.days2");
+      return t("admin.days");
+    }
+    if (lang.startsWith("kk")) {
+      return days === 1 ? "күн" : "күн";
+    }
+    // default en
+    return days === 1 ? "day" : "days";
+  };
   const { user } = useAuth();
   const { data: company, isLoading: companyLoading, refetch: refetchCompany } = useCompany(user?.companyId || 0, {
     enabled: !!user?.companyId,
@@ -87,7 +102,7 @@ const CompanyBilling = () => {
         <main className={`flex-1 px-6 py-4 w-full flex flex-col min-h-0 ${isFullscreen ? 'h-auto overflow-visible block' : 'overflow-y-auto'}`}>
           <div className="flex flex-col gap-4 w-full min-h-0 pb-6">
             {/* Current Plan Info Banner */}
-            {currentPlan && company && (
+            {company && (
               <Card className="p-6 border-border shadow-lg relative overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.03))' }}>
                 <div className="absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 opacity-10" style={{ backgroundColor: 'hsl(var(--primary))' }}></div>
                 <div className="relative z-10">
@@ -96,7 +111,11 @@ const CompanyBilling = () => {
                       <div className="flex items-center gap-3 mb-3">
                         <h3 className="text-xl font-bold text-foreground">{t("company.yourTariff")}</h3>
                         <Badge variant="outline" className="text-base px-3 py-1">
-                          {company.status === t("admin.trial") ? t("company.trialPeriod") : getTranslatedValue(currentPlan.name)}
+                          {company.status === t("admin.trial") 
+                            ? t("company.trialPeriod") 
+                            : currentPlan 
+                              ? getTranslatedValue(currentPlan.name)
+                              : company.plan || t("company.plan")}
                         </Badge>
                       </div>
                       {company.trialEndDate && (() => {
@@ -109,7 +128,7 @@ const CompanyBilling = () => {
                             <p className="text-sm text-muted-foreground">{t("company.daysUntilTariffEnds")}:</p>
                             {diffDays > 0 ? (
                               <Badge className="bg-primary text-white text-base px-4 py-1.5 font-semibold">
-                                {diffDays} {diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'}
+                                {diffDays} {getDaysText(diffDays)}
                               </Badge>
                             ) : (
                               <Badge className="bg-destructive text-white text-base px-4 py-1.5 font-semibold">
@@ -129,11 +148,15 @@ const CompanyBilling = () => {
                     </div>
                     <div className="text-right sm:text-left sm:min-w-[120px]">
                       <p className="text-3xl font-bold mb-1" style={{ color: 'hsl(var(--primary))' }}>
-                        {company.status === t("admin.trial") ? t("common.free") : currentPlan.price === 0 ? t("common.free") : `${currentPlan.price} ₸`}
+                        {company.status === t("admin.trial") 
+                          ? t("common.free") 
+                          : currentPlan 
+                            ? (currentPlan.price === 0 ? t("common.free") : `${currentPlan.price} ₸`)
+                            : t("common.free")}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {company.status === t("admin.trial") 
-                          ? `Пробный период (${freePeriodDays} ${freePeriodDays === 1 ? 'день' : freePeriodDays < 5 ? 'дня' : 'дней'})`
+                          ? `${t("company.trialPeriodLabel")} (${freePeriodDays} ${getDaysText(freePeriodDays)})`
                           : t("admin.perMonth")}
                       </p>
                     </div>
@@ -143,6 +166,7 @@ const CompanyBilling = () => {
             )}
             {/* Available Plans */}
             <div className="flex-shrink-0 pb-6">
+              <h2 className="text-2xl font-bold text-foreground mb-6">{t("company.availablePlans")}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
               {plans.map((plan) => {
                 const planName = typeof plan.name === "string" ? plan.name : getTranslatedValue(plan.name);
@@ -214,9 +238,9 @@ const CompanyBilling = () => {
                         {isFree && plan.freePeriodDays ? (
                           <div className="flex flex-col">
                             <p className="text-3xl font-bold text-foreground mb-1">
-                              {plan.freePeriodDays} {plan.freePeriodDays === 1 ? 'день' : plan.freePeriodDays < 5 ? 'дня' : 'дней'}
+                              {plan.freePeriodDays} {getDaysText(plan.freePeriodDays)}
                             </p>
-                            <p className="text-sm text-muted-foreground">пробного доступа</p>
+                            <p className="text-sm text-muted-foreground">{t("company.trialAccess")}</p>
                           </div>
                         ) : (
                           <div className="flex items-baseline gap-1">
@@ -238,7 +262,7 @@ const CompanyBilling = () => {
                                 <span className="text-muted-foreground">{t("admin.daysUntilExpiry")}:</span>
                                 <span className={`font-semibold ${diffDays <= 0 ? "text-destructive" : "text-foreground"}`}>
                                   {diffDays > 0 
-                                    ? `${diffDays} ${diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'}`
+                                    ? `${diffDays} ${getDaysText(diffDays)}`
                                     : t("admin.tariffExpired")
                                   }
                                 </span>

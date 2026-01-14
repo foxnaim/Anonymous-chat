@@ -173,8 +173,9 @@ export const companyService = {
     }
   },
 
-  delete: async (id: string | number): Promise<void> => {
-    await apiClient.delete<ApiResponse<void>>(`/companies/${id}`);
+  delete: async (id: string | number, password?: string): Promise<void> => {
+    const body = password ? { password } : undefined;
+    await apiClient.delete<ApiResponse<void>>(`/companies/${id}`, body);
   },
 };
 

@@ -23,7 +23,6 @@ import { useCompany, useCompanyStats, useMessageDistribution, useGroupedAchievem
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import TrialCard from "@/components/TrialCard";
 import { Badge } from "@/components/ui/badge";
 import { getTranslatedValue } from "@/lib/utils/translations";
 import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
@@ -278,20 +277,21 @@ const CompanyDashboard = () => {
                   </Card>
                 )}
                 
-                {/* Trial Card - показывается только для пробного периода */}
-                {company && company.status !== "Заблокирована" && <TrialCard company={company} />}
-                
-                {/* Plan Info Card - показывается только если не пробный период */}
-                {company && !isTrialPlan(company.plan) && currentPlan && (
-                  <Card className="p-6 border-border shadow-lg relative overflow-hidden bg-card" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.03))' }}>
-                    <div className="absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 opacity-10 bg-primary"></div>
+                {/* Tariff Info Banner - показывается всегда для всех тарифов */}
+                {company && company.status !== "Заблокирована" && (
+                  <Card className="p-6 border-border shadow-lg relative overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.03))' }}>
+                    <div className="absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 opacity-10" style={{ backgroundColor: 'hsl(var(--primary))' }}></div>
                     <div className="relative z-10">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-3">
                             <h3 className="text-xl font-bold text-foreground">{t("company.yourTariff")}</h3>
                             <Badge variant="outline" className="text-base px-3 py-1">
-                              {getTranslatedValue(currentPlan.name)}
+                              {company.status === t("admin.trial") 
+                                ? t("company.trialPeriod") 
+                                : currentPlan 
+                                  ? getTranslatedValue(currentPlan.name)
+                                  : company.plan || t("company.plan")}
                             </Badge>
                           </div>
                           {company.trialEndDate && (() => {
@@ -324,10 +324,16 @@ const CompanyDashboard = () => {
                         </div>
                         <div className="text-right sm:text-left sm:min-w-[120px]">
                           <p className="text-3xl font-bold mb-1" style={{ color: 'hsl(var(--primary))' }}>
-                            {currentPlan.price === 0 ? t("common.free") : `${currentPlan.price} ₸`}
+                            {company.status === t("admin.trial") 
+                              ? t("common.free") 
+                              : currentPlan 
+                                ? (currentPlan.price === 0 ? t("common.free") : `${currentPlan.price} ₸`)
+                                : t("common.free")}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {t("admin.perMonth")}
+                            {company.status === t("admin.trial") 
+                              ? t("company.trialPeriod")
+                              : t("admin.perMonth")}
                           </p>
                         </div>
                       </div>
