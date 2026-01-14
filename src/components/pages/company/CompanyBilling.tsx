@@ -80,9 +80,6 @@ const CompanyBilling = () => {
     const planName = typeof p.name === "string" ? p.name : getTranslatedValue(p.name);
     return planName === company?.plan || (typeof p.name === "object" && (p.name.ru === company?.plan || p.name.en === company?.plan || p.name.kk === company?.plan));
   });
-  const messagesUsage = company
-    ? Math.round((company.messagesThisMonth || 0) / (company.messagesLimit || 1) * 100)
-    : 0;
   return (
     <div className={`min-h-screen bg-background flex flex-col overflow-x-hidden w-full ${isFullscreen ? 'h-auto overflow-y-auto' : ''}`}>
       <CompanyHeader />
