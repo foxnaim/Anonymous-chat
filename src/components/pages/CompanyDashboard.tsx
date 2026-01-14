@@ -31,7 +31,7 @@ const CompanyDashboard = () => {
   const { isFullscreen } = useFullscreenContext();
   const { t } = useTranslation();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [copiedCode, setCopiedCode] = React.useState(false);
   const [copiedLink, setCopiedLink] = React.useState(false);
   const [copiedPassword, setCopiedPassword] = React.useState(false);
@@ -236,7 +236,13 @@ const CompanyDashboard = () => {
                     <Button
                       variant="outline"
                       onClick={() => {
-                        router.push("/");
+                        // Выполняем выход из системы, так как компания была удалена
+                        // и пользователь больше не должен иметь доступ к сервису
+                        logout();
+                        // Перенаправляем на главную страницу после выхода
+                        setTimeout(() => {
+                          router.push("/");
+                        }, 100);
                       }}
                     >
                       {t("common.backToHome") || "Вернуться на главную"}
