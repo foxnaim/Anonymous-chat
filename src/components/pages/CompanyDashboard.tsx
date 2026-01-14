@@ -31,7 +31,7 @@ const CompanyDashboard = () => {
   const { isFullscreen } = useFullscreenContext();
   const { t } = useTranslation();
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [copiedCode, setCopiedCode] = React.useState(false);
   const [copiedLink, setCopiedLink] = React.useState(false);
   const [copiedPassword, setCopiedPassword] = React.useState(false);
@@ -230,23 +230,9 @@ const CompanyDashboard = () => {
                     <h3 className="text-lg font-semibold text-destructive mb-2">
                       {t("company.deletedTitle") || "Компания была удалена"}
                     </h3>
-                    <p className="text-sm text-foreground mb-4">
+                    <p className="text-sm text-foreground">
                       {t("company.deletedMessage") || "Ваша компания была удалена администратором. Ваш аккаунт больше не имеет доступа к сервису. Для получения дополнительной информации свяжитесь с администратором."}
                     </p>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        // Выполняем выход из системы, так как компания была удалена
-                        // и пользователь больше не должен иметь доступ к сервису
-                        logout();
-                        // Перенаправляем на главную страницу после выхода
-                        setTimeout(() => {
-                          router.push("/");
-                        }, 100);
-                      }}
-                    >
-                      {t("common.backToHome") || "Вернуться на главную"}
-                    </Button>
                   </div>
                 </div>
               </Card>
