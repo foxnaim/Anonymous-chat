@@ -248,12 +248,6 @@ const CompanyMessages = () => {
         
         // Если любое из условий "старости" выполнено, НЕ обновляем selectedMessage
         if (isStaleStatus || isStaleResponse || isInGracePeriod) { 
-            isInGracePeriod,
-            localStatus: selectedMessage.status,
-            remoteStatus: updatedMessage.status,
-            localHasResponse: !!selectedMessage.companyResponse,
-            remoteHasResponse: !!updatedMessage.companyResponse
-          });
           return;
         }
         
