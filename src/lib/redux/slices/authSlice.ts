@@ -328,7 +328,13 @@ const authSlice = createSlice({
                  backendMessage.includes("incorrect")) {
           errorMessage = "Неверный email или пароль";
         }
-        // 4. Если есть сообщение, показываем его
+        // 4. Проверка необходимости подтверждения email
+        else if (backendMessage.includes("Please verify your email address before logging in") ||
+                 backendMessage.includes("verify your email") ||
+                 (msgLower.includes("verify") && msgLower.includes("email") && msgLower.includes("before"))) {
+          errorMessage = i18n.t("auth.verifyEmailBeforeLogin");
+        }
+        // 5. Если есть сообщение, показываем его
         else if (backendMessage && !backendMessage.includes("HTTP error")) {
           errorMessage = backendMessage;
         }

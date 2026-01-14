@@ -98,13 +98,17 @@ const CompanyBilling = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h3 className="text-lg font-bold text-foreground mb-2">{t("company.currentPlan")}</h3>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Badge variant="outline" className="text-sm">
                           {company.status === t("admin.trial") ? t("company.trialPeriod") : getTranslatedValue(currentPlan.name)}
                         </Badge>
-                        {company.status === t("admin.trial") && company.trialEndDate && (
+                        {company.trialEndDate && (
                           <Badge className="bg-primary text-white text-xs">
-                            {t("company.trialEnds")} {new Date(company.trialEndDate).toLocaleDateString("ru-RU")}
+                            {t("company.planEnds")} {new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric"
+                            })}
                           </Badge>
                         )}
                       </div>
@@ -123,15 +127,22 @@ const CompanyBilling = () => {
                   {company.trialEndDate && (
                     <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
                       <p className="text-sm font-medium text-foreground mb-2">
-                        {company.status === t("admin.trial") ? t("company.trialPeriodActive") : "Срок действия тарифа"}
+                        {company.status === t("admin.trial") ? t("company.trialPeriodActive") : t("admin.tariffExpiry")}
                       </p>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
                         <p className="text-xs text-muted-foreground">
-                          {t("company.trialPeriodDescription", { date: new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric"
-                          }) })}
+                          {company.status === t("admin.trial") 
+                            ? t("company.trialPeriodDescription", { date: new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric"
+                              }) })
+                            : t("company.planActiveUntil") + " " + new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric"
+                              })
+                          }
                         </p>
                         {(() => {
                           const endDate = new Date(company.trialEndDate);
@@ -140,14 +151,14 @@ const CompanyBilling = () => {
                           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                           if (diffDays > 0) {
                             return (
-                              <Badge className="bg-primary text-white text-xs ml-2">
-                                Осталось: {diffDays} {diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'}
+                              <Badge className="bg-primary text-white text-xs">
+                                {t("admin.daysUntilExpiry")}: {diffDays} {diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'}
                               </Badge>
                             );
                           }
                           return (
-                            <Badge className="bg-destructive text-white text-xs ml-2">
-                              Истек
+                            <Badge className="bg-destructive text-white text-xs">
+                              {t("admin.tariffExpired")}
                             </Badge>
                           );
                         })()}
@@ -280,15 +291,27 @@ const CompanyBilling = () => {
                               const diffTime = endDate.getTime() - now.getTime();
                               const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                               return (
-                                <div className="flex items-center justify-between text-xs mb-1">
-                                  <span className="text-muted-foreground">{t("admin.daysUntilExpiry")}:</span>
-                                  <span className={`font-semibold ${diffDays <= 0 ? "text-destructive" : "text-foreground"}`}>
-                                    {diffDays > 0 
-                                      ? `${diffDays} ${diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'}`
-                                      : t("admin.tariffExpired")
-                                    }
-                                  </span>
-                                </div>
+                                <>
+                                  <div className="flex items-center justify-between text-xs mb-1">
+                                    <span className="text-muted-foreground">{t("company.planEnds")}:</span>
+                                    <span className="font-semibold text-foreground">
+                                      {new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
+                                        day: "numeric",
+                                        month: "short",
+                                        year: "numeric"
+                                      })}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between text-xs mb-1">
+                                    <span className="text-muted-foreground">{t("admin.daysUntilExpiry")}:</span>
+                                    <span className={`font-semibold ${diffDays <= 0 ? "text-destructive" : "text-foreground"}`}>
+                                      {diffDays > 0 
+                                        ? `${diffDays} ${diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'}`
+                                        : t("admin.tariffExpired")
+                                      }
+                                    </span>
+                                  </div>
+                                </>
                               );
                             })()}
                             {plan.avgDaysUntilExpiry !== null && plan.avgDaysUntilExpiry !== undefined && (

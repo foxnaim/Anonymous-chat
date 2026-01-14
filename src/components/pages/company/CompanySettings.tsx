@@ -8,10 +8,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FiUpload, FiX, FiEdit2 } from "react-icons/fi";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { FiUpload, FiX, FiEdit2, FiTrash2 } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
-import { useCompany, useUpdateCompany } from "@/lib/query";
+import { useCompany, useUpdateCompany, useDeleteCompany } from "@/lib/query";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { authService } from "@/lib/api/auth";
 import { validatePasswordStrength } from "@/lib/utils/validation";
@@ -22,6 +33,7 @@ import { useFullscreenContext } from "@/components/providers/FullscreenProvider"
 const CompanySettings = () => {
   const { t, i18n: i18nInstance } = useTranslation();
   const { user } = useAuth();
+  const router = useRouter();
   const { isFullscreen } = useFullscreenContext();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -33,6 +45,7 @@ const CompanySettings = () => {
   const [newEmail, setNewEmail] = useState("");
   const [emailPassword, setEmailPassword] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const { data: company, refetch: refetchCompany } = useCompany(user?.companyId || 0, {
     enabled: !!user?.companyId,
@@ -47,6 +60,38 @@ const CompanySettings = () => {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || t("common.error"));
+    },
+  });
+
+  const { mutateAsync: deleteCompany, isPending: isDeleting } = useDeleteCompany({
+    onSuccess: () => {
+      setIsDeleteDialogOpen(false);
+      toast.success(t("admin.companyDeleted") || t("company.companyDeleted") || "Компания удалена");
+      // Перенаправляем на главную страницу после удаления компании
+      router.push("/");
+    },
+    onError: (error: any) => {
+      const backendMessage = error?.message || error?.response?.data?.error?.message || error?.response?.data?.message || "";
+      const errorStatus = error?.status || error?.response?.status;
+      
+      // Если 404 - компания уже удалена, это нормально
+      const isNotFound = errorStatus === 404 || 
+                        backendMessage.includes("Company not found") || 
+                        backendMessage.includes("not found");
+      
+      if (isNotFound) {
+        toast.success(t("admin.companyDeleted") || t("company.companyDeleted") || "Компания удалена");
+        router.push("/");
+      } else {
+        // Маппинг сообщений об ошибках
+        let errorMessage = backendMessage || t("common.error");
+        
+        if (backendMessage.includes("Access denied") || backendMessage.includes("Forbidden")) {
+          errorMessage = t("auth.accessDenied") || "Доступ запрещен";
+        }
+        
+        toast.error(errorMessage);
+      }
     },
   });
 
@@ -427,7 +472,14 @@ const CompanySettings = () => {
                     {t("company.deleteCompanyWarning")}
                   </p>
                 </div>
-                <Button variant="destructive">{t("common.delete")}</Button>
+                <Button 
+                  variant="destructive"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  disabled={isDeleting}
+                >
+                  <FiTrash2 className="h-4 w-4 mr-2" />
+                  {t("common.delete")}
+                </Button>
               </div>
             </div>
           </Card>
@@ -437,6 +489,44 @@ const CompanySettings = () => {
           </div>
         </main>
       </div>
+
+      {/* Delete Company Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("company.deleteCompany") || t("admin.deleteCompany") || "Удалить компанию"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("company.deleteCompanyWarning") || t("admin.deleteCompanyWarning") || "Вы уверены, что хотите удалить эту компанию? Это действие нельзя отменить. Все данные компании будут безвозвратно удалены."}
+              {company && (
+                <span className="block mt-2 font-semibold text-foreground">
+                  {company.name}
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (user?.companyId) {
+                  try {
+                    await deleteCompany(user.companyId);
+                  } catch (error) {
+                    // Ошибка уже обработана в onError хука
+                    console.error("[CompanySettings] Failed to delete company:", error);
+                  }
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
+            >
+              {isDeleting ? t("common.loading") : (t("company.deleteCompany") || t("admin.deleteCompany") || "Удалить")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

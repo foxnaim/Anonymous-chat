@@ -315,16 +315,36 @@ const CompanyDashboard = () => {
                       </div>
                       {company.trialEndDate && (
                         <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-                          <p className="text-sm font-medium text-foreground mb-1">
-                            {t("company.planActiveUntil")}
+                          <p className="text-sm font-medium text-foreground mb-2">
+                            {t("admin.tariffExpiry")}
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric"
-                            })}
-                          </p>
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <p className="text-xs text-muted-foreground">
+                              {t("company.planActiveUntil")} {new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric"
+                              })}
+                            </p>
+                            {(() => {
+                              const endDate = new Date(company.trialEndDate);
+                              const now = new Date();
+                              const diffTime = endDate.getTime() - now.getTime();
+                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                              if (diffDays > 0) {
+                                return (
+                                  <Badge className="bg-primary text-white text-xs">
+                                    {t("admin.daysUntilExpiry")}: {diffDays} {diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'}
+                                  </Badge>
+                                );
+                              }
+                              return (
+                                <Badge className="bg-destructive text-white text-xs">
+                                  {t("admin.tariffExpired")}
+                                </Badge>
+                              );
+                            })()}
+                          </div>
                         </div>
                       )}
                     </div>

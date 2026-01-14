@@ -211,7 +211,8 @@
     "verificationFailed": "Verification Failed",
     "verificationLinkInvalid": "The verification link is invalid or has expired.",
     "returnHome": "Return Home",
-    "checkEmailInstruction": "Please check your email to verify your account."
+    "checkEmailInstruction": "Please check your email to verify your account.",
+    "verifyEmailBeforeLogin": "Please verify your email address before logging in."
   },
   "company": {
     "dashboard": "Dashboard",
@@ -272,6 +273,14 @@
         "activity": "Activity",
         "quality": "Quality",
         "longevity": "Longevity"
+      },
+      "categoryTooltip": {
+        "reviews": "Tracks the total number of reviews from employees. The more reviews, the higher the team's engagement in the feedback system.",
+        "resolved": "Shows the number of resolved issues. Resolving problems raised by employees increases trust and improves the work atmosphere.",
+        "responseSpeed": "Evaluates the speed of your responses to messages. Fast responses (within 24 hours) show that you value employee feedback.",
+        "activity": "Tracks employee activity in the system. Includes weekly and monthly activity, periods without complaints, and consistent activity over several months.",
+        "quality": "Evaluates the quality of your work with feedback. Takes into account the number of praises, percentage of positive reviews, and percentage of resolved issues.",
+        "longevity": "Shows how long your company has been using the platform. Long-term use demonstrates commitment to a feedback culture."
       },
       "reviews": {
         "level": "Level {{level}}: {{target}} reviews",
