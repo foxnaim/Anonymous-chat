@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { authService } from "@/lib/api/auth";
 import type { ApiError } from "@/lib/api/client";
 import { setToken, getToken, removeToken } from "@/lib/utils/cookies";
+import i18n from "@/i18n/config";
 
 const initialState: AuthState = {
   user: null,
@@ -228,7 +229,64 @@ const authSlice = createSlice({
       })
       .addCase(registerAsync.rejected, (state, action) => {
         state.isLoading = false;
-        toast.error(action.payload as string || "Ошибка регистрации");
+        
+        // Получаем сообщение об ошибке
+        const backendMessage = String(action.payload || "").trim();
+        const msgLower = backendMessage.toLowerCase();
+        
+        // Маппинг сообщений об ошибках - проверяем в строгом порядке приоритета
+        let errorMessage = "";
+        
+        // 1. Проверка кода компании
+        if (backendMessage.includes("Company with this code already exists") || 
+            (msgLower.includes("code") && msgLower.includes("already exists") && msgLower.includes("company"))) {
+          errorMessage = i18n.t("auth.companyCodeAlreadyExists");
+        }
+        // 2. Проверка имени компании
+        else if (backendMessage.includes("Company with this name already exists") || 
+                 (msgLower.includes("name") && msgLower.includes("already exists") && msgLower.includes("company"))) {
+          errorMessage = i18n.t("auth.companyNameAlreadyExists");
+        }
+        // 3. Проверка email компании
+        else if (backendMessage.includes("Company with this email already exists") || 
+                 (msgLower.includes("email") && msgLower.includes("already exists") && msgLower.includes("company"))) {
+          errorMessage = i18n.t("auth.companyEmailAlreadyExists");
+        }
+        // 4. Проверка email админа
+        else if (backendMessage.includes("Admin with this email already exists") || 
+                 (msgLower.includes("email") && msgLower.includes("already exists") && msgLower.includes("admin"))) {
+          errorMessage = i18n.t("auth.adminEmailAlreadyExists");
+        }
+        // 5. Проверка email пользователя
+        else if (backendMessage.includes("User already exists") || 
+                 backendMessage.includes("User with this email already exists") ||
+                 (msgLower.includes("user") && msgLower.includes("already exists")) ||
+                 (msgLower.includes("email") && msgLower.includes("already exists") && !msgLower.includes("company") && !msgLower.includes("admin"))) {
+          errorMessage = i18n.t("auth.userEmailAlreadyExists");
+        }
+        // 6. Проверка обязательных полей
+        else if (backendMessage.includes("Email and password are required") || 
+                 msgLower.includes("required")) {
+          errorMessage = i18n.t("auth.emailAndPasswordRequired");
+        }
+        // 7. Проверка длины пароля
+        else if (backendMessage.includes("Password must be at least")) {
+          errorMessage = i18n.t("auth.passwordMinLength", { length: 8 });
+        }
+        // 8. Общая ошибка конфликта
+        else if (action.meta.requestStatus === "rejected" && !backendMessage) {
+          errorMessage = i18n.t("common.error");
+        }
+        // 9. Если есть сообщение, но оно не распознано
+        else if (backendMessage && !backendMessage.includes("HTTP error")) {
+          errorMessage = i18n.t("auth.companyConflictError") || backendMessage;
+        }
+        // 10. Общая ошибка
+        else {
+          errorMessage = i18n.t("auth.registrationError");
+        }
+        
+        toast.error(errorMessage);
       })
       // Verify Email
       .addCase(verifyEmailAsync.pending, (state) => {
