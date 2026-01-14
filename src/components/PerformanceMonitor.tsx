@@ -15,7 +15,7 @@ export function PerformanceMonitorComponent() {
     // Отслеживаем Web Vitals
     if (typeof window !== 'undefined') {
       // Можно интегрировать с аналитикой (Google Analytics, etc.)
-      const vitals = PerformanceMonitor.getWebVitals();
+      // const vitals = PerformanceMonitor.getWebVitals();
       // Performance warnings removed
     }
   }, []);
