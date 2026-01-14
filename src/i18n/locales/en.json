@@ -252,6 +252,8 @@
     "cultureStrong": "Feedback culture in your company is strong",
     "searchMessages": "Search messages...",
     "currentPlan": "Current Plan",
+    "yourTariff": "Your tariff",
+    "daysUntilTariffEnds": "Days until tariff ends",
     "trialPeriod2Months": "Trial Period (2 months)",
     "trialPeriodActive": "Trial period active",
     "trialPeriodDescription": "Full access to all features without restrictions until {{date}}. After the trial period ends, the account will automatically switch to the pricing system.",

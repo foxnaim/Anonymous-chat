@@ -90,30 +90,48 @@ const CompanyBilling = () => {
       <div className={`flex flex-col flex-1 w-full min-h-0 ${isFullscreen ? 'h-auto overflow-visible block' : 'overflow-hidden'}`}>
         <main className={`flex-1 px-6 py-4 w-full flex flex-col min-h-0 ${isFullscreen ? 'h-auto overflow-visible block' : 'overflow-y-auto'}`}>
           <div className="flex flex-col gap-4 w-full min-h-0 pb-6">
-            {/* Current Plan */}
+            {/* Current Plan Info Banner */}
             {currentPlan && company && (
               <Card className="p-6 border-border shadow-lg relative overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.03))' }}>
-                <div className="absolute top-0 right-0 w-20 h-20 rounded-full -mr-10 -mt-10 opacity-10" style={{ backgroundColor: 'hsl(var(--primary))' }}></div>
+                <div className="absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 opacity-10" style={{ backgroundColor: 'hsl(var(--primary))' }}></div>
                 <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-bold text-foreground mb-2">{t("company.currentPlan")}</h3>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="outline" className="text-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <h3 className="text-xl font-bold text-foreground">{t("company.yourTariff")}</h3>
+                        <Badge variant="outline" className="text-base px-3 py-1">
                           {company.status === t("admin.trial") ? t("company.trialPeriod") : getTranslatedValue(currentPlan.name)}
                         </Badge>
-                        {company.trialEndDate && (
-                          <Badge className="bg-primary text-white text-xs">
-                            {t("company.planEnds")} {new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric"
-                            })}
-                          </Badge>
-                        )}
                       </div>
+                      {company.trialEndDate && (() => {
+                        const endDate = new Date(company.trialEndDate);
+                        const now = new Date();
+                        const diffTime = endDate.getTime() - now.getTime();
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        return (
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <p className="text-sm text-muted-foreground">{t("company.daysUntilTariffEnds")}:</p>
+                            {diffDays > 0 ? (
+                              <Badge className="bg-primary text-white text-base px-4 py-1.5 font-semibold">
+                                {diffDays} {diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'}
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-destructive text-white text-base px-4 py-1.5 font-semibold">
+                                {t("admin.tariffExpired")}
+                              </Badge>
+                            )}
+                            <span className="text-xs text-muted-foreground">
+                              ({new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric"
+                              })})
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </div>
-                    <div className="text-right">
+                    <div className="text-right sm:text-left sm:min-w-[120px]">
                       <p className="text-3xl font-bold mb-1" style={{ color: 'hsl(var(--primary))' }}>
                         {company.status === t("admin.trial") ? t("common.free") : currentPlan.price === 0 ? t("common.free") : `${currentPlan.price} ₸`}
                       </p>
@@ -124,70 +142,6 @@ const CompanyBilling = () => {
                       </p>
                     </div>
                   </div>
-                  {company.trialEndDate && (
-                    <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
-                      <p className="text-sm font-medium text-foreground mb-2">
-                        {company.status === t("admin.trial") ? t("company.trialPeriodActive") : t("admin.tariffExpiry")}
-                      </p>
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <p className="text-xs text-muted-foreground">
-                          {company.status === t("admin.trial") 
-                            ? t("company.trialPeriodDescription", { date: new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
-                                day: "numeric",
-                                month: "long",
-                                year: "numeric"
-                              }) })
-                            : t("company.planActiveUntil") + " " + new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
-                                day: "numeric",
-                                month: "long",
-                                year: "numeric"
-                              })
-                          }
-                        </p>
-                        {(() => {
-                          const endDate = new Date(company.trialEndDate);
-                          const now = new Date();
-                          const diffTime = endDate.getTime() - now.getTime();
-                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                          if (diffDays > 0) {
-                            return (
-                              <Badge className="bg-primary text-white text-xs">
-                                {t("admin.daysUntilExpiry")}: {diffDays} {diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'}
-                              </Badge>
-                            );
-                          }
-                          return (
-                            <Badge className="bg-destructive text-white text-xs">
-                              {t("admin.tariffExpired")}
-                            </Badge>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  )}
-                  {company.status === t("admin.trial") ? (
-                    <div className="bg-muted/50 rounded-lg p-4">
-                      <p className="text-sm font-medium text-foreground mb-2">
-                        {t("company.trialPeriodAllFeatures")}
-                      </p>
-                      <div className="text-sm">
-                        <div>
-                          <span className="text-muted-foreground">{t("sendMessage.message")}: </span>
-                          <span className="font-semibold">{t("company.unlimited")}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{t("admin.messagesThisMonth")}</span>
-                        <span className="font-semibold">
-                          {company?.messagesThisMonth || 0} / {company?.messagesLimit || 0}
-                        </span>
-                      </div>
-                      <Progress value={messagesUsage} className="h-2" />
-                    </div>
-                  )}
                 </div>
               </Card>
             )}
@@ -276,54 +230,26 @@ const CompanyBilling = () => {
                             <span className="text-xs text-muted-foreground">/{t("admin.perMonth")}</span>
                           </div>
                         )}
-                        {/* Статистика по тарифу */}
-                        {(plan.companiesCount !== undefined || plan.avgDaysUntilExpiry !== undefined || (isCurrent && company?.trialEndDate)) && (
-                          <div className="mt-3 pt-3 border-t border-border/50">
-                            {plan.companiesCount !== undefined && (
-                              <div className="flex items-center justify-between text-xs mb-1">
-                                <span className="text-muted-foreground">Компаний на тарифе:</span>
-                                <span className="font-semibold text-foreground">{plan.companiesCount}</span>
-                              </div>
-                            )}
-                            {isCurrent && company?.trialEndDate && (() => {
-                              const endDate = new Date(company.trialEndDate);
-                              const now = new Date();
-                              const diffTime = endDate.getTime() - now.getTime();
-                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                              return (
-                                <>
-                                  <div className="flex items-center justify-between text-xs mb-1">
-                                    <span className="text-muted-foreground">{t("company.planEnds")}:</span>
-                                    <span className="font-semibold text-foreground">
-                                      {new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
-                                        day: "numeric",
-                                        month: "short",
-                                        year: "numeric"
-                                      })}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center justify-between text-xs mb-1">
-                                    <span className="text-muted-foreground">{t("admin.daysUntilExpiry")}:</span>
-                                    <span className={`font-semibold ${diffDays <= 0 ? "text-destructive" : "text-foreground"}`}>
-                                      {diffDays > 0 
-                                        ? `${diffDays} ${diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'}`
-                                        : t("admin.tariffExpired")
-                                      }
-                                    </span>
-                                  </div>
-                                </>
-                              );
-                            })()}
-                            {plan.avgDaysUntilExpiry !== null && plan.avgDaysUntilExpiry !== undefined && (
+                        {/* Дни до окончания тарифа - только для текущего тарифа */}
+                        {isCurrent && company?.trialEndDate && (() => {
+                          const endDate = new Date(company.trialEndDate);
+                          const now = new Date();
+                          const diffTime = endDate.getTime() - now.getTime();
+                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                          return (
+                            <div className="mt-3 pt-3 border-t border-border/50">
                               <div className="flex items-center justify-between text-xs">
-                                <span className="text-muted-foreground">Среднее время до окончания:</span>
-                                <span className="font-semibold text-foreground">
-                                  {plan.avgDaysUntilExpiry} {plan.avgDaysUntilExpiry === 1 ? 'день' : plan.avgDaysUntilExpiry < 5 ? 'дня' : 'дней'}
+                                <span className="text-muted-foreground">{t("admin.daysUntilExpiry")}:</span>
+                                <span className={`font-semibold ${diffDays <= 0 ? "text-destructive" : "text-foreground"}`}>
+                                  {diffDays > 0 
+                                    ? `${diffDays} ${diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'}`
+                                    : t("admin.tariffExpired")
+                                  }
                                 </span>
                               </div>
-                            )}
-                          </div>
-                        )}
+                            </div>
+                          );
+                        })()}
                       </div>
                       <ul className="space-y-2.5 mb-6 flex-grow">
                         {plan.features.map((feature, idx) => {

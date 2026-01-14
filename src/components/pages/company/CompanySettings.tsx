@@ -73,6 +73,7 @@ const CompanySettings = () => {
     onError: (error: any) => {
       const backendMessage = error?.message || error?.response?.data?.error?.message || error?.response?.data?.message || "";
       const errorStatus = error?.status || error?.response?.status;
+      const msgLower = backendMessage.toLowerCase();
       
       // Если 404 - компания уже удалена, это нормально
       const isNotFound = errorStatus === 404 || 
@@ -86,8 +87,15 @@ const CompanySettings = () => {
         // Маппинг сообщений об ошибках
         let errorMessage = backendMessage || t("common.error");
         
-        if (backendMessage.includes("Access denied") || backendMessage.includes("Forbidden")) {
-          errorMessage = t("auth.accessDenied") || "Доступ запрещен";
+        // Проверка на недостаточные права доступа
+        if (backendMessage.includes("Access denied") || 
+            backendMessage.includes("Forbidden") ||
+            backendMessage.includes("Insufficient permissions") ||
+            msgLower.includes("insufficient permissions") ||
+            msgLower.includes("access denied") ||
+            msgLower.includes("forbidden") ||
+            errorStatus === 403) {
+          errorMessage = t("auth.accessDenied") || "Доступ запрещен. У вас нет прав для выполнения этого действия.";
         }
         
         toast.error(errorMessage);

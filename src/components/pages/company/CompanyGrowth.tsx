@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FiAward, FiStar, FiMessageSquare, FiCheckCircle, FiClock, FiHelpCircle } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
@@ -187,27 +186,25 @@ const CompanyGrowth = () => {
                             <div className="flex-1 min-w-0 pr-3">
                               <div className="flex items-center gap-2 mb-3">
                                 <h4 className="text-base font-semibold text-foreground leading-tight">{categoryTitle}</h4>
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        type="button"
-                                        className="text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full p-0.5"
-                                        aria-label={t(`company.achievement.categoryTooltip.${group.category === "response_speed" ? "responseSpeed" : group.category}`)}
-                                      >
-                                        <FiHelpCircle className="h-3.5 w-3.5" />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent 
-                                      side="top" 
-                                      align="start"
-                                      sideOffset={8}
-                                      className="max-w-xs z-[100]"
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className="text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full p-0.5"
+                                      aria-label={t(`company.achievement.categoryTooltip.${group.category === "response_speed" ? "responseSpeed" : group.category}`)}
                                     >
-                                      <p className="text-sm">{t(`company.achievement.categoryTooltip.${group.category === "response_speed" ? "responseSpeed" : group.category}`)}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
+                                      <FiHelpCircle className="h-3.5 w-3.5" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent 
+                                    side="top" 
+                                    align="start"
+                                    sideOffset={8}
+                                    className="max-w-xs z-[100]"
+                                  >
+                                    <p className="text-sm">{t(`company.achievement.categoryTooltip.${group.category === "response_speed" ? "responseSpeed" : group.category}`)}</p>
+                                  </PopoverContent>
+                                </Popover>
                                 <span className="text-sm text-muted-foreground whitespace-nowrap">
                                   Lv.{group.currentLevel}/{group.maxLevel}
                                 </span>
