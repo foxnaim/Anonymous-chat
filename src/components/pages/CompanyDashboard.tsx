@@ -43,13 +43,6 @@ const CompanyDashboard = () => {
 
   const { data: plans = [], isLoading: plansLoading } = usePlans();
 
-  // Функция для проверки, является ли план пробным
-  const isTrialPlan = (planName?: string): boolean => {
-    if (!planName) return false;
-    const trialPlanNames = ['Пробный', 'Trial', 'Бесплатный', 'Free', 'Тегін', 'Сынақ'];
-    return trialPlanNames.includes(planName);
-  };
-
   // Находим текущий план компании
   const currentPlan = React.useMemo(() => {
     if (!company?.plan || !plans.length) return null;
