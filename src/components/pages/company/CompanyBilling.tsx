@@ -5,7 +5,6 @@ import { useCompany, usePlans, useFreePlanSettings, useUpdateCompanyPlan } from 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { FiCheck, FiArrowRight } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
