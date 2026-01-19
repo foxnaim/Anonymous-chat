@@ -37,6 +37,7 @@ export interface Company {
   storageLimit?: number;
   logoUrl?: string;
   fullscreenMode?: boolean;
+  supportWhatsApp?: string;
 }
 
 export interface User {

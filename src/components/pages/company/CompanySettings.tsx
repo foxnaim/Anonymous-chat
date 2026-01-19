@@ -29,12 +29,14 @@ import { validatePasswordStrength } from "@/lib/utils/validation";
 import { compressImage, validateFileSize, validateImageType } from "@/lib/utils/imageCompression";
 
 import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
+import { usePlanPermissions } from "@/hooks/usePlanPermissions";
 
 const CompanySettings = () => {
   const { t, i18n: i18nInstance } = useTranslation();
   const { user } = useAuth();
   const router = useRouter();
   const { isFullscreen } = useFullscreenContext();
+  const permissions = usePlanPermissions();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -45,6 +47,7 @@ const CompanySettings = () => {
   const [newEmail, setNewEmail] = useState("");
   const [emailPassword, setEmailPassword] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [supportWhatsApp, setSupportWhatsApp] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   
@@ -122,6 +125,9 @@ const CompanySettings = () => {
       if (company.name) {
         setCompanyName(company.name);
       }
+      if (company.supportWhatsApp) {
+        setSupportWhatsApp(company.supportWhatsApp);
+      }
     }
   }, [company]);
 
@@ -173,6 +179,11 @@ const CompanySettings = () => {
       // Имя компании
       if (companyName && companyName !== company?.name) {
         updates.name = companyName;
+      }
+
+      // WhatsApp поддержки (только для Pro плана)
+      if (permissions.isPro && supportWhatsApp !== company?.supportWhatsApp) {
+        updates.supportWhatsApp = supportWhatsApp || "";
       }
 
       // Логотип: отправляем base64, если меняли; если удалили — пустую строку
@@ -387,6 +398,23 @@ const CompanySettings = () => {
                   </div>
                 )}
               </div>
+
+              {/* Support WhatsApp (только для Pro плана) */}
+              {permissions.isPro && (
+                <div className="space-y-2">
+                  <Label htmlFor="supportWhatsApp">{t("company.supportWhatsApp") || "WhatsApp для поддержки"}</Label>
+                  <Input
+                    id="supportWhatsApp"
+                    type="tel"
+                    value={supportWhatsApp}
+                    onChange={(e) => setSupportWhatsApp(e.target.value)}
+                    placeholder="+7 700 123 4567"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t("company.supportWhatsAppDescription") || "Укажите номер WhatsApp для приоритетной поддержки"}
+                  </p>
+                </div>
+              )}
             </div>
           </Card>
 

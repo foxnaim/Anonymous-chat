@@ -9,6 +9,7 @@ export interface AdminSettings {
   itemsPerPage?: number;
   notificationsEnabled?: boolean;
   emailNotifications?: boolean;
+  supportWhatsAppNumber?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -25,6 +26,7 @@ export interface UpdateAdminSettingsRequest {
   itemsPerPage?: number;
   notificationsEnabled?: boolean;
   emailNotifications?: boolean;
+  supportWhatsAppNumber?: string;
 }
 
 export const adminSettingsApi = {

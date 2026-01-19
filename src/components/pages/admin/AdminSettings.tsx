@@ -33,6 +33,7 @@ const AdminSettings = () => {
   const [newEmail, setNewEmail] = useState("");
   const [emailPassword, setEmailPassword] = useState("");
   const [showEmailPassword, setShowEmailPassword] = useState(false);
+  const [supportWhatsAppNumber, setSupportWhatsAppNumber] = useState("");
 
   // Загружаем настройки из API только если пользователь авторизован
   const { data: settings, isLoading: settingsLoading, refetch: refetchSettings } = useAdminSettings({
@@ -50,6 +51,13 @@ const AdminSettings = () => {
       setIsLanguageChanging(false);
     },
   });
+
+  // Синхронизируем настройки при загрузке
+  useEffect(() => {
+    if (settings) {
+      setSupportWhatsAppNumber(settings.supportWhatsAppNumber || "");
+    }
+  }, [settings]);
 
   // Синхронизируем язык с API только один раз при первой загрузке настроек
   // Приоритет у localStorage, так как пользователь мог изменить язык в другом месте
@@ -475,6 +483,39 @@ const AdminSettings = () => {
                     <SelectItem value="kk">Қазақша</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+          </Card>
+
+          {/* Support Settings */}
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-6">{t("admin.supportSettings") || "Настройки поддержки"}</h3>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="supportWhatsAppNumber">{t("admin.supportWhatsAppNumber") || "Номер WhatsApp для поддержки"}</Label>
+                <Input
+                  id="supportWhatsAppNumber"
+                  type="tel"
+                  value={supportWhatsAppNumber}
+                  onChange={(e) => setSupportWhatsAppNumber(e.target.value)}
+                  placeholder="+7 700 123 4567"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t("admin.supportWhatsAppNumberDescription") || "Этот номер будет доступен компаниям с планом Pro в их настройках"}
+                </p>
+                <Button
+                  onClick={async () => {
+                    try {
+                      await updateSettings({ supportWhatsAppNumber });
+                      toast.success(t("admin.settingsSaved"));
+                    } catch (error: any) {
+                      toast.error(error.message || t("common.error"));
+                    }
+                  }}
+                  disabled={isUpdating || supportWhatsAppNumber === settings?.supportWhatsAppNumber}
+                >
+                  {t("common.save")}
+                </Button>
               </div>
             </div>
           </Card>
