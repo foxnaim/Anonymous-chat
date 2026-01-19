@@ -3,18 +3,23 @@
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { FiAward, FiStar, FiMessageSquare, FiCheckCircle, FiClock, FiHelpCircle } from "react-icons/fi";
+import { FiAward, FiStar, FiMessageSquare, FiCheckCircle, FiClock, FiHelpCircle, FiLock } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import { useGrowthMetrics, useGroupedAchievements, useCompanyStats, useMessages, useCompany } from "@/lib/query";
 import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
+import { usePlanPermissions } from "@/hooks/usePlanPermissions";
+import { useRouter } from "next/navigation";
 
 const CompanyGrowth = () => {
   const { isFullscreen } = useFullscreenContext();
   const { t } = useTranslation();
+  const router = useRouter();
   const { user } = useAuth();
+  const permissions = usePlanPermissions();
   const { data: company } = useCompany(user?.companyId || 0, {
     enabled: !!user?.companyId,
   });
@@ -90,50 +95,69 @@ const CompanyGrowth = () => {
               <Card className="p-4 border-border shadow-lg relative overflow-hidden w-full flex-shrink-0" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.08), hsl(var(--secondary) / 0.05))' }}>
                 <div className="absolute top-0 right-0 w-48 h-48 rounded-full -mr-24 -mt-24 opacity-10" style={{ backgroundColor: 'hsl(var(--primary))' }}></div>
                 <div className="relative z-10">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="p-2 rounded-lg" style={{ backgroundColor: 'hsl(var(--primary))' }}>
-                          <FiStar className="h-5 w-5 text-white fill-white" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-bold text-foreground">{t("company.growthRating")}</h3>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <button
-                                  type="button"
-                                  className="text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full p-0.5"
-                                  aria-label={t("company.growthRatingInfo")}
-                                >
-                                  <FiHelpCircle className="h-4 w-4" />
-                                </button>
-                              </PopoverTrigger>
-                              <PopoverContent 
-                                side="bottom" 
-                                align="start"
-                                sideOffset={8}
-                                className="max-w-xs z-[100]"
-                              >
-                                <p className="text-sm">{t("company.growthRatingTooltip")}</p>
-                              </PopoverContent>
-                            </Popover>
+                  {permissions.canViewGrowth ? (
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="p-2 rounded-lg" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                            <FiStar className="h-5 w-5 text-white fill-white" />
                           </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {getRatingDescription(metrics?.rating || 0)}
-                          </p>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-lg font-bold text-foreground">{t("company.growthRating")}</h3>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <button
+                                    type="button"
+                                    className="text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full p-0.5"
+                                    aria-label={t("company.growthRatingInfo")}
+                                  >
+                                    <FiHelpCircle className="h-4 w-4" />
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent 
+                                  side="bottom" 
+                                  align="start"
+                                  sideOffset={8}
+                                  className="max-w-xs z-[100]"
+                                >
+                                  <p className="text-sm">{t("company.growthRatingTooltip")}</p>
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {getRatingDescription(metrics?.rating || 0)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-5xl font-bold" style={{ color: 'hsl(var(--primary))' }}>
+                            {metrics?.rating?.toFixed(1) || "0.0"}
+                          </span>
+                          <span className="text-xl font-semibold text-muted-foreground">/ 10</span>
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-5xl font-bold" style={{ color: 'hsl(var(--primary))' }}>
-                          {metrics?.rating?.toFixed(1) || "0.0"}
-                        </span>
-                        <span className="text-xl font-semibold text-muted-foreground">/ 10</span>
-                      </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center p-6 text-center">
+                      <FiLock className="h-8 w-8 text-muted-foreground mb-3" />
+                      <h3 className="text-base font-semibold text-foreground mb-2">
+                        {t("company.featureLocked") || "Функция недоступна"}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        {t("company.growthLocked") || "Рейтинг роста доступен в планах Standard и Pro"}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => router.push("/company/billing")}
+                      >
+                        {t("company.upgradePlan") || "Обновить план"}
+                      </Button>
                     </div>
-                  </div>
+                  )}
                 </div>
               </Card>
               {/* Achievements */}

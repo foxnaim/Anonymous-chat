@@ -26,7 +26,7 @@ const AdminPlans = () => {
     freePeriodDays: number | "";
   }>({
     messagesLimit: 10,
-    freePeriodDays: 60,
+    freePeriodDays: 22,
   });
 
   const { data: plans = [], isLoading, refetch } = usePlans();
@@ -57,7 +57,7 @@ const AdminPlans = () => {
     plansService.getFreePlanSettings().then((data) => {
       setFreePlanSettings({
         messagesLimit: data.messagesLimit ?? 10,
-        freePeriodDays: data.freePeriodDays ?? 60,
+        freePeriodDays: data.freePeriodDays ?? 22,
       });
     });
   }, []);
@@ -74,7 +74,7 @@ const AdminPlans = () => {
       const updatedSettings = await plansService.getFreePlanSettings();
       setFreePlanSettings({
         messagesLimit: updatedSettings.messagesLimit ?? 10,
-        freePeriodDays: updatedSettings.freePeriodDays ?? 60,
+        freePeriodDays: updatedSettings.freePeriodDays ?? 22,
       });
       refetch();
     },

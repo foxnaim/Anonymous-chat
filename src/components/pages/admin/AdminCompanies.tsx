@@ -133,7 +133,7 @@ const AdminCompanies = () => {
   const { data: plans = [] } = usePlans();
 
   // Проверка, является ли план пробным/бесплатным
-  const isTrialPlan = (planName?: string): boolean => {
+  const isTrialPlan = useCallback((planName?: string): boolean => {
     if (!planName) return false;
     const trialPlanNames = ['Пробный', 'Trial', 'Бесплатный', 'Free', 'Тегін', 'Сынақ'];
     const normalized = planName.toLowerCase();
@@ -142,7 +142,7 @@ const AdminCompanies = () => {
              const pName = typeof p.name === "string" ? p.name : getTranslatedValue(p.name);
              return pName === planName && p.isFree === true;
            });
-  };
+  }, [plans]);
 
   // Проверка, может ли пользователь редактировать план компании
   const canEditPlan = (company: Company): boolean => {
@@ -571,7 +571,7 @@ const AdminCompanies = () => {
     setSelectedPlan(company.plan as PlanType);
     setPlanEndDate(company.trialEndDate || "");
     setIsPlanModalOpen(true);
-  }, [user, plans, t]);
+  }, [user, t, isTrialPlan]);
 
   const openViewModal = useCallback((company: Company) => {
     setSelectedCompany(company);

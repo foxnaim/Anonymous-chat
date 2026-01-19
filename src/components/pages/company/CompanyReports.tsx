@@ -12,17 +12,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FiDownload, FiMessageSquare, FiAlertCircle, FiAward, FiZap, FiBarChart2, FiCheckCircle, FiX, FiTrendingUp } from "react-icons/fi";
+import { FiDownload, FiMessageSquare, FiAlertCircle, FiAward, FiZap, FiBarChart2, FiCheckCircle, FiX, FiTrendingUp, FiLock } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
+import { usePlanPermissions } from "@/hooks/usePlanPermissions";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 const CompanyReports = () => {
   const { isFullscreen } = useFullscreenContext();
   const { t, i18n: i18nInstance } = useTranslation();
+  const router = useRouter();
   const { user } = useAuth();
+  const permissions = usePlanPermissions();
   
   // Состояние для выбранного месяца и года
   const now = new Date();
@@ -105,6 +110,11 @@ const CompanyReports = () => {
   };
 
   const generatePdfReport = async () => {
+    if (!permissions.canViewReports) {
+      toast.error(t("company.reportsLocked") || "Отчёты доступны только в плане Pro");
+      router.push("/company/billing");
+      return;
+    }
     if (!distribution || !stats || !growthMetrics || !company) return;
 
     const totalMessages = total;
@@ -297,16 +307,23 @@ const CompanyReports = () => {
                   </div>
                 </div>
               </div>
-              <Button
-                onClick={generatePdfReport}
-                disabled={isLoading}
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 rounded-full flex-shrink-0 self-start sm:self-auto"
-                aria-label={t("company.downloadMonthlyReport")}
-              >
-                <FiDownload className="h-4 w-4" />
-              </Button>
+              <div className="relative">
+                <Button
+                  onClick={generatePdfReport}
+                  disabled={isLoading || !permissions.canViewReports}
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 rounded-full flex-shrink-0 self-start sm:self-auto"
+                  aria-label={t("company.downloadMonthlyReport")}
+                >
+                  <FiDownload className="h-4 w-4" />
+                </Button>
+                {!permissions.canViewReports && (
+                  <div className="absolute -top-2 -right-2">
+                    <FiLock className="h-3 w-3 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -443,23 +460,46 @@ const CompanyReports = () => {
                       <div className="flex items-center gap-2 mb-3 sm:mb-4">
                         <FiTrendingUp className="h-4 w-4 text-primary flex-shrink-0" />
                         <h3 className="text-xs sm:text-sm font-semibold">{t("company.teamMood")}</h3>
+                        {!permissions.canViewTeamMood && (
+                          <FiLock className="h-3 w-3 text-muted-foreground" />
+                        )}
                       </div>
-                      <div className="space-y-4 sm:space-y-6 flex-1 flex flex-col justify-center">
-                        <div className="p-3 sm:p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{t("company.growthRating")}</span>
-                            <span className="text-2xl sm:text-3xl font-bold flex-shrink-0" style={{ color: 'hsl(var(--secondary))' }}>{growthMetrics.rating}</span>
+                      {permissions.canViewTeamMood ? (
+                        <div className="space-y-4 sm:space-y-6 flex-1 flex flex-col justify-center">
+                          <div className="p-3 sm:p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{t("company.growthRating")}</span>
+                              <span className="text-2xl sm:text-3xl font-bold flex-shrink-0" style={{ color: 'hsl(var(--secondary))' }}>{growthMetrics.rating}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between p-3 sm:p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>
+                            <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{t("company.overallMood")}</span>
+                            <span className="text-base sm:text-lg font-bold flex-shrink-0 ml-2" style={{ color: 'hsl(var(--secondary))' }}>{getMoodLabel(growthMetrics.mood)}</span>
+                          </div>
+                          <div className="flex items-center justify-between p-3 sm:p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>
+                            <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{t("company.trend")}</span>
+                            <span className="text-base sm:text-lg font-bold flex-shrink-0 ml-2" style={{ color: 'hsl(var(--success))' }}>{getTrendLabel(growthMetrics.trend)}</span>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between p-3 sm:p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>
-                          <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{t("company.overallMood")}</span>
-                          <span className="text-base sm:text-lg font-bold flex-shrink-0 ml-2" style={{ color: 'hsl(var(--secondary))' }}>{getMoodLabel(growthMetrics.mood)}</span>
+                      ) : (
+                        <div className="flex-1 flex flex-col justify-center items-center p-4 bg-muted/50 rounded-lg border border-border">
+                          <FiLock className="h-6 w-6 text-muted-foreground mb-2" />
+                          <p className="text-xs font-semibold text-foreground mb-1 text-center">
+                            {t("company.featureLocked") || "Функция недоступна"}
+                          </p>
+                          <p className="text-xs text-muted-foreground mb-3 text-center">
+                            {t("company.teamMoodLocked") || "Показатель «настроение команды» доступен только в плане Pro"}
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => router.push("/company/billing")}
+                            className="text-xs"
+                          >
+                            {t("company.upgradePlan") || "Обновить план"}
+                          </Button>
                         </div>
-                        <div className="flex items-center justify-between p-3 sm:p-4 bg-card rounded-lg border" style={{ borderColor: 'hsl(var(--secondary) / 0.3)' }}>
-                          <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{t("company.trend")}</span>
-                          <span className="text-base sm:text-lg font-bold flex-shrink-0 ml-2" style={{ color: 'hsl(var(--success))' }}>{getTrendLabel(growthMetrics.trend)}</span>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </Card>
                 )}

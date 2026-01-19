@@ -50,7 +50,7 @@ const CompanyBilling = () => {
   // Получаем количество дней пробного периода из плана (который обновляется на бэкенде)
   // Если план еще не загружен, используем настройки как fallback
   const freePlan = plans.find((p) => p.id === 'free' || p.isFree);
-  const freePeriodDays = freePlan?.freePeriodDays || freePlanSettings?.freePeriodDays || 60;
+  const freePeriodDays = freePlan?.freePeriodDays || freePlanSettings?.freePeriodDays || 22;
   
   const handleUpgrade = async (planId: string) => {
     if (!user?.companyId || !company) {
