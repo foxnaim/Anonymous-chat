@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { FiSearch, FiEye, FiCheckCircle, FiClock, FiX, FiChevronDown, FiCheck, FiMessageSquare, FiAlertCircle, FiLock } from "react-icons/fi";
+import { FiSearch, FiEye, FiCheckCircle, FiClock, FiX, FiChevronDown, FiCheck, FiMessageSquare, FiAlertCircle } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import { Message, MessageStatus } from "@/types";
@@ -20,12 +20,10 @@ import { useSocketMessages } from "@/lib/websocket/useSocket";
 import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
 import { useDebounce } from "@/hooks/use-debounce";
 import { usePlanPermissions } from "@/hooks/usePlanPermissions";
-import { useRouter } from "next/navigation";
 
 const CompanyMessages = () => {
   const { isFullscreen } = useFullscreenContext();
   const { t } = useTranslation();
-  const router = useRouter();
   const { user } = useAuth();
   const permissions = usePlanPermissions();
   const [searchQuery, setSearchQuery] = useState("");
@@ -597,142 +595,75 @@ const CompanyMessages = () => {
                             </div>
                           </div>
                         ) : (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Label>{t("messages.response")}</Label>
-                              {selectedMessage.companyResponse && (
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  onClick={() => setIsEditingResponse(false)}
-                                  className="h-6 px-2 text-xs"
-                                >
-                                  {t("common.cancel") || "Отмена"}
-                                </Button>
-                              )}
-                            </div>
-                            <Textarea
-                              value={responseText}
-                              onChange={(e) => setResponseText(e.target.value)}
-                              placeholder={t("messages.enterResponse")}
-                              className="min-h-[120px]"
-                              disabled={isRejectedByAdmin(selectedMessage) || !permissions.canReply}
-                            />
-                            {!permissions.canReply && (
-                              <div className="bg-muted/50 border border-border rounded-lg p-3 flex items-start gap-2">
-                                <FiLock className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                                <div className="flex-1">
-                                  <p className="text-xs font-semibold text-foreground mb-1">
-                                    {t("company.featureLocked") || "Функция недоступна"}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground mb-2">
-                                    {t("company.replyLockedMessage") || "Ответы на сообщения доступны в планах Standard и Pro"}
-                                  </p>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => router.push("/company/billing")}
-                                    className="text-xs"
+                          permissions.canReply && (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <Label>{t("messages.response")}</Label>
+                                {selectedMessage.companyResponse && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => setIsEditingResponse(false)}
+                                    className="h-6 px-2 text-xs"
                                   >
-                                    {t("company.upgradePlan") || "Обновить план"}
+                                    {t("common.cancel") || "Отмена"}
                                   </Button>
-                                </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        )}
-                        {permissions.isReadOnly && (
-                          <div className="bg-muted/50 border border-border rounded-lg p-3 flex items-start gap-2">
-                            <FiLock className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                            <div className="flex-1">
-                              <p className="text-xs font-semibold text-foreground mb-1">
-                                {t("company.readOnlyMode") || "Режим только для чтения"}
-                              </p>
-                              <p className="text-xs text-muted-foreground mb-2">
-                                {t("company.readOnlyMessage") || "В пробном периоде доступен только просмотр сообщений. Обновите план для ответов и смены статусов."}
-                              </p>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => router.push("/company/billing")}
-                                className="text-xs"
-                              >
-                                {t("company.upgradePlan") || "Обновить план"}
-                              </Button>
+                              <Textarea
+                                value={responseText}
+                                onChange={(e) => setResponseText(e.target.value)}
+                                placeholder={t("messages.enterResponse")}
+                                className="min-h-[120px]"
+                                disabled={isRejectedByAdmin(selectedMessage)}
+                              />
                             </div>
+                          )
+                        )}
+                        {permissions.canChangeStatus && (
+                          <div className="flex gap-3 flex-wrap">
+                            <Button
+                              variant="outline"
+                              onClick={() => handleUpdateStatus(t("checkStatus.inProgress") as MessageStatus)}
+                              disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === t("checkStatus.inProgress")}
+                            >
+                              <FiClock className="h-4 w-4 mr-2" />
+                              {t("checkStatus.inProgress")}
+                            </Button>
+                            <Button
+                              onClick={() => handleUpdateStatus(t("checkStatus.resolved") as MessageStatus)}
+                              disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === t("checkStatus.resolved")}
+                            >
+                              <FiCheckCircle className="h-4 w-4 mr-2" />
+                              {t("checkStatus.resolved")}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleUpdateStatus(t("checkStatus.rejected") as MessageStatus)}
+                              disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === t("checkStatus.rejected") || selectedMessage.status === "Отклонено"}
+                            >
+                              <FiX className="h-4 w-4 mr-2" />
+                              {t("messages.reject")}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleUpdateStatus(t("checkStatus.spam") as MessageStatus)}
+                              disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === t("checkStatus.spam") || selectedMessage.status === "Спам"}
+                            >
+                              <FiAlertCircle className="h-4 w-4 mr-2" />
+                              {t("checkStatus.spam")}
+                            </Button>
                           </div>
                         )}
-                        <div className="flex gap-3 flex-wrap">
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              if (!permissions.canChangeStatus) {
-                                toast.error(t("company.statusChangeLocked") || "Смена статусов недоступна в вашем плане");
-                                return;
-                              }
-                              handleUpdateStatus(t("checkStatus.inProgress") as MessageStatus);
-                            }}
-                            disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === t("checkStatus.inProgress") || !permissions.canChangeStatus}
-                          >
-                            <FiClock className="h-4 w-4 mr-2" />
-                            {t("checkStatus.inProgress")}
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              if (!permissions.canChangeStatus) {
-                                toast.error(t("company.statusChangeLocked") || "Смена статусов недоступна в вашем плане");
-                                return;
-                              }
-                              handleUpdateStatus(t("checkStatus.resolved") as MessageStatus);
-                            }}
-                            disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === t("checkStatus.resolved") || !permissions.canChangeStatus}
-                          >
-                            <FiCheckCircle className="h-4 w-4 mr-2" />
-                            {t("checkStatus.resolved")}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              if (!permissions.canChangeStatus) {
-                                toast.error(t("company.statusChangeLocked") || "Смена статусов недоступна в вашем плане");
-                                return;
-                              }
-                              handleUpdateStatus(t("checkStatus.rejected") as MessageStatus);
-                            }}
-                            disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === t("checkStatus.rejected") || selectedMessage.status === "Отклонено" || !permissions.canChangeStatus}
-                          >
-                            <FiX className="h-4 w-4 mr-2" />
-                            {t("messages.reject")}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              if (!permissions.canChangeStatus) {
-                                toast.error(t("company.statusChangeLocked") || "Смена статусов недоступна в вашем плане");
-                                return;
-                              }
-                              handleUpdateStatus(t("checkStatus.spam") as MessageStatus);
-                            }}
-                            disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === t("checkStatus.spam") || selectedMessage.status === "Спам" || !permissions.canChangeStatus}
-                          >
-                            <FiAlertCircle className="h-4 w-4 mr-2" />
-                            {t("checkStatus.spam")}
-                          </Button>
-                        </div>
-                        {!permissions.canReply && !permissions.isReadOnly && (
+                        {permissions.canReply && responseText.trim() && (
                           <Button
                             className="w-full"
                             onClick={() => {
-                              if (!permissions.canReply) {
-                                toast.error(t("company.replyLocked") || "Ответы недоступны в вашем плане");
-                                router.push("/company/billing");
-                                return;
-                              }
                               if (responseText.trim()) {
                                 handleUpdateStatus(selectedMessage.status);
                               }
                             }}
-                            disabled={!responseText.trim() || !permissions.canReply}
+                            disabled={!responseText.trim()}
                           >
                             {t("messages.saveResponse") || "Сохранить ответ"}
                           </Button>

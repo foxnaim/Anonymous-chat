@@ -3,21 +3,18 @@
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { FiAward, FiStar, FiMessageSquare, FiCheckCircle, FiClock, FiHelpCircle, FiLock } from "react-icons/fi";
+import { FiAward, FiStar, FiMessageSquare, FiCheckCircle, FiClock, FiHelpCircle } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import { useGrowthMetrics, useGroupedAchievements, useCompanyStats, useMessages, useCompany } from "@/lib/query";
 import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
 import { usePlanPermissions } from "@/hooks/usePlanPermissions";
-import { useRouter } from "next/navigation";
 
 const CompanyGrowth = () => {
   const { isFullscreen } = useFullscreenContext();
   const { t } = useTranslation();
-  const router = useRouter();
   const { user } = useAuth();
   const permissions = usePlanPermissions();
   const { data: company } = useCompany(user?.companyId || 0, {
@@ -92,10 +89,10 @@ const CompanyGrowth = () => {
           ) : (
             <div className="flex flex-col gap-4 w-full h-full min-h-0 justify-between">
               {/* Rating Card */}
-              <Card className="p-4 border-border shadow-lg relative overflow-hidden w-full flex-shrink-0" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.08), hsl(var(--secondary) / 0.05))' }}>
-                <div className="absolute top-0 right-0 w-48 h-48 rounded-full -mr-24 -mt-24 opacity-10" style={{ backgroundColor: 'hsl(var(--primary))' }}></div>
-                <div className="relative z-10">
-                  {permissions.canViewGrowth ? (
+              {permissions.canViewGrowth && (
+                <Card className="p-4 border-border shadow-lg relative overflow-hidden w-full flex-shrink-0" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.08), hsl(var(--secondary) / 0.05))' }}>
+                  <div className="absolute top-0 right-0 w-48 h-48 rounded-full -mr-24 -mt-24 opacity-10" style={{ backgroundColor: 'hsl(var(--primary))' }}></div>
+                  <div className="relative z-10">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
@@ -140,28 +137,12 @@ const CompanyGrowth = () => {
                         </div>
                       </div>
                     </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center p-6 text-center">
-                      <FiLock className="h-8 w-8 text-muted-foreground mb-3" />
-                      <h3 className="text-base font-semibold text-foreground mb-2">
-                        {t("company.featureLocked") || "Функция недоступна"}
-                      </h3>
-                      <p className="text-xs text-muted-foreground mb-4">
-                        {t("company.growthLocked") || "Рейтинг роста доступен в планах Standard и Pro"}
-                      </p>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => router.push("/company/billing")}
-                      >
-                        {t("company.upgradePlan") || "Обновить план"}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </Card>
+                  </div>
+                </Card>
+              )}
               {/* Achievements */}
-              <Card className="p-4 w-full flex-1 flex flex-col min-h-0">
+              {permissions.canViewGrowth && (
+                <Card className="p-4 w-full flex-1 flex flex-col min-h-0">
                 <div className="flex items-center gap-2 mb-3 flex-shrink-0">
                   <FiAward className="h-4 w-4 text-primary" />
                   <h3 className="text-sm font-semibold">{t("company.achievements")}</h3>
@@ -262,7 +243,8 @@ const CompanyGrowth = () => {
                     })
                   )}
                 </div>
-              </Card>
+                </Card>
+              )}
               {/* Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full flex-shrink-0">
                 <Card className="p-6 border-border shadow-lg relative overflow-hidden w-full" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.03))' }}>
