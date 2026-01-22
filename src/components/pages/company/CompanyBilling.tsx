@@ -35,7 +35,7 @@ const CompanyBilling = () => {
     enabled: !!user?.companyId,
   });
   const { data: plans = [], isLoading: plansLoading } = usePlans();
-  const { data: freePlanSettings, isLoading: freePlanSettingsLoading } = useFreePlanSettings();
+  const { isLoading: freePlanSettingsLoading } = useFreePlanSettings();
   
   const { mutate: updatePlan } = useUpdateCompanyPlan({
     onSuccess: () => {
