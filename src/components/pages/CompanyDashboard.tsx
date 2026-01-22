@@ -264,61 +264,57 @@ const CompanyDashboard = () => {
                 
                 {/* Tariff Info Banner - показывается всегда для всех тарифов */}
                 {company && company.status !== "Заблокирована" && (
-                  <Card className="p-4 sm:p-6 border-border shadow-lg relative overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.03))' }}>
+                  <Card className="p-4 sm:p-5 border-border shadow-lg relative overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(to bottom right, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.03))' }}>
                     <div className="absolute top-0 right-0 w-32 h-32 rounded-full -mr-16 -mt-16 opacity-10" style={{ backgroundColor: 'hsl(var(--primary))' }}></div>
                     <div className="relative z-10">
-                      <div className="flex flex-col gap-4">
-                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
-                              <h3 className="text-lg sm:text-xl font-bold text-foreground">{t("company.yourTariff")}</h3>
-                              <Badge variant="outline" className="text-sm sm:text-base px-3 py-1 w-fit">
-                                {company.status === t("admin.trial") 
-                                  ? t("company.trialPeriod") 
-                                  : currentPlan 
-                                    ? getTranslatedValue(currentPlan.name)
-                                    : company.plan || t("company.plan")}
-                              </Badge>
-                            </div>
-                            {company.trialEndDate && (() => {
-                              const endDate = new Date(company.trialEndDate);
-                              const now = new Date();
-                              const diffTime = endDate.getTime() - now.getTime();
-                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                              return (
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-wrap">
-                                  <p className="text-xs sm:text-sm text-muted-foreground">{t("company.daysUntilTariffEnds")}:</p>
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    {diffDays > 0 ? (
-                                      <Badge className="bg-primary text-white text-sm sm:text-base px-3 sm:px-4 py-1 sm:py-1.5 font-semibold">
-                                        {diffDays} {diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'}
-                                      </Badge>
-                                    ) : (
-                                      <Badge className="bg-destructive text-white text-sm sm:text-base px-3 sm:px-4 py-1 sm:py-1.5 font-semibold">
-                                        {t("admin.tariffExpired")}
-                                      </Badge>
-                                    )}
-                                    <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                      ({new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
-                                        day: "numeric",
-                                        month: "long",
-                                        year: "numeric"
-                                      })})
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            })()}
-                          </div>
-                          <div className="flex-shrink-0 text-left sm:text-right">
-                            <p className="text-2xl sm:text-3xl font-bold" style={{ color: 'hsl(var(--primary))' }}>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2.5 mb-2">
+                            <h3 className="text-base sm:text-lg font-bold text-foreground">{t("company.yourTariff")}</h3>
+                            <Badge variant="outline" className="text-xs sm:text-sm px-2.5 py-0.5">
                               {company.status === t("admin.trial") 
-                                ? t("common.free") 
+                                ? t("company.trialPeriod") 
                                 : currentPlan 
-                                  ? (currentPlan.price === 0 ? t("common.free") : `${currentPlan.price} ₸`)
-                                  : t("common.free")}
-                            </p>
+                                  ? getTranslatedValue(currentPlan.name)
+                                  : company.plan || t("company.plan")}
+                            </Badge>
                           </div>
+                          {company.trialEndDate && (() => {
+                            const endDate = new Date(company.trialEndDate);
+                            const now = new Date();
+                            const diffTime = endDate.getTime() - now.getTime();
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            return (
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-xs text-muted-foreground">{t("company.daysUntilTariffEnds")}:</p>
+                                {diffDays > 0 ? (
+                                  <Badge className="bg-primary text-white text-xs px-2.5 py-0.5 font-semibold">
+                                    {diffDays} {diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'}
+                                  </Badge>
+                                ) : (
+                                  <Badge className="bg-destructive text-white text-xs px-2.5 py-0.5 font-semibold">
+                                    {t("admin.tariffExpired")}
+                                  </Badge>
+                                )}
+                                <span className="text-xs text-muted-foreground">
+                                  ({new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
+                                    day: "numeric",
+                                    month: "long",
+                                    year: "numeric"
+                                  })})
+                                </span>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                        <div className="flex-shrink-0 text-left sm:text-right">
+                          <p className="text-2xl sm:text-3xl font-bold" style={{ color: 'hsl(var(--primary))' }}>
+                            {company.status === t("admin.trial") 
+                              ? t("common.free") 
+                              : currentPlan 
+                                ? (currentPlan.price === 0 ? t("common.free") : `${currentPlan.price} ₸`)
+                                : t("common.free")}
+                          </p>
                         </div>
                       </div>
                     </div>
