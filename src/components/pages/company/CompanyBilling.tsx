@@ -25,7 +25,7 @@ const CompanyBilling = () => {
       return t("admin.days");
     }
     if (lang.startsWith("kk")) {
-      return days === 1 ? "күн" : "күн";
+      return t("company.day");
     }
     // default en
     return days === 1 ? "day" : "days";

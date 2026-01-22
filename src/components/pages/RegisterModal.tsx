@@ -261,7 +261,7 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-0.5">
                       <p className="font-bold text-sm text-foreground">
-                        {freePeriodDays} {freePeriodDays === 1 ? 'день' : freePeriodDays < 5 ? 'дня' : 'дней'} бесплатно
+                        {freePeriodDays} {freePeriodDays === 1 ? t("company.day") : freePeriodDays < 5 ? t("company.days2") : t("company.days")} {t("common.free")}
                       </p>
                       <Badge className="bg-accent text-accent-foreground border-0 text-xs">{t("auth.trialPeriod")}</Badge>
                     </div>

@@ -35,15 +35,15 @@ const AdminPlans = () => {
   const getDaysLabel = (count: number) => {
     const lang = i18n.language;
     if (lang === "en") {
-      return count === 1 ? "day" : "days";
+      return count === 1 ? t("company.day") : t("company.days");
     }
     if (lang === "kk") {
-      return count === 1 ? "күн" : "күндер";
+      return t("company.day");
     }
     // ru default
-    if (count === 1) return "день";
-    if (count > 1 && count < 5) return "дня";
-    return "дней";
+    if (count === 1) return t("company.day");
+    if (count > 1 && count < 5) return t("company.days2");
+    return t("company.days");
   };
 
   // Вычисляем значения динамически, чтобы они обновлялись при изменении состояния

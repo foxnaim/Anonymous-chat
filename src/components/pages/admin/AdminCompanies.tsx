@@ -596,7 +596,7 @@ const AdminCompanies = () => {
   }, [t]);
 
   const exportToCSV = useCallback(() => {
-    const headers = ["Название", "Код", "Email", "Статус", "План", "Сообщений", "Регистрация"];
+    const headers = [t("admin.companyName"), t("company.companyCodeLabel"), t("auth.email"), t("admin.status"), t("admin.plan"), t("admin.totalMessages"), t("admin.registration")];
     const rows = filteredCompanies.map((c) => [
       c.name,
       c.code,
@@ -751,7 +751,7 @@ const AdminCompanies = () => {
                       {t("admin.adminEmail")}
                     </th>
                     <th className="p-4 text-left text-sm font-medium text-muted-foreground">
-                      Код
+                      {t("company.companyCodeLabel")}
                     </th>
                     <th className="p-4 text-left text-sm font-medium text-muted-foreground">
                       {t("admin.status")}
@@ -876,7 +876,7 @@ const AdminCompanies = () => {
                                   onClick={() => copyToClipboard(company.code)}
                                 >
                                   <FiCopy className="h-4 w-4 mr-2" />
-                                  {t("common.copy")} код
+                                  {t("common.copy")} {t("company.companyCodeLabel").toLowerCase()}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
@@ -920,7 +920,7 @@ const AdminCompanies = () => {
                     <FiChevronLeft className="h-4 w-4" />
                   </Button>
                   <div className="text-sm text-muted-foreground">
-                    {currentPage} из {totalPages}
+                    {currentPage} {t("company.of")} {totalPages}
                   </div>
                   <Button
                     variant="outline"
@@ -993,7 +993,7 @@ const AdminCompanies = () => {
                       onChange={(e) =>
                         setNewCompany({ ...newCompany, name: e.target.value })
                       }
-                      placeholder="Введите название компании"
+                      placeholder={t("company.companyNamePlaceholder")}
                     />
                   </div>
                   <div>
@@ -1009,7 +1009,7 @@ const AdminCompanies = () => {
                     />
                   </div>
                   <div>
-                    <Label>Код компании (8 символов)</Label>
+                    <Label>{t("company.companyCodeWithLength")}</Label>
                     <div className="flex gap-2">
                       <Input
                         value={newCompany.code}
@@ -1029,7 +1029,7 @@ const AdminCompanies = () => {
                           setNewCompany({ ...newCompany, code: generateCode() })
                         }
                       >
-                        Сгенерировать
+                        {t("company.generateCode")}
                       </Button>
                     </div>
                   </div>
@@ -1057,7 +1057,7 @@ const AdminCompanies = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label>Пароль администратора</Label>
+                    <Label>{t("company.adminPassword")}</Label>
                     <div className="relative">
                       <Input
                         type={showCreatePassword ? "text" : "password"}
@@ -1066,7 +1066,7 @@ const AdminCompanies = () => {
                           setNewCompany({ ...newCompany, password: e.target.value })
                         }
                         autoComplete="new-password"
-                        placeholder="Минимум 8 символов"
+                        placeholder={t("admin.passwordMinLengthPlaceholder")}
                         minLength={8}
                         className="pr-10"
                       />
@@ -1074,7 +1074,7 @@ const AdminCompanies = () => {
                         type="button"
                         className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
                         onClick={() => setShowCreatePassword((v) => !v)}
-                        aria-label={showCreatePassword ? "Скрыть пароль" : "Показать пароль"}
+                        aria-label={showCreatePassword ? t("company.hidePassword") : t("company.showPassword")}
                       >
                         {showCreatePassword ? (
                           <FiEyeOff className="h-5 w-5" />
@@ -1100,7 +1100,7 @@ const AdminCompanies = () => {
                         type="button"
                         className="absolute inset-y-0 right-2 flex items-center text-muted-foreground hover:text-foreground"
                         onClick={() => setShowConfirmPassword((v) => !v)}
-                        aria-label={showConfirmPassword ? "Скрыть пароль" : "Показать пароль"}
+                        aria-label={showConfirmPassword ? t("company.hidePassword") : t("company.showPassword")}
                       >
                         {showConfirmPassword ? (
                           <FiEyeOff className="h-5 w-5" />
@@ -1217,7 +1217,7 @@ const AdminCompanies = () => {
                     />
                   </div>
                   <div>
-                    <Label>Код компании (8 символов)</Label>
+                    <Label>{t("company.companyCodeWithLength")}</Label>
                     <Input
                       value={editCompany.code}
                       onChange={(e) =>
@@ -1409,7 +1409,7 @@ const AdminCompanies = () => {
                         <div className="text-lg">{selectedCompany.adminEmail || "—"}</div>
                       </Card>
                       <Card className="p-4">
-                        <div className="text-sm text-muted-foreground mb-1">Код</div>
+                        <div className="text-sm text-muted-foreground mb-1">{t("company.companyCodeLabel")}</div>
                         <div className="flex items-center gap-2">
                           <code className="text-lg font-mono">{selectedCompany.code}</code>
                           <Button
@@ -1612,7 +1612,7 @@ const AdminCompanies = () => {
                 {selectedCompany && (
                   <div className="space-y-4">
                     <div>
-                      <Label>Компания</Label>
+                      <Label>{t("company.companyLabel")}</Label>
                       <div className="text-lg font-semibold mt-1">{selectedCompany.name}</div>
                     </div>
                     <div>
@@ -1692,7 +1692,7 @@ const AdminCompanies = () => {
                 {selectedCompany && (
                   <div className="space-y-4">
                     <div>
-                      <Label>Компания</Label>
+                      <Label>{t("company.companyLabel")}</Label>
                       <div className="text-lg font-semibold mt-1">{selectedCompany.name}</div>
                     </div>
                     <div>

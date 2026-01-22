@@ -312,7 +312,7 @@ const CompanySettings = () => {
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isCompressing}
                     >
-                      {isCompressing ? t("common.processing") : t("company.changeLogo")}
+                      {isCompressing ? t("company.processing") : t("company.changeLogo")}
                     </Button>
                     <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
                       <span className="font-medium">{t("company.logoRequirements")}:</span>{" "}

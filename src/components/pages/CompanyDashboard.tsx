@@ -154,9 +154,9 @@ const CompanyDashboard = () => {
     const baseMessage = t("company.supportMessage") || "Здравствуйте! Мне нужна помощь с платформой FeedbackHub.";
     if (permissions.isPro) {
       const priorityNote = t("company.prioritySupportNote") || "\n\n⚠️ ПРИОРИТЕТНАЯ ПОДДЕРЖКА (Pro план)";
-      return `${baseMessage}${priorityNote}\n\nКомпания: ${company?.name || ""}\nКод компании: ${company?.code || ""}`;
+      return `${baseMessage}${priorityNote}\n\n${t("company.companyNameLabel")} ${company?.name || ""}\n${t("company.companyCodeLabelWithColon")} ${company?.code || ""}`;
     }
-    return `${baseMessage}\n\nКомпания: ${company?.name || ""}\nКод компании: ${company?.code || ""}`;
+    return `${baseMessage}\n\n${t("company.companyNameLabel")} ${company?.name || ""}\n${t("company.companyCodeLabelWithColon")} ${company?.code || ""}`;
   }, [permissions.isPro, company?.name, company?.code, t]);
 
   // Получаем достижения, близкие к получению (незавершенные с наибольшим прогрессом)
@@ -398,7 +398,7 @@ const CompanyDashboard = () => {
                                 <p className="text-xs text-muted-foreground">{t("company.daysUntilTariffEnds")}:</p>
                                 {diffDays > 0 ? (
                                   <Badge className="bg-primary text-white text-xs px-2.5 py-0.5 font-semibold">
-                                    {diffDays} {diffDays === 1 ? 'день' : diffDays < 5 ? 'дня' : 'дней'}
+                                    {diffDays} {diffDays === 1 ? t("company.day") : diffDays < 5 ? t("company.days2") : t("company.days")}
                                   </Badge>
                                 ) : (
                                   <Badge className="bg-destructive text-white text-xs px-2.5 py-0.5 font-semibold">

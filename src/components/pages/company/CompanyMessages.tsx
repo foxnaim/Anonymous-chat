@@ -462,7 +462,7 @@ const CompanyMessages = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold text-destructive mb-1">
-                    {t("company.tariffExpiredTitle") || "Тариф истек"}
+                    {t("company.tariffExpiredTitle")}
                   </h3>
                   <p className="text-xs text-foreground mb-3">
                     {t("company.tariffExpiredMessageShort") || "Ваш тариф истек. Ответы на сообщения и изменение статусов недоступны. Обновите тариф для продолжения работы."}
@@ -473,7 +473,7 @@ const CompanyMessages = () => {
                     className="bg-primary hover:bg-primary/90 text-white text-xs"
                   >
                     <FiCreditCard className="h-3 w-3 mr-1.5" />
-                    {t("company.upgradeTariff") || "Обновить тариф"}
+                    {t("company.upgradeTariff")}
                   </Button>
                 </div>
               </div>
@@ -668,12 +668,12 @@ const CompanyMessages = () => {
                                 <FiAlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-semibold text-destructive mb-1">
-                                    {t("company.functionUnavailable") || "Функция недоступна"}
+                                    {t("company.functionUnavailable")}
                                   </p>
                                   <p className="text-xs text-foreground mb-3">
                                     {isTrialExpired 
-                                      ? (t("company.tariffExpiredMessageShort") || "Ваш тариф истек. Обновите тариф для ответа на сообщения.")
-                                      : (t("company.upgradeRequired") || "Для ответа на сообщения необходимо обновить тариф.")}
+                                      ? t("company.tariffExpiredMessageShort")
+                                      : t("company.upgradeRequired")}
                                   </p>
                                   <Button
                                     onClick={() => router.push("/company/billing")}
@@ -681,7 +681,7 @@ const CompanyMessages = () => {
                                     className="bg-primary hover:bg-primary/90 text-white text-xs"
                                   >
                                     <FiCreditCard className="h-3 w-3 mr-1.5" />
-                                    {t("company.upgradeTariff") || "Обновить тариф"}
+                                    {t("company.upgradeTariff")}
                                   </Button>
                                 </div>
                               </div>
@@ -733,7 +733,7 @@ const CompanyMessages = () => {
                             }}
                             disabled={!responseText.trim()}
                           >
-                            {t("messages.saveResponse") || "Сохранить ответ"}
+                            {t("company.saveResponse")}
                           </Button>
                         )}
                       </div>
