@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
@@ -181,8 +182,8 @@ const CompanySettings = () => {
         updates.name = companyName;
       }
 
-      // WhatsApp поддержки (только для Pro плана)
-      if (permissions.isPro && supportWhatsApp !== company?.supportWhatsApp) {
+      // WhatsApp поддержки (доступно для всех)
+      if (supportWhatsApp !== company?.supportWhatsApp) {
         updates.supportWhatsApp = supportWhatsApp || "";
       }
 
@@ -399,22 +400,30 @@ const CompanySettings = () => {
                 )}
               </div>
 
-              {/* Support WhatsApp (только для Pro плана) */}
-              {permissions.isPro && (
-                <div className="space-y-2">
+              {/* Support WhatsApp - доступно для всех, приоритетная для Pro */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
                   <Label htmlFor="supportWhatsApp">{t("company.supportWhatsApp") || "WhatsApp для поддержки"}</Label>
-                  <Input
-                    id="supportWhatsApp"
-                    type="tel"
-                    value={supportWhatsApp}
-                    onChange={(e) => setSupportWhatsApp(e.target.value)}
-                    placeholder="+7 700 123 4567"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t("company.supportWhatsAppDescription") || "Укажите номер WhatsApp для приоритетной поддержки"}
-                  </p>
+                  {permissions.isPro && (
+                    <Badge variant="default" className="text-xs">
+                      {t("company.prioritySupport") || "Приоритетная"}
+                    </Badge>
+                  )}
                 </div>
-              )}
+                <Input
+                  id="supportWhatsApp"
+                  type="tel"
+                  value={supportWhatsApp}
+                  onChange={(e) => setSupportWhatsApp(e.target.value)}
+                  placeholder="+7 700 123 4567"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {permissions.isPro 
+                    ? (t("company.supportWhatsAppDescriptionPro") || "Укажите номер WhatsApp для приоритетной поддержки")
+                    : (t("company.supportWhatsAppDescription") || "Укажите номер WhatsApp для связи с поддержкой")
+                  }
+                </p>
+              </div>
             </div>
           </Card>
 

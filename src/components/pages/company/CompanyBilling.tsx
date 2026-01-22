@@ -35,7 +35,7 @@ const CompanyBilling = () => {
     enabled: !!user?.companyId,
   });
   const { data: plans = [], isLoading: plansLoading } = usePlans();
-  const { isLoading: freePlanSettingsLoading } = useFreePlanSettings();
+  const { data: freePlanSettings, isLoading: freePlanSettingsLoading } = useFreePlanSettings();
   
   const { mutate: updatePlan } = useUpdateCompanyPlan({
     onSuccess: () => {
@@ -158,7 +158,20 @@ const CompanyBilling = () => {
             <div className="flex-shrink-0 pb-6">
               <h2 className="text-2xl font-bold text-foreground mb-6">{t("company.availablePlans")}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
-              {plans.map((plan) => {
+              {plans
+                .filter((plan) => {
+                  // Скрываем пробный тариф, если пользователь его уже использовал и сейчас не на нем
+                  const planName = typeof plan.name === "string" ? plan.name : getTranslatedValue(plan.name);
+                  const isCurrent = planName === company?.plan || (typeof plan.name === "object" && (plan.name.ru === company?.plan || plan.name.en === company?.plan || plan.name.kk === company?.plan));
+                  const isFree = plan.price === 0 || plan.isFree === true;
+                  
+                  // Если это пробный тариф и пользователь его уже использовал, но сейчас не на нем - скрываем
+                  if (isFree && company?.trialUsed && !isCurrent) {
+                    return false;
+                  }
+                  return true;
+                })
+                .map((plan) => {
                 const planName = typeof plan.name === "string" ? plan.name : getTranslatedValue(plan.name);
                 const isCurrent = planName === company?.plan || (typeof plan.name === "object" && (plan.name.ru === company?.plan || plan.name.en === company?.plan || plan.name.kk === company?.plan));
                 const isFree = plan.price === 0;
@@ -225,12 +238,30 @@ const CompanyBilling = () => {
                         </div>
                       </div>
                       <div className="mb-4">
-                        {isFree && plan.freePeriodDays ? (
+                        {isFree && (plan.freePeriodDays || freePlanSettings?.freePeriodDays) ? (
                           <div className="flex flex-col">
-                            <p className="text-3xl font-bold text-foreground mb-1">
-                              {plan.freePeriodDays} {getDaysText(plan.freePeriodDays)}
-                            </p>
-                            <p className="text-sm text-muted-foreground">{t("company.trialAccess")}</p>
+                            {/* Для текущего пробного тарифа показываем дни до окончания вместо общего количества дней */}
+                            {isCurrent && company?.trialEndDate ? (() => {
+                              const endDate = new Date(company.trialEndDate);
+                              const now = new Date();
+                              const diffTime = endDate.getTime() - now.getTime();
+                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                              return (
+                                <>
+                                  <p className="text-3xl font-bold text-foreground mb-1">
+                                    {diffDays > 0 ? `${diffDays} ${getDaysText(diffDays)}` : t("admin.tariffExpired")}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">{t("company.trialAccess")}</p>
+                                </>
+                              );
+                            })() : (
+                              <>
+                                <p className="text-3xl font-bold text-foreground mb-1">
+                                  {freePlanSettings?.freePeriodDays ?? plan.freePeriodDays ?? 0} {getDaysText(freePlanSettings?.freePeriodDays ?? plan.freePeriodDays ?? 0)}
+                                </p>
+                                <p className="text-sm text-muted-foreground">{t("company.trialAccess")}</p>
+                              </>
+                            )}
                           </div>
                         ) : (
                           <div className="flex items-baseline gap-1">
@@ -240,8 +271,8 @@ const CompanyBilling = () => {
                             <span className="text-xs text-muted-foreground">/{t("admin.perMonth")}</span>
                           </div>
                         )}
-                        {/* Дни до окончания тарифа - только для текущего тарифа */}
-                        {isCurrent && company?.trialEndDate && (() => {
+                        {/* Дни до окончания тарифа - только для текущего платного тарифа (не пробного) */}
+                        {isCurrent && !isFree && company?.trialEndDate && (() => {
                           const endDate = new Date(company.trialEndDate);
                           const now = new Date();
                           const diffTime = endDate.getTime() - now.getTime();

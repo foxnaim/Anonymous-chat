@@ -16,6 +16,7 @@ import {
   adminService 
 } from "./services";
 import { adminSettingsApi, type AdminSettings, type UpdateAdminSettingsRequest } from "../api/adminSettings";
+import { supportApi, type SupportInfo } from "../api/support";
 
 /**
  * Хук для получения всех сообщений
@@ -1316,6 +1317,22 @@ export const useUpdateAdminSettings = (options?: UseMutationOptions<AdminSetting
         refetchType: 'active', // Принудительно обновляем активные запросы
       });
     },
+    ...options,
+  });
+};
+
+/**
+ * Хук для получения публичной информации о поддержке
+ */
+export const useSupportInfo = (options?: Omit<UseQueryOptions<SupportInfo>, 'queryKey' | 'queryFn'>) => {
+  return useQuery({
+    queryKey: queryKeys.supportInfo,
+    queryFn: async () => {
+      const response = await supportApi.getInfo();
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 5, // 5 минут
+    gcTime: 1000 * 60 * 30, // 30 минут в кэше
     ...options,
   });
 };

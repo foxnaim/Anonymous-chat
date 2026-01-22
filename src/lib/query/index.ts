@@ -48,5 +48,8 @@ export const queryKeys = {
   
   // Platform
   platformStats: ['platform-stats'] as const,
+  
+  // Support
+  supportInfo: ['support-info'] as const,
 } as const;
 

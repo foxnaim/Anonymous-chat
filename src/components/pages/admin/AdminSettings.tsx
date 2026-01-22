@@ -501,7 +501,7 @@ const AdminSettings = () => {
                   placeholder="+7 700 123 4567"
                 />
                 <p className="text-xs text-muted-foreground">
-                  {t("admin.supportWhatsAppNumberDescription") || "Этот номер будет доступен компаниям с планом Pro в их настройках"}
+                  {t("admin.supportWhatsAppNumberDescription") || "Этот номер будет доступен всем компаниям в их настройках. Для Pro плана - приоритетная поддержка"}
                 </p>
                 <Button
                   onClick={async () => {

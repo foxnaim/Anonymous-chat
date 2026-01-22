@@ -1441,6 +1441,23 @@ const AdminCompanies = () => {
                         </div>
                         <div className="text-lg">{selectedCompany.registered}</div>
                       </Card>
+                      {selectedCompany.supportWhatsApp && (
+                        <Card className="p-4">
+                          <div className="text-sm text-muted-foreground mb-1">
+                            {t("admin.supportWhatsApp") || "WhatsApp поддержки"}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={`https://wa.me/${selectedCompany.supportWhatsApp.replace(/[^0-9]/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-lg font-semibold text-primary hover:underline"
+                            >
+                              {selectedCompany.supportWhatsApp}
+                            </a>
+                          </div>
+                        </Card>
+                      )}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <Card className="p-4">

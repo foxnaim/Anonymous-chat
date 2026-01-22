@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { FiSearch, FiEye, FiCheckCircle, FiClock, FiX, FiChevronDown, FiCheck, FiMessageSquare, FiAlertCircle } from "react-icons/fi";
+import { FiSearch, FiEye, FiCheckCircle, FiClock, FiX, FiChevronDown, FiCheck, FiMessageSquare, FiAlertCircle, FiAlertTriangle, FiCreditCard } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import { Message, MessageStatus } from "@/types";
@@ -20,12 +20,28 @@ import { useSocketMessages } from "@/lib/websocket/useSocket";
 import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
 import { useDebounce } from "@/hooks/use-debounce";
 import { usePlanPermissions } from "@/hooks/usePlanPermissions";
+import { useRouter } from "next/navigation";
 
 const CompanyMessages = () => {
   const { isFullscreen } = useFullscreenContext();
   const { t } = useTranslation();
+  const router = useRouter();
   const { user } = useAuth();
   const permissions = usePlanPermissions();
+  const { data: company } = useCompany(user?.companyId || 0, {
+    enabled: !!user?.companyId,
+  });
+  
+  // Проверяем, истек ли тариф
+  const isTrialExpired = company?.trialEndDate ? (() => {
+    try {
+      const endDate = new Date(company.trialEndDate);
+      const now = new Date();
+      return now > endDate;
+    } catch {
+      return false;
+    }
+  })() : false;
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -436,6 +452,34 @@ const CompanyMessages = () => {
               </Listbox>
             </div>
           </Card>
+          
+          {/* Tariff Expired Warning - показывается если тариф истек и функции ограничены */}
+          {isTrialExpired && permissions.isReadOnly && !permissions.canReply && (
+            <Card className="p-4 border-destructive/50 bg-destructive/10 shadow-lg">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-destructive/20 flex items-center justify-center">
+                  <FiAlertTriangle className="w-5 h-5 text-destructive" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-destructive mb-1">
+                    {t("company.tariffExpiredTitle") || "Тариф истек"}
+                  </h3>
+                  <p className="text-xs text-foreground mb-3">
+                    {t("company.tariffExpiredMessageShort") || "Ваш тариф истек. Ответы на сообщения и изменение статусов недоступны. Обновите тариф для продолжения работы."}
+                  </p>
+                  <Button
+                    onClick={() => router.push("/company/billing")}
+                    size="sm"
+                    className="bg-primary hover:bg-primary/90 text-white text-xs"
+                  >
+                    <FiCreditCard className="h-3 w-3 mr-1.5" />
+                    {t("company.upgradeTariff") || "Обновить тариф"}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
+          
           {/* Messages List */}
           <div className="flex-1 overflow-y-auto min-h-0">
             {isLoading ? (
@@ -595,7 +639,7 @@ const CompanyMessages = () => {
                             </div>
                           </div>
                         ) : (
-                          permissions.canReply && (
+                          permissions.canReply ? (
                             <div className="space-y-2">
                               <div className="flex items-center justify-between">
                                 <Label>{t("messages.response")}</Label>
@@ -618,6 +662,30 @@ const CompanyMessages = () => {
                                 disabled={isRejectedByAdmin(selectedMessage)}
                               />
                             </div>
+                          ) : (
+                            <Card className="p-4 border-destructive/50 bg-destructive/10">
+                              <div className="flex items-start gap-3">
+                                <FiAlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold text-destructive mb-1">
+                                    {t("company.functionUnavailable") || "Функция недоступна"}
+                                  </p>
+                                  <p className="text-xs text-foreground mb-3">
+                                    {isTrialExpired 
+                                      ? (t("company.tariffExpiredMessageShort") || "Ваш тариф истек. Обновите тариф для ответа на сообщения.")
+                                      : (t("company.upgradeRequired") || "Для ответа на сообщения необходимо обновить тариф.")}
+                                  </p>
+                                  <Button
+                                    onClick={() => router.push("/company/billing")}
+                                    size="sm"
+                                    className="bg-primary hover:bg-primary/90 text-white text-xs"
+                                  >
+                                    <FiCreditCard className="h-3 w-3 mr-1.5" />
+                                    {t("company.upgradeTariff") || "Обновить тариф"}
+                                  </Button>
+                                </div>
+                              </div>
+                            </Card>
                           )
                         )}
                         {permissions.canChangeStatus && (

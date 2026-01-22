@@ -113,6 +113,7 @@ export function usePlanPermissions(): PlanPermissions {
     if (isFree) {
       const trialExpired = isTrialExpired(company);
       if (trialExpired) {
+        // Пробный период истек - только просмотр (read-only)
         return {
           canReply: false,
           canChangeStatus: false,
@@ -128,16 +129,16 @@ export function usePlanPermissions(): PlanPermissions {
           isPro: false,
         };
       }
-      // Пробный период активен - только просмотр (read-only)
+      // Пробный период активен - ВСЕ функции доступны (как Pro план)
       return {
-        canReply: false,
-        canChangeStatus: false,
-        canViewBasicAnalytics: false,
-        canViewExtendedAnalytics: false,
-        canViewReports: false,
-        canViewGrowth: false,
-        canViewTeamMood: false,
-        isReadOnly: true,
+        canReply: true,
+        canChangeStatus: true,
+        canViewBasicAnalytics: true,
+        canViewExtendedAnalytics: true,
+        canViewReports: true,
+        canViewGrowth: true,
+        canViewTeamMood: true,
+        isReadOnly: false,
         currentPlan,
         isFree: true,
         isStandard: false,

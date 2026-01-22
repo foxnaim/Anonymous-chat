@@ -19,13 +19,15 @@ import {
 } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
-import { useCompany, useCompanyStats, useMessageDistribution, useGroupedAchievements, useGrowthMetrics, usePlans } from "@/lib/query";
+import { useCompany, useCompanyStats, useMessageDistribution, useGroupedAchievements, useGrowthMetrics, usePlans, useSupportInfo } from "@/lib/query";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { getTranslatedValue } from "@/lib/utils/translations";
 import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
+import { usePlanPermissions } from "@/hooks/usePlanPermissions";
+import { FiAlertTriangle, FiCreditCard, FiHeadphones, FiMessageCircle } from "react-icons/fi";
 
 const CompanyDashboard = () => {
   const { isFullscreen } = useFullscreenContext();
@@ -42,6 +44,19 @@ const CompanyDashboard = () => {
   });
 
   const { data: plans = [], isLoading: plansLoading } = usePlans();
+  const permissions = usePlanPermissions();
+
+  // Проверяем, истек ли тариф
+  const isTrialExpired = React.useMemo(() => {
+    if (!company?.trialEndDate) return false;
+    try {
+      const endDate = new Date(company.trialEndDate);
+      const now = new Date();
+      return now > endDate;
+    } catch {
+      return false;
+    }
+  }, [company?.trialEndDate]);
 
   // Находим текущий план компании
   const currentPlan = React.useMemo(() => {
@@ -131,6 +146,18 @@ const CompanyDashboard = () => {
   const { data: growthMetrics, isLoading: growthLoading } = useGrowthMetrics(user?.companyId || 0, {
     enabled: !!user?.companyId,
   });
+
+  const { data: supportInfo } = useSupportInfo();
+
+  // Формируем сообщение для WhatsApp с указанием приоритета
+  const getWhatsAppMessage = React.useMemo(() => {
+    const baseMessage = t("company.supportMessage") || "Здравствуйте! Мне нужна помощь с платформой FeedbackHub.";
+    if (permissions.isPro) {
+      const priorityNote = t("company.prioritySupportNote") || "\n\n⚠️ ПРИОРИТЕТНАЯ ПОДДЕРЖКА (Pro план)";
+      return `${baseMessage}${priorityNote}\n\nКомпания: ${company?.name || ""}\nКод компании: ${company?.code || ""}`;
+    }
+    return `${baseMessage}\n\nКомпания: ${company?.name || ""}\nКод компании: ${company?.code || ""}`;
+  }, [permissions.isPro, company?.name, company?.code, t]);
 
   // Получаем достижения, близкие к получению (незавершенные с наибольшим прогрессом)
   const nearCompletionAchievements = React.useMemo(() => {
@@ -261,6 +288,88 @@ const CompanyDashboard = () => {
                     </div>
                   </Card>
                 )}
+                
+                {/* Trial Expired Banner - показывается если пробный период истек */}
+                {company && company.status !== "Заблокирована" && (() => {
+                  // Проверяем, является ли текущий план пробным
+                  const isTrialPlan = currentPlan?.isFree === true || currentPlan?.price === 0 || 
+                    company.plan === "Пробный" || company.plan === "Trial" || company.plan === "Бесплатный" || company.plan === "Free" ||
+                    company.plan === "Сынақ" || company.plan === "Тегін";
+                  
+                  if (!isTrialPlan) return null;
+                  
+                  const trialExpired = company.trialEndDate ? (() => {
+                    try {
+                      const endDate = new Date(company.trialEndDate);
+                      const now = new Date();
+                      return now > endDate;
+                    } catch {
+                      return false;
+                    }
+                  })() : false;
+                  
+                  if (!trialExpired) return null;
+                  
+                  return (
+                    <Card className="p-6 border-primary/50 bg-primary/10 shadow-lg">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                          <FiClock className="w-6 h-6 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-foreground mb-2">
+                            {t("company.trialExpiredTitle") || "Пробный период истек"}
+                          </h3>
+                          <p className="text-sm text-foreground mb-4">
+                            {t("company.trialExpiredMessage") || "Ваш пробный период закончился. Для продолжения работы подключите один из тарифов."}
+                          </p>
+                          <Button
+                            onClick={() => router.push("/company/billing")}
+                            className="bg-primary hover:bg-primary/90"
+                          >
+                            {t("company.choosePlan") || "Выбрать тариф"}
+                            <FiArrowRight className="ml-2 h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })()}
+                
+                {/* Tariff Expired Warning - показывается если тариф истек (не пробный) */}
+                {company && company.status !== "Заблокирована" && isTrialExpired && permissions.isReadOnly && (() => {
+                  // Показываем только если это НЕ пробный план (чтобы не дублировать с баннером выше)
+                  const isTrialPlan = currentPlan?.isFree === true || currentPlan?.price === 0 || 
+                    company.plan === "Пробный" || company.plan === "Trial" || company.plan === "Бесплатный" || company.plan === "Free" ||
+                    company.plan === "Сынақ" || company.plan === "Тегін";
+                  
+                  if (isTrialPlan) return null; // Пробный план уже обработан выше
+                  
+                  return (
+                    <Card className="p-6 border-destructive/50 bg-destructive/10 shadow-lg">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
+                          <FiAlertTriangle className="w-6 h-6 text-destructive" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-destructive mb-2">
+                            {t("company.tariffExpiredTitle") || "Тариф истек"}
+                          </h3>
+                          <p className="text-sm text-foreground mb-4">
+                            {t("company.tariffExpiredMessage") || "Ваш тариф истек. Доступ к функциям ограничен. Обновите тариф, чтобы продолжить использование всех возможностей сервиса."}
+                          </p>
+                          <Button
+                            onClick={() => router.push("/company/billing")}
+                            className="bg-primary hover:bg-primary/90 text-white"
+                          >
+                            <FiCreditCard className="h-4 w-4 mr-2" />
+                            {t("company.upgradeTariff") || "Обновить тариф"}
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })()}
                 
                 {/* Tariff Info Banner - показывается всегда для всех тарифов */}
                 {company && company.status !== "Заблокирована" && (
@@ -637,6 +746,57 @@ const CompanyDashboard = () => {
                     </Button>
                   </div>
                 </Card>
+
+                {/* Support Card */}
+                {(supportInfo?.supportWhatsAppNumber || company?.supportWhatsApp) && (
+                  <Card className="p-5 border-border shadow-lg relative overflow-hidden bg-card">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="p-2 rounded-lg" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                        <FiHeadphones className="h-4 w-4 text-white" />
+                      </div>
+                      <h3 className="text-sm font-semibold">{t("company.support") || "Поддержка"}</h3>
+                      {permissions.isPro && (
+                        <Badge variant="default" className="text-xs">
+                          {t("company.prioritySupport") || "Приоритетная"}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="space-y-3">
+                      {company?.supportWhatsApp && (
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                          <div className="flex items-center gap-2">
+                            <FiMessageCircle className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">{t("company.yourSupportNumber") || "Ваш номер поддержки"}:</span>
+                          </div>
+                          <a
+                            href={`https://wa.me/${company.supportWhatsApp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(getWhatsAppMessage)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-semibold text-primary hover:underline"
+                          >
+                            {company.supportWhatsApp}
+                          </a>
+                        </div>
+                      )}
+                      {supportInfo?.supportWhatsAppNumber && (
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                          <div className="flex items-center gap-2">
+                            <FiMessageCircle className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">{t("company.globalSupportNumber") || "Глобальная поддержка"}:</span>
+                          </div>
+                          <a
+                            href={`https://wa.me/${supportInfo.supportWhatsAppNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(getWhatsAppMessage)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-semibold text-primary hover:underline"
+                          >
+                            {supportInfo.supportWhatsAppNumber}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                )}
               </>
             )}
           </div>
