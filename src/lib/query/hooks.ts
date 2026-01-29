@@ -1329,7 +1329,7 @@ export const useSupportInfo = (options?: Omit<UseQueryOptions<SupportInfo>, 'que
     queryKey: queryKeys.supportInfo,
     queryFn: async () => {
       const response = await supportApi.getInfo();
-      return response.data;
+      return response.data.data;
     },
     staleTime: 1000 * 60 * 5, // 5 минут
     gcTime: 1000 * 60 * 30, // 30 минут в кэше

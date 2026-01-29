@@ -748,7 +748,7 @@ const CompanyDashboard = () => {
                 </Card>
 
                 {/* Support Card */}
-                {(supportInfo?.supportWhatsAppNumber || company?.supportWhatsApp) && (
+                {supportInfo?.supportWhatsAppNumber && (
                   <Card className="p-5 border-border shadow-lg relative overflow-hidden bg-card">
                     <div className="flex items-center gap-2 mb-4">
                       <div className="p-2 rounded-lg" style={{ backgroundColor: 'hsl(var(--primary))' }}>
@@ -762,22 +762,6 @@ const CompanyDashboard = () => {
                       )}
                     </div>
                     <div className="space-y-3">
-                      {company?.supportWhatsApp && (
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                          <div className="flex items-center gap-2">
-                            <FiMessageCircle className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm text-muted-foreground">{t("company.yourSupportNumber") || "Ваш номер поддержки"}:</span>
-                          </div>
-                          <a
-                            href={`https://wa.me/${company.supportWhatsApp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(getWhatsAppMessage)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm font-semibold text-primary hover:underline"
-                          >
-                            {company.supportWhatsApp}
-                          </a>
-                        </div>
-                      )}
                       {supportInfo?.supportWhatsAppNumber && (
                         <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                           <div className="flex items-center gap-2">

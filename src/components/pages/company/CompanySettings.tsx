@@ -48,7 +48,6 @@ const CompanySettings = () => {
   const [newEmail, setNewEmail] = useState("");
   const [emailPassword, setEmailPassword] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [supportWhatsApp, setSupportWhatsApp] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   
@@ -129,9 +128,6 @@ const CompanySettings = () => {
       if (company.name) {
         setCompanyName(company.name);
       }
-      if (company.supportWhatsApp) {
-        setSupportWhatsApp(company.supportWhatsApp);
-      }
     }
   }, [company]);
 
@@ -183,11 +179,6 @@ const CompanySettings = () => {
       // Имя компании
       if (companyName && companyName !== company?.name) {
         updates.name = companyName;
-      }
-
-      // WhatsApp поддержки (доступно для всех)
-      if (supportWhatsApp !== company?.supportWhatsApp) {
-        updates.supportWhatsApp = supportWhatsApp || "";
       }
 
       // Логотип: отправляем base64, если меняли; если удалили — пустую строку
@@ -401,31 +392,6 @@ const CompanySettings = () => {
                     {company?.adminEmail || user?.email}
                   </div>
                 )}
-              </div>
-
-              {/* Support WhatsApp - доступно для всех, приоритетная для Pro */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="supportWhatsApp">{t("company.supportWhatsApp") || "WhatsApp для поддержки"}</Label>
-                  {permissions.isPro && (
-                    <Badge variant="default" className="text-xs">
-                      {t("company.prioritySupport") || "Приоритетная"}
-                    </Badge>
-                  )}
-                </div>
-                <Input
-                  id="supportWhatsApp"
-                  type="tel"
-                  value={supportWhatsApp}
-                  onChange={(e) => setSupportWhatsApp(e.target.value)}
-                  placeholder="+7 700 123 4567"
-                />
-                <p className="text-xs text-muted-foreground">
-                  {permissions.isPro
-                    ? (t("company.supportWhatsAppDescriptionPro") || "Укажите номер WhatsApp для приоритетной поддержки")
-                    : (t("company.supportWhatsAppDescription") || "Укажите номер WhatsApp для связи с поддержкой")
-                  }
-                </p>
               </div>
 
               {/* Ссылка на поддержку от админа */}
