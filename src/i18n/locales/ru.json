@@ -461,6 +461,9 @@
     "companyLabel": "Компания",
     "companyNameLabel": "Компания:",
     "companyCodeLabelWithColon": "Код компании:",
+    "contactSupport": "Связаться с поддержкой",
+    "contactSupportDescription": "Нажмите, чтобы открыть чат в WhatsApp",
+    "prioritySupport": "Приоритетная поддержка",
     "day": "день",
     "days2": "дня",
     "days": "дней"

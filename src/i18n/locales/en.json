@@ -459,6 +459,9 @@
     "companyLabel": "Company",
     "companyNameLabel": "Company:",
     "companyCodeLabelWithColon": "Company Code:",
+    "contactSupport": "Contact support",
+    "contactSupportDescription": "Click to open a WhatsApp chat",
+    "prioritySupport": "Priority support",
     "day": "day",
     "days2": "days",
     "days": "days"
@@ -728,4 +731,3 @@
     "defaultKeywords": "feedback, anonymous feedback, HR, company, anonymity, complaints, suggestions, employee feedback"
   }
 }
-
