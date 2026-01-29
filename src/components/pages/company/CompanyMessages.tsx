@@ -137,11 +137,7 @@ const CompanyMessages = () => {
     { value: "praise", label: t("sendMessage.praise") },
     { value: "suggestion", label: t("sendMessage.suggestion") },
   ];
-  
-  const { data: company } = useCompany(user?.companyId || 0, {
-    enabled: !!user?.companyId,
-  });
-  
+
   // Определяем, является ли поисковый запрос похожим на ID сообщения (FB-YYYY-XXXXXX)
   // Используем debounced версию для поиска на бэкенде
   // Поддерживает форматы: FB-2024-ABC, FB2024ABC, FB_2024_ABC, fb-2024-abc и т.д.
