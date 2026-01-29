@@ -216,10 +216,10 @@ export const useAdmins = (page?: number, limit?: number, options?: Omit<UseQuery
       const result = await adminService.getAdmins(page, limit);
       return result.data;
     },
-    staleTime: 0, // Всегда считаем данные устаревшими для получения свежих данных
-    gcTime: 0, // Не кэшируем данные после unmount
-    refetchOnMount: true, // Всегда обновляем при монтировании
-    refetchOnWindowFocus: true, // Обновляем при фокусе окна
+    staleTime: 1000 * 60 * 2, // 2 минуты - админы редко меняются
+    gcTime: 1000 * 60 * 5, // 5 минут в кэше
+    refetchOnMount: true, // Обновляем при монтировании
+    refetchOnWindowFocus: false, // Не нужно обновлять при каждом фокусе
     ...options,
   });
 };
@@ -247,7 +247,7 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
       await queryClient.cancelQueries({ queryKey: queryKeys.admins, exact: false });
       const previousData = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
 
-      const tempId = `temp-${Date.now()}`;
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
       const optimisticAdmin: AdminUser = {
         id: tempId,
         email: variables.email,
@@ -494,7 +494,7 @@ export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Om
       await queryClient.cancelQueries({ queryKey: queryKeys.messages(variables.companyCode), exact: false });
       const previousData = queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(variables.companyCode), exact: false });
 
-      const tempId = `temp-${Date.now()}`;
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
       const now = new Date().toISOString();
       const optimistic: Message = {
         id: tempId,

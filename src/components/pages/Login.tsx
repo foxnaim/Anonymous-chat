@@ -47,8 +47,13 @@ const Login = () => {
 
         // Используем пользователя из результата логина для определения роли
         const from = searchParams?.get('from');
-        if (from) {
-          router.replace(from as any);
+        // Валидация from параметра - только относительные пути, без javascript: и внешних URL
+        const isValidRedirect = from &&
+          from.startsWith('/') &&
+          !from.startsWith('//') &&
+          !from.toLowerCase().includes('javascript:');
+        if (isValidRedirect) {
+          router.replace(from as __next_route_internal_types__.RouteImpl<string>);
         } else {
           const role = result.user.role?.toLowerCase();
 

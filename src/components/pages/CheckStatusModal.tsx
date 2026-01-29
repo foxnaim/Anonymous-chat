@@ -52,23 +52,23 @@ const CheckStatusModal = ({ open, onOpenChange }: CheckStatusModalProps) => {
 
   const getStatusIcon = (status: string) => {
     if (!status || typeof status !== 'string') {
-      return <FiMessageSquare className="h-5 w-5" />;
+      return <FiMessageSquare className="h-5 w-5" aria-label={t("checkStatus.new")} />;
     }
     const statusLower = status.toLowerCase();
     const inProgressTranslated = t("checkStatus.inProgress");
     const resolvedTranslated = t("checkStatus.resolved");
     const spamTranslated = t("checkStatus.spam");
-    
+
     if ((inProgressTranslated && statusLower === inProgressTranslated.toLowerCase()) || status === "In Progress" || status === "В работе") {
-      return <FiClock className="h-5 w-5" />;
+      return <FiClock className="h-5 w-5" aria-label={inProgressTranslated || "In Progress"} />;
     }
     if ((resolvedTranslated && statusLower === resolvedTranslated.toLowerCase()) || status === "Resolved" || status === "Решено") {
-      return <FiCheckCircle className="h-5 w-5" />;
+      return <FiCheckCircle className="h-5 w-5" aria-label={resolvedTranslated || "Resolved"} />;
     }
     if ((spamTranslated && statusLower === spamTranslated.toLowerCase()) || status === "Spam" || status === "Спам") {
-      return <FiAlertCircle className="h-5 w-5" />;
+      return <FiAlertCircle className="h-5 w-5" aria-label={spamTranslated || "Spam"} />;
     }
-    return <FiMessageSquare className="h-5 w-5" />;
+    return <FiMessageSquare className="h-5 w-5" aria-label={t("checkStatus.new")} />;
   };
 
   const getStatusColor = (status: string) => {

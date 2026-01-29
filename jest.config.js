@@ -22,10 +22,11 @@ const customJestConfig = {
     '!src/lib/seo/**',
   ],
   testMatch: [
-    '**/__tests__/**/*.{js,jsx,ts,tsx}',
+    '**/__tests__/**/*.test.{js,jsx,ts,tsx}',
+    '**/__tests__/**/*.spec.{js,jsx,ts,tsx}',
     '**/*.{test,spec}.{js,jsx,ts,tsx}',
   ],
-  testPathIgnorePatterns: ['/node_modules/', '/.next/', '/dist/'],
+  testPathIgnorePatterns: ['/node_modules/', '/.next/', '/dist/', '.*\\.d\\.ts$'],
   transformIgnorePatterns: [
     '/node_modules/(?!(@radix-ui|lucide-react|date-fns|react-day-picker|embla-carousel-react|cmdk|input-otp|vaul|sonner|recharts)/)',
   ],
