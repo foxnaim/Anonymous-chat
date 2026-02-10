@@ -568,6 +568,7 @@
     "enterPlanName": "Enter plan name",
     "supportWhatsAppNumber": "WhatsApp support number",
     "supportWhatsAppNumberDescription": "This number will be available to all companies in their settings. For Pro plan - priority support",
+    "supportPhoneInvalid": "Invalid number. Use international format, e.g. +7 700 123 4567",
     "supportWhatsApp": "Support WhatsApp",
     "supportSettings": "Support settings",
     "upTo": "Up to",

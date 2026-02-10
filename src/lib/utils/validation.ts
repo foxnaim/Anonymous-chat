@@ -134,3 +134,26 @@ export const isValidMessageId = (id: string): boolean => {
   return messageIdSchema.safeParse(id).success;
 };
 
+/**
+ * Валидация номера для поддержки (WhatsApp/телефон).
+ * Допускается: +, цифры, пробелы, дефисы, скобки. После очистки — от 10 до 15 цифр.
+ * Пустая строка считается валидной (очистка номера).
+ */
+export const supportPhoneSchema = z
+  .string()
+  .refine(
+    (val) => {
+      const trimmed = (val ?? "").trim();
+      if (trimmed === "") return true;
+      const digits = trimmed.replace(/\D/g, "");
+      return digits.length >= 10 && digits.length <= 15 && /^\+?[\d\s\-()]+$/.test(trimmed);
+    },
+    { message: "Некорректный номер. Используйте международный формат, например +7 700 123 4567" },
+  );
+
+export function validateSupportPhone(value: string): { valid: boolean; error?: string } {
+  const result = supportPhoneSchema.safeParse(value ?? "");
+  if (result.success) return { valid: true };
+  return { valid: false, error: result.error.errors[0]?.message };
+}
+

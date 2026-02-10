@@ -570,6 +570,7 @@
     "enterPlanName": "Жоспар атауын енгізіңіз",
     "supportWhatsAppNumber": "Қолдау үшін WhatsApp нөмірі",
     "supportWhatsAppNumberDescription": "Бұл нөмір барлық компанияларға олардың параметрлерінде қолжетімді болады. Pro жоспары үшін - басымдықты қолдау",
+    "supportPhoneInvalid": "Нөмір форматы қате. Халықаралық форматты пайдаланыңыз, мысалы +7 700 123 4567",
     "supportWhatsApp": "Қолдау WhatsApp",
     "supportSettings": "Қолдау параметрлері",
     "upTo": "Дейін",

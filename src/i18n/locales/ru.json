@@ -570,6 +570,7 @@
     "enterPlanName": "Введите название плана",
     "supportWhatsAppNumber": "Номер WhatsApp для поддержки",
     "supportWhatsAppNumberDescription": "Этот номер будет доступен всем компаниям в их настройках. Для Pro плана - приоритетная поддержка",
+    "supportPhoneInvalid": "Некорректный номер. Используйте международный формат, например +7 700 123 4567",
     "supportWhatsApp": "WhatsApp поддержки",
     "supportSettings": "Настройки поддержки",
     "upTo": "До",

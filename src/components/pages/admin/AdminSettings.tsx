@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { useAdminSettings, useUpdateAdminSettings } from "@/lib/query";
 import { authService } from "@/lib/api/auth";
 import { useDispatch } from "react-redux";
-import { validatePasswordStrength } from "@/lib/utils/validation";
+import { validatePasswordStrength, validateSupportPhone } from "@/lib/utils/validation";
 
 const AdminSettings = () => {
   const { t, i18n: i18nInstance } = useTranslation();
@@ -505,8 +505,13 @@ const AdminSettings = () => {
                 </p>
                 <Button
                   onClick={async () => {
+                    const validation = validateSupportPhone(supportWhatsAppNumber);
+                    if (!validation.valid) {
+                      toast.error(validation.error || t("admin.supportPhoneInvalid"));
+                      return;
+                    }
                     try {
-                      await updateSettings({ supportWhatsAppNumber });
+                      await updateSettings({ supportWhatsAppNumber: supportWhatsAppNumber.trim() });
                       toast.success(t("admin.settingsSaved"));
                     } catch (error: any) {
                       toast.error(error.message || t("common.error"));
