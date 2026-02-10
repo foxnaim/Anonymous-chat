@@ -335,7 +335,8 @@ export const adminService = {
 
   updateAdmin: async (id: string, data: { name?: string; role?: 'admin' | 'super_admin' }): Promise<AdminUser> => {
     const response = await apiClient.put<ApiResponse<any>>(`/admins/${id}`, data);
-    return transformAdminUser(response.data);
+    const raw = (response as ApiResponse<any>)?.data ?? response;
+    return transformAdminUser(raw);
   },
 
   deleteAdmin: async (id: string): Promise<void> => {

@@ -219,14 +219,14 @@ const AdminAdmins = () => {
   });
 
   const updateAdminMutation = useUpdateAdmin({
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success(t("common.success"));
       setIsEditOpen(false);
       setEditAdmin(null);
       setShowEditPassword(false);
       setShowEditConfirmPassword(false);
-      // Явно обновляем список админов
-      refetch();
+      // Принудительно подтягиваем актуальный список с сервера
+      await refetch();
     },
     onError: (error: any) => {
       // Получаем сообщение об ошибке с бэкенда
