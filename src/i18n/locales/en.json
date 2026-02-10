@@ -480,6 +480,7 @@
     "manageCompanies": "Manage Companies",
     "companyName": "Company Name",
     "adminEmail": "Admin Email",
+    "newEmail": "New Email",
     "searchCompanies": "Search companies...",
     "loadingCompanies": "Loading companies...",
     "companiesNotFound": "No companies found",

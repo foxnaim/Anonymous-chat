@@ -482,6 +482,7 @@
     "manageCompanies": "Управление компаниями",
     "companyName": "Название компании",
     "adminEmail": "Email администратора",
+    "newEmail": "Новый email",
     "searchCompanies": "Поиск компаний...",
     "loadingCompanies": "Загрузка компаний...",
     "companiesNotFound": "Компании не найдены",
