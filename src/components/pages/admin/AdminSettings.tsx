@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { useAdminSettings, useUpdateAdminSettings } from "@/lib/query";
 import { authService } from "@/lib/api/auth";
 import { useDispatch } from "react-redux";
-import { validatePasswordStrength, validateSupportPhone } from "@/lib/utils/validation";
+import { validatePasswordStrength, validateSupportPhone, isValidEmail } from "@/lib/utils/validation";
 
 const AdminSettings = () => {
   const { t, i18n: i18nInstance } = useTranslation();
@@ -189,18 +189,27 @@ const AdminSettings = () => {
   };
 
   const handleEmailSave = async () => {
+    const trimmedEmail = newEmail.trim();
     if (!emailPassword) {
       toast.error(t("admin.passwordRequiredForEmailChange"));
       return;
     }
-    if (!newEmail || newEmail === user?.email) {
+    if (!trimmedEmail) {
       toast.error(t("admin.emailNotChanged"));
+      return;
+    }
+    if (trimmedEmail === user?.email) {
+      toast.error(t("admin.emailNotChanged"));
+      return;
+    }
+    if (!isValidEmail(trimmedEmail)) {
+      toast.error(t("admin.emailChangeInvalidFormat"));
       return;
     }
 
     try {
       const response = await authService.changeEmail({
-        newEmail,
+        newEmail: trimmedEmail,
         password: emailPassword,
       });
 
@@ -253,7 +262,8 @@ const AdminSettings = () => {
         <main className="container flex-1 p-6 space-y-6">
           {/* Change Email */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-6">{t("auth.email")}</h3>
+            <h3 className="text-lg font-semibold mb-1">{t("admin.emailSectionTitle")}</h3>
+            <p className="text-sm text-muted-foreground mb-6">{t("admin.emailSectionDescription")}</p>
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -290,13 +300,14 @@ const AdminSettings = () => {
                       style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0, pointerEvents: "none" }}
                     />
                     <div className="space-y-2">
+                      <Label htmlFor="newEmail">{t("admin.newEmail")}</Label>
                       <Input
-                        id="email"
+                        id="newEmail"
                         type="email"
                         value={newEmail}
                         onChange={(e) => setNewEmail(e.target.value)}
                         autoComplete="email"
-                        placeholder={t("auth.email")}
+                        placeholder={t("admin.newEmail")}
                       />
                     </div>
                     <div className="space-y-2">
@@ -342,7 +353,7 @@ const AdminSettings = () => {
                       <Button
                         type="submit"
                         className="flex-1"
-                        disabled={!emailPassword || !newEmail || newEmail === user?.email}
+                        disabled={!emailPassword || !newEmail.trim() || newEmail.trim() === user?.email}
                       >
                         {t("common.save")}
                       </Button>
