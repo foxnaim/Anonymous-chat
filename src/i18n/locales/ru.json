@@ -146,6 +146,7 @@
     "loginSuccess": "Успешный вход!",
     "logoutSuccess": "Вы вышли из системы",
     "passwordMismatch": "Пароли не совпадают",
+    "passwordInvalid": "Неверный пароль. Проверьте правильность пароля.",
     "passwordTooShort": "Пароль должен содержать минимум 8 символов",
     "passwordMinLengthError": "Пароль должен содержать минимум 8 символов",
     "passwordWeak": "Пароль слишком слабый",

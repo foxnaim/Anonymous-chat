@@ -147,6 +147,7 @@
     "logoutSuccess": "You have logged out",
     "loginError": "Invalid email or password",
     "passwordMismatch": "Passwords do not match",
+    "passwordInvalid": "Invalid password. Please check the password.",
     "passwordTooShort": "Password must be at least 8 characters long",
     "passwordMinLengthError": "Password must be at least 8 characters long",
     "passwordWeak": "Password is too weak",

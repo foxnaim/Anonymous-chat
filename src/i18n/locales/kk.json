@@ -146,6 +146,7 @@
     "loginSuccess": "Кіру сәтті!",
     "logoutSuccess": "Сіз жүйеден шықтыңыз",
     "passwordMismatch": "Құпия сөздер сәйкес келмейді",
+    "passwordInvalid": "Дұрыс емес құпия сөз. Құпия сөзді тексеріңіз.",
     "passwordTooShort": "Құпия сөз кемінде 8 таңбадан тұруы керек",
     "passwordMinLengthError": "Құпия сөз кемінде 8 таңбадан тұруы керек",
     "passwordWeak": "Құпия сөз тым әлсіз",
