@@ -18,6 +18,10 @@ import {
 } from "react-icons/fi";
 import { MESSAGE_STATUSES, COMPANY_STATUSES } from "@/lib/utils/constants";
 
+/** Сравнение статуса с учётом пробелов и разных представлений из API */
+const statusMatches = (actual: string | undefined, expected: string) =>
+  actual != null && String(actual).trim() === expected;
+
 const getFromDateForMonth = (): string => {
   const d = new Date();
   d.setDate(d.getDate() - 30);
@@ -74,9 +78,9 @@ const AdminAnalytics = () => {
     const blockedCompanies = companies.filter((c) => c.status === COMPANY_STATUSES.BLOCKED).length;
     
     const totalMessages = messages.length;
-    const newMessages = messages.filter((m) => m.status === MESSAGE_STATUSES.NEW).length;
-    const inProgressMessages = messages.filter((m) => m.status === MESSAGE_STATUSES.IN_PROGRESS).length;
-    const resolvedMessages = messages.filter((m) => m.status === MESSAGE_STATUSES.RESOLVED).length;
+    const newMessages = messages.filter((m) => statusMatches(m.status, MESSAGE_STATUSES.NEW)).length;
+    const inProgressMessages = messages.filter((m) => statusMatches(m.status, MESSAGE_STATUSES.IN_PROGRESS)).length;
+    const resolvedMessages = messages.filter((m) => statusMatches(m.status, MESSAGE_STATUSES.RESOLVED)).length;
     
     // Распределение по типам
     const complaints = messages.filter((m) => m.type === "complaint").length;
