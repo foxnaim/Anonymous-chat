@@ -40,6 +40,7 @@ const CompanyBilling = () => {
   const { mutate: updatePlan } = useUpdateCompanyPlan({
     onSuccess: () => {
       toast.success(t("company.switchingPlan"));
+      toast.info(t("admin.changesTakeEffectWithin5Minutes"));
       refetchCompany();
     },
     onError: (error: any) => {

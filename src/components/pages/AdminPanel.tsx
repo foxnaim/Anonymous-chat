@@ -236,6 +236,7 @@ const AdminPanel = () => {
       setIsDeleteDialogOpen(false);
       setSelectedCompanyId(null);
       toast.success(t("admin.companyDeleted") || "Компания удалена");
+      toast.info(t("admin.changesTakeEffectWithin5Minutes"));
     },
     onError: (error: Error) => {
       toast.error(error.message || t("common.error"));
@@ -1771,6 +1772,7 @@ const AdminPanel = () => {
                           planEndDate: planEndDate || undefined
                         });
                         toast.success(t("admin.planUpdated"));
+                        toast.info(t("admin.changesTakeEffectWithin5Minutes"));
                         setIsPlanModalOpen(false);
                         setSelectedPlan("");
                         setPlanEndDate("");
@@ -1852,6 +1854,7 @@ const AdminPanel = () => {
                   try {
                     await updateStatus({ id: selectedCompanyId, status: COMPANY_STATUS.BLOCKED });
                     toast.success(t("admin.companyBlocked"));
+                    toast.info(t("admin.changesTakeEffectWithin5Minutes"));
                     setIsBlockDialogOpen(false);
                     if (isViewOpen) {
                       setIsViewOpen(false);
@@ -1896,6 +1899,7 @@ const AdminPanel = () => {
                   try {
                     await updateStatus({ id: selectedCompanyId, status: COMPANY_STATUS.ACTIVE });
                     toast.success(t("admin.companyActivated"));
+                    toast.info(t("admin.changesTakeEffectWithin5Minutes"));
                     setIsUnblockDialogOpen(false);
                     if (isViewOpen) {
                       setIsViewOpen(false);

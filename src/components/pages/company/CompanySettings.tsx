@@ -85,6 +85,7 @@ const CompanySettings = () => {
     onSuccess: () => {
       setIsDeleteDialogOpen(false);
       toast.success(t("admin.companyDeleted") || t("company.companyDeleted") || "Компания удалена");
+      toast.info(t("admin.changesTakeEffectWithin5Minutes"));
       // Перенаправляем на главную страницу после удаления компании
       router.push("/");
     },
@@ -100,6 +101,7 @@ const CompanySettings = () => {
       
       if (isNotFound) {
         toast.success(t("admin.companyDeleted") || t("company.companyDeleted") || "Компания удалена");
+        toast.info(t("admin.changesTakeEffectWithin5Minutes"));
         router.push("/");
       } else {
         // Маппинг сообщений об ошибках

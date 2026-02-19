@@ -513,6 +513,7 @@
     "pastDateNotAllowed": "You cannot select a past date. Please choose a date from today onwards.",
     "planUpdated": "Plan updated successfully",
     "planUpdateError": "Error updating plan",
+    "changesTakeEffectWithin5Minutes": "Changes will take effect within 5 minutes",
     "planPro": "Pro",
     "planStandard": "Standard",
     "planTrial": "Trial",

@@ -265,6 +265,7 @@ const AdminCompanies = () => {
       }
       
       toast.success(t("admin.companyDeleted") || "Компания удалена");
+      toast.info(t("admin.changesTakeEffectWithin5Minutes"));
     },
     onError: (error: any, variables: { id: string | number }) => {
       // Получаем сообщение об ошибке с бэкенда
@@ -286,6 +287,7 @@ const AdminCompanies = () => {
           setIsViewOpen(false);
         }
         toast.success(t("admin.companyDeleted") || "Компания удалена");
+        toast.info(t("admin.changesTakeEffectWithin5Minutes"));
       } else {
         // Маппинг сообщений об ошибках на ключи переводов
         let translationKey = "common.error";
@@ -367,6 +369,7 @@ const AdminCompanies = () => {
       await refetch();
       setIsStatusModalOpen(false);
       toast.success(t("common.success"));
+      toast.info(t("admin.changesTakeEffectWithin5Minutes"));
     },
     onError: (error: any) => {
       // Получаем сообщение об ошибке с бэкенда
@@ -427,6 +430,7 @@ const AdminCompanies = () => {
       setIsPlanModalOpen(false);
       setPlanEndDate("");
       toast.success(t("admin.planUpdated"));
+      toast.info(t("admin.changesTakeEffectWithin5Minutes"));
     },
     onError: (error: Error) => {
       toast.error(error.message || t("admin.planUpdateError"));

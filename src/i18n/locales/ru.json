@@ -515,6 +515,7 @@
     "pastDateNotAllowed": "Нельзя указать дату в прошлом. Выберите дату не ранее сегодняшнего дня.",
     "planUpdated": "План успешно обновлен",
     "planUpdateError": "Ошибка обновления плана",
+    "changesTakeEffectWithin5Minutes": "Изменения вступят в силу в течение 5 минут",
     "planPro": "Про",
     "planStandard": "Стандарт",
     "planTrial": "Пробный",
