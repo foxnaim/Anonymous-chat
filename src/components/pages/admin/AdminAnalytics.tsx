@@ -162,21 +162,19 @@ const AdminAnalytics = () => {
               </p>
               <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
                 <span>{analytics.activeCompanies} {t("admin.active")}</span>
-                <span>•</span>
-                <span>{analytics.trialCompanies} {t("admin.trial")}</span>
               </div>
             </Card>
 
             <Card className="p-4 sm:p-6">
               <div className="flex items-center gap-3 mb-2">
                 <FiMessageSquare className="h-5 w-5 text-secondary" />
-                <p className="text-sm text-muted-foreground">{t("admin.totalMessages")}</p>
+                <p className="text-sm text-muted-foreground">{t("admin.resolvedRequests")}</p>
               </div>
               <p className="text-2xl sm:text-3xl font-bold text-foreground">
-                {analytics.totalMessages}
+                {analytics.resolvedMessages}
               </p>
               <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
-                <span>{analytics.resolvedMessages} {t("checkStatus.resolved")}</span>
+                <span>{analytics.totalMessages} {t("admin.totalReceived")}</span>
                 <span>•</span>
                 <span>{analytics.resolutionRate}% {t("admin.resolutionRate")}</span>
               </div>
@@ -185,7 +183,7 @@ const AdminAnalytics = () => {
             <Card className="p-4 sm:p-6">
               <div className="flex items-center gap-3 mb-2">
                 <FiTrendingUp className="h-5 w-5 text-accent" />
-                <p className="text-sm text-muted-foreground">{t("admin.avgMessagesPerCompany")}</p>
+                <p className="text-sm text-muted-foreground">{t("admin.engagementIndex")}</p>
               </div>
               <p className="text-2xl sm:text-3xl font-bold text-foreground">
                 {analytics.avgMessagesPerCompany}
