@@ -958,7 +958,7 @@ export const useUpdateCompanyStatus = (options?: UseMutationOptions<Company, Err
     onSuccess: (data, variables, context, mutation) => {
       const targetIdStr = String(variables.id).trim();
 
-      // Обновляем кэш с реальными данными от сервера — обновляем ТОЛЬКО компанию с variables.id
+      // Обновляем ТОЛЬКО статус — не затираем план и другие поля (иначе при быстрых изменениях они конфликтуют)
       const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
       allQueries.forEach(([key, oldData]) => {
         if (oldData && Array.isArray(oldData)) {
@@ -968,7 +968,7 @@ export const useUpdateCompanyStatus = (options?: UseMutationOptions<Company, Err
             const isTarget = companyId === targetIdStr || company_id === targetIdStr;
 
             if (isTarget) {
-              return { ...company, ...data };
+              return { ...company, status: data.status };
             }
             return company;
           });
@@ -1068,7 +1068,13 @@ export const useUpdateCompanyPlan = (options?: UseMutationOptions<Company, Error
       const companyId = data.id ?? (data as any)._id;
       const targetIdStr = companyId ? String(companyId).trim() : null;
 
-      // Сразу обновляем кэш компаний данными с сервера — чтобы UI показывал изменения без задержки
+      // Обновляем ТОЛЬКО план и связанные поля — не затираем статус (иначе при быстрых изменениях они конфликтуют)
+      const planUpdateFields: Partial<Company> = {};
+      if (data.plan !== undefined) planUpdateFields.plan = data.plan;
+      if (data.trialEndDate !== undefined) planUpdateFields.trialEndDate = data.trialEndDate;
+      if (data.messagesLimit !== undefined) planUpdateFields.messagesLimit = data.messagesLimit;
+      if (data.storageLimit !== undefined) planUpdateFields.storageLimit = data.storageLimit;
+      if ((data as any).trialUsed !== undefined) (planUpdateFields as any).trialUsed = (data as any).trialUsed;
       if (targetIdStr) {
         const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
         allQueries.forEach(([key, oldData]) => {
@@ -1077,7 +1083,7 @@ export const useUpdateCompanyPlan = (options?: UseMutationOptions<Company, Error
               const cid = company.id ? String(company.id).trim() : null;
               const c_id = (company as any)._id ? String((company as any)._id).trim() : null;
               if (cid === targetIdStr || c_id === targetIdStr) {
-                return { ...company, ...data };
+                return { ...company, ...planUpdateFields };
               }
               return company;
             });
@@ -1094,8 +1100,7 @@ export const useUpdateCompanyPlan = (options?: UseMutationOptions<Company, Error
         queryClient.setQueryData(queryKeys.companyByCode(data.code), { ...data });
       }
 
-      // Инвалидируем для синхронизации (refetch в фоне)
-      await queryClient.invalidateQueries({ queryKey: queryKeys.companies, exact: false });
+      // НЕ делаем invalidateQueries — refetch может завершиться позже и затереть статус при быстрых изменениях
 
       if (userOnSuccess) {
         (userOnSuccess as any)(data, variables, context, mutation);

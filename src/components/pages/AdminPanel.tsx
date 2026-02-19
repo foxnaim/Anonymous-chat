@@ -549,7 +549,7 @@ const AdminPanel = () => {
                           if (id != null) setSelectedCompanyId(toIdString(id));
                         }}
                         >
-                        <td className={`p-4 ${rowBg} ${selected ? "border-l-4 border-l-primary" : ""}`}>
+                        <td className={`p-4 ${rowBg}`}>
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-[#553D67] flex items-center justify-center text-white font-semibold relative overflow-hidden flex-shrink-0">
                               {company.logoUrl ? (
