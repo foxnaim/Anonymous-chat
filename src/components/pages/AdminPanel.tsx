@@ -109,6 +109,7 @@ const AdminPanel = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showCreatePassword, setShowCreatePassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [lastPlanUpdatedCompany, setLastPlanUpdatedCompany] = useState<{ id: string; data: { plan?: string; trialEndDate?: string } } | null>(null);
 
   const getStatusLabel = (status: CompanyStatus) => {
     const value = String(status).toLowerCase();
