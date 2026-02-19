@@ -322,13 +322,13 @@ export const useCreateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
 /**
  * Хук для обновления админа
  */
-export const useUpdateAdmin = (options?: UseMutationOptions<AdminUser, Error, { id: string; data: { name?: string; role?: 'admin' | 'super_admin' } }>) => {
+export const useUpdateAdmin = (options?: UseMutationOptions<AdminUser, Error, { id: string; data: { name?: string; email?: string; role?: 'admin' | 'super_admin'; password?: string } }>) => {
   const queryClient = useQueryClient();
   const userOnSuccess = options?.onSuccess;
   const { onSuccess: _, ...rest } = options ?? {};
   
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { name?: string; role?: 'admin' | 'super_admin' } }) => adminService.updateAdmin(id, data),
+    mutationFn: ({ id, data }: { id: string; data: { name?: string; email?: string; role?: 'admin' | 'super_admin'; password?: string } }) => adminService.updateAdmin(id, data),
     onSuccess: async (updatedAdmin, variables, context, mutation) => {
       const targetId = variables.id;
       const isMatch = (admin: AdminUser) =>

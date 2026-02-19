@@ -397,33 +397,27 @@ const AdminAdmins = () => {
       return;
     }
 
-    // Если пароль введен, проверяем его
+    // Суперадмин может менять пароль без старого — только новый и подтверждение
     if (password.trim()) {
-      // Проверка надежности пароля
       const passwordValidation = validatePasswordStrength(password);
       if (!passwordValidation.isValid) {
-        // Показываем первую ошибку
         const firstError = passwordValidation.errors[0];
         toast.error(firstError || t("auth.passwordWeak"));
         return;
       }
-
-      // Проверка совпадения паролей
       if (password !== confirmPassword) {
         toast.error(t("auth.passwordMismatch"));
         return;
       }
-      // Примечание: изменение пароля через этот endpoint не поддерживается
-      // Нужен отдельный endpoint для смены пароля
     }
 
-    // Обновляем админа через API
+    const updateData: { name?: string; email?: string; password?: string } = { name };
+    if (email.trim()) updateData.email = email.trim().toLowerCase();
+    if (password.trim()) updateData.password = password;
+
     updateAdminMutation.mutate({
       id: editAdmin.id,
-      data: {
-        name,
-        // role можно добавить, если нужно
-      },
+      data: updateData,
     });
   };
   return (
@@ -697,11 +691,11 @@ const AdminAdmins = () => {
                       />
                     </div>
                     <div>
-                      <Label>{t("auth.password")}</Label>
+                      <Label>{t("auth.newPassword")}</Label>
                       <div className="relative">
                         <Input
                           type={showEditPassword ? "text" : "password"}
-                          placeholder={t("auth.password")}
+                          placeholder={t("admin.enterNewPasswordToChange")}
                           autoComplete="new-password"
                           value={editAdmin?.password || ""}
                           onChange={(e) => setEditAdmin((prev) => prev ? { ...prev, password: e.target.value } : prev)}

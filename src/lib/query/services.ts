@@ -333,7 +333,7 @@ export const adminService = {
     return transformAdminUser(response.data);
   },
 
-  updateAdmin: async (id: string, data: { name?: string; role?: 'admin' | 'super_admin' }): Promise<AdminUser> => {
+  updateAdmin: async (id: string, data: { name?: string; email?: string; role?: 'admin' | 'super_admin'; password?: string }): Promise<AdminUser> => {
     const response = await apiClient.put<ApiResponse<any>>(`/admins/${id}`, data);
     const raw = (response as ApiResponse<any>)?.data ?? response;
     return transformAdminUser(raw);

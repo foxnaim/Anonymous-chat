@@ -641,6 +641,7 @@
     "addAdmin": "Add Administrator",
     "createError": "Error creating administrator",
     "updateError": "Error updating administrator",
+    "enterNewPasswordToChange": "Leave empty to keep current password",
     "deleteError": "Error deleting administrator",
     "confirmDelete": "Confirm deletion",
     "deleteAdminWarning": "Are you sure you want to delete administrator \"{{name}}\" ({{email}})? This action cannot be undone.",
