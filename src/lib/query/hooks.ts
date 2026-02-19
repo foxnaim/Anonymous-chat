@@ -1094,6 +1094,26 @@ export const useUpdateCompanyPlan = (options?: UseMutationOptions<Company, Error
 };
 
 /**
+ * Хук для смены пароля компании (только суперадмин)
+ */
+export const useUpdateCompanyPassword = (options?: UseMutationOptions<void, Error, { id: string | number; password: string }>) => {
+  const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess;
+  const { onSuccess: _, ...rest } = options ?? {};
+
+  return useMutation({
+    mutationFn: ({ id, password }) => companyService.updatePassword(id, password),
+    onSuccess: (data, variables, context, mutation) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.company(String(variables.id)) });
+      if (userOnSuccess) {
+        (userOnSuccess as any)(data, variables, context, mutation);
+      }
+    },
+    ...rest,
+  });
+};
+
+/**
  * Хук для удаления компании
  */
 export const useDeleteCompany = (options?: UseMutationOptions<void, Error, { id: string | number; password?: string }>) => {

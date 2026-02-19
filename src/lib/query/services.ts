@@ -162,6 +162,10 @@ export const companyService = {
     return response.data;
   },
 
+  updatePassword: async (id: string | number, password: string): Promise<void> => {
+    await apiClient.put<ApiResponse<{ message: string }>>(`/companies/${id}/password`, { password });
+  },
+
   verifyPassword: async (code: string, password: string): Promise<boolean> => {
     try {
       const response = await apiClient.post<ApiResponse<{ isValid: boolean }>>('/auth/verify-password', {

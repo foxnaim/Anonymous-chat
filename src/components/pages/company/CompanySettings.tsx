@@ -22,7 +22,7 @@ import {
 import { FiUpload, FiX, FiEdit2, FiTrash2 } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
-import { useCompany, useUpdateCompany, useDeleteCompany, useSupportInfo } from "@/lib/query";
+import { useCompany, useUpdateCompany, useUpdateCompanyPassword, useDeleteCompany, useSupportInfo } from "@/lib/query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { authService } from "@/lib/api/auth";
@@ -67,6 +67,17 @@ const CompanySettings = () => {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || t("common.error"));
+    },
+  });
+
+  const { mutateAsync: updateCompanyPassword, isPending: isUpdatingPassword } = useUpdateCompanyPassword({
+    onSuccess: () => {
+      toast.success(t("auth.passwordUpdated"));
+      setNewPassword("");
+      setConfirmPassword("");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || t("common.error"));
     },
   });
 
@@ -216,16 +227,23 @@ const CompanySettings = () => {
     }
 
     try {
-      await authService.changePassword({
-        currentPassword,
-        newPassword,
-      });
-      toast.success(t("auth.passwordUpdated"));
-      setCurrentPassword("");
+      if (user?.role === "super_admin" && user?.companyId) {
+        await updateCompanyPassword({
+          id: user.companyId,
+          password: newPassword,
+        });
+      } else {
+        await authService.changePassword({
+          currentPassword,
+          newPassword,
+        });
+        toast.success(t("auth.passwordUpdated"));
+        setCurrentPassword("");
+      }
       setNewPassword("");
       setConfirmPassword("");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || t("common.error"));
+      toast.error(error.response?.data?.message || error?.message || t("common.error"));
     }
   };
   
@@ -424,9 +442,16 @@ const CompanySettings = () => {
             </div>
           </Card>
 
-          {/* Password Change */}
+          {/* Password Change - для суперадмина без подтверждения старого, с предупреждением */}
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-6">{t("company.changePassword")}</h3>
+            {user?.role === "super_admin" && (
+              <div className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800">
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  {t("admin.superAdminPasswordWarning") || "Внимание: вы меняете пароль компании без подтверждения старого. Администратор компании потеряет доступ со старым паролем."}
+                </p>
+              </div>
+            )}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -443,18 +468,20 @@ const CompanySettings = () => {
                   autoComplete="username"
                   defaultValue={company?.adminEmail || user?.email || ""}
                 />
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword">{t("company.currentPassword")}</Label>
-                  <div className="relative">
-                    <Input
-                      id="currentPassword"
-                      type="password"
-                      autoComplete="current-password"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                    />
+                {user?.role !== "super_admin" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="currentPassword">{t("company.currentPassword")}</Label>
+                    <div className="relative">
+                      <Input
+                        id="currentPassword"
+                        type="password"
+                        autoComplete="current-password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="newPassword">{t("company.newPassword")}</Label>
                   <div className="relative">
@@ -482,9 +509,13 @@ const CompanySettings = () => {
                 <div className="flex justify-end">
                   <Button 
                     type="submit"
-                    disabled={!currentPassword || !newPassword || !confirmPassword}
+                    disabled={
+                      (user?.role !== "super_admin" && (!currentPassword || !newPassword || !confirmPassword)) ||
+                      (user?.role === "super_admin" && (!newPassword || !confirmPassword)) ||
+                      isUpdatingPassword
+                    }
                   >
-                    {t("company.updatePassword")}
+                    {isUpdatingPassword ? t("common.loading") : t("company.updatePassword")}
                   </Button>
                 </div>
               </div>

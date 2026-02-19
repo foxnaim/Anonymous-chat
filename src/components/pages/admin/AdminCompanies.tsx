@@ -31,6 +31,7 @@ import {
   FiMoreVertical,
   FiAlertCircle,
   FiSettings,
+  FiLock,
   FiTrash2,
 } from "react-icons/fi";
 import {
@@ -57,6 +58,7 @@ import {
   useUpdateCompany,
   useUpdateCompanyStatus,
   useUpdateCompanyPlan,
+  useUpdateCompanyPassword,
   useDeleteCompany,
   usePlans,
   useCompanyStats,
@@ -139,6 +141,9 @@ const AdminCompanies = () => {
   const [showCreatePassword, setShowCreatePassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [editNewPassword, setEditNewPassword] = useState("");
+  const [editConfirmPassword, setEditConfirmPassword] = useState("");
+  const [showEditPassword, setShowEditPassword] = useState(false);
 
   const getCompanyId = (company?: Company | null) =>
     (company as any)?.id || (company as any)?._id || "";
@@ -376,6 +381,18 @@ const AdminCompanies = () => {
     },
   });
 
+  const { mutateAsync: updateCompanyPassword, isPending: isUpdatingPassword } = useUpdateCompanyPassword({
+    onSuccess: () => {
+      setEditNewPassword("");
+      setEditConfirmPassword("");
+      setShowEditPassword(false);
+      toast.success(t("company.passwordUpdated") || t("admin.companyPasswordUpdated") || "Пароль компании обновлён");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || t("auth.passwordRequirements") || t("common.error"));
+    },
+  });
+
   const { mutateAsync: updatePlan, isPending: isUpdatingPlan } = useUpdateCompanyPlan({
     onSuccess: async (updatedCompany) => {
       // Обновляем selectedCompany сразу с новыми данными
@@ -547,7 +564,7 @@ const AdminCompanies = () => {
     });
   };
 
-  const openEditModal = useCallback((company: Company) => {
+  const openEditModal = useCallback((company: Company, options?: { expandPassword?: boolean }) => {
     setSelectedCompany(company);
     setEditCompany({
       name: company.name,
@@ -558,8 +575,29 @@ const AdminCompanies = () => {
       messagesLimit: company.messagesLimit || 10,
       storageLimit: company.storageLimit || 1,
     });
+    setEditNewPassword("");
+    setEditConfirmPassword("");
+    setShowEditPassword(!!options?.expandPassword);
     setIsEditOpen(true);
   }, []);
+
+  const handleEditPasswordChange = async () => {
+    if (!selectedCompany) return;
+    if (editNewPassword !== editConfirmPassword) {
+      toast.error(t("auth.passwordMismatch"));
+      return;
+    }
+    const passwordValidation = validatePasswordStrength(editNewPassword);
+    if (!passwordValidation.isValid) {
+      const firstError = passwordValidation.errors[0];
+      toast.error(firstError || t("auth.passwordTooWeak"));
+      return;
+    }
+    await updateCompanyPassword({
+      id: getCompanyId(selectedCompany),
+      password: editNewPassword,
+    });
+  };
 
   const openStatusModal = useCallback((company: Company) => {
     setSelectedCompany(company);
@@ -892,6 +930,14 @@ const AdminCompanies = () => {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                                {user?.role === "super_admin" && (
+                                  <DropdownMenuItem
+                                    onClick={() => openEditModal(company, { expandPassword: true })}
+                                  >
+                                    <FiLock className="h-4 w-4 mr-2" />
+                                    {t("company.changePassword")}
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem onClick={() => openStatusModal(company)}>
                                   <FiAlertCircle className="h-4 w-4 mr-2" />
                                   {t("admin.changeStatus")}
@@ -1336,6 +1382,54 @@ const AdminCompanies = () => {
                       step={0.1}
                     />
                   </div>
+                  {user?.role === "super_admin" && (
+                    <div className="border-t border-border pt-4 mt-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowEditPassword(!showEditPassword)}
+                        className="mb-3"
+                      >
+                        {showEditPassword ? t("common.cancel") : t("company.changePassword")}
+                      </Button>
+                      {showEditPassword && (
+                        <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
+                          <p className="text-sm text-muted-foreground">
+                            {t("admin.changeCompanyPasswordWithoutOld") || "Смена пароля без подтверждения старого (только суперадмин)"}
+                          </p>
+                          <div>
+                            <Label>{t("company.newPassword")}</Label>
+                            <Input
+                              type="password"
+                              value={editNewPassword}
+                              onChange={(e) => setEditNewPassword(e.target.value)}
+                              placeholder={t("admin.passwordMinLengthPlaceholder")}
+                              autoComplete="new-password"
+                            />
+                          </div>
+                          <div>
+                            <Label>{t("auth.confirmPassword")}</Label>
+                            <Input
+                              type="password"
+                              value={editConfirmPassword}
+                              onChange={(e) => setEditConfirmPassword(e.target.value)}
+                              placeholder={t("auth.confirmPassword")}
+                              autoComplete="new-password"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={handleEditPasswordChange}
+                            disabled={isUpdatingPassword || !editNewPassword || !editConfirmPassword}
+                          >
+                            {isUpdatingPassword ? t("common.loading") : t("company.updatePassword")}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-end gap-3 mt-6">
                   <Button variant="outline" onClick={() => setIsEditOpen(false)}>
