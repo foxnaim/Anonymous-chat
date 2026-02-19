@@ -329,16 +329,25 @@ export const useUpdateAdmin = (options?: UseMutationOptions<AdminUser, Error, { 
   
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: { name?: string; role?: 'admin' | 'super_admin' } }) => adminService.updateAdmin(id, data),
-    onSuccess: (updatedAdmin, variables, context, mutation) => {
-      // Оптимистично обновляем кэш - обновляем админа сразу
+    onSuccess: async (updatedAdmin, variables, context, mutation) => {
+      const targetId = variables.id;
+      const isMatch = (admin: AdminUser) =>
+        admin.id === targetId ||
+        admin.id === updatedAdmin.id ||
+        (admin as any)._id === targetId;
+
+      // Обновляем кэш — обновляем админа сразу во всех запросах админов
       const allQueries = queryClient.getQueriesData<AdminUser[]>({ queryKey: queryKeys.admins, exact: false });
       allQueries.forEach(([queryKey, oldData]) => {
-        if (oldData) {
-          queryClient.setQueryData<AdminUser[]>(queryKey, oldData.map(admin => admin.id === updatedAdmin.id ? updatedAdmin : admin));
+        if (oldData && Array.isArray(oldData)) {
+          const newData = oldData.map((admin) => (isMatch(admin) ? updatedAdmin : admin));
+          queryClient.setQueryData<AdminUser[]>(queryKey, newData);
         }
       });
-      // Инвалидируем кэш - React Query обновит данные при следующем использовании
-      queryClient.invalidateQueries({ queryKey: queryKeys.admins, exact: false });
+
+      // Инвалидируем и принудительно перезапрашиваем для консистентности с сервером
+      await queryClient.refetchQueries({ queryKey: queryKeys.admins, exact: false });
+
       if (userOnSuccess) {
         (userOnSuccess as any)(updatedAdmin, variables, context, mutation);
       }

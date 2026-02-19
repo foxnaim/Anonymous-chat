@@ -219,14 +219,13 @@ const AdminAdmins = () => {
   });
 
   const updateAdminMutation = useUpdateAdmin({
-    onSuccess: async () => {
+    onSuccess: () => {
       toast.success(t("common.success"));
       setIsEditOpen(false);
       setEditAdmin(null);
       setShowEditPassword(false);
       setShowEditConfirmPassword(false);
-      // Принудительно подтягиваем актуальный список с сервера
-      await refetch();
+      // refetchQueries уже выполняется в useUpdateAdmin
     },
     onError: (error: any) => {
       // Получаем сообщение об ошибке с бэкенда
