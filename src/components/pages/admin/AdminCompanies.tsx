@@ -144,6 +144,9 @@ const AdminCompanies = () => {
   const [editNewPassword, setEditNewPassword] = useState("");
   const [editConfirmPassword, setEditConfirmPassword] = useState("");
   const [showEditPassword, setShowEditPassword] = useState(false);
+  const [viewNewPassword, setViewNewPassword] = useState("");
+  const [viewConfirmPassword, setViewConfirmPassword] = useState("");
+  const [showViewPasswordSection, setShowViewPasswordSection] = useState(false);
 
   const getCompanyId = (company?: Company | null) =>
     (company as any)?.id || (company as any)?._id || "";
@@ -386,6 +389,9 @@ const AdminCompanies = () => {
       setEditNewPassword("");
       setEditConfirmPassword("");
       setShowEditPassword(false);
+      setViewNewPassword("");
+      setViewConfirmPassword("");
+      setShowViewPasswordSection(false);
       toast.success(t("company.passwordUpdated") || t("admin.companyPasswordUpdated") || "Пароль компании обновлён");
     },
     onError: (error: any) => {
@@ -644,8 +650,29 @@ const AdminCompanies = () => {
 
   const openViewModal = useCallback((company: Company) => {
     setSelectedCompany(company);
+    setViewNewPassword("");
+    setViewConfirmPassword("");
+    setShowViewPasswordSection(false);
     setIsViewOpen(true);
   }, []);
+
+  const handleViewPasswordChange = async () => {
+    if (!selectedCompany) return;
+    if (viewNewPassword !== viewConfirmPassword) {
+      toast.error(t("auth.passwordMismatch"));
+      return;
+    }
+    const passwordValidation = validatePasswordStrength(viewNewPassword);
+    if (!passwordValidation.isValid) {
+      const firstError = passwordValidation.errors[0];
+      toast.error(firstError || t("auth.passwordTooWeak"));
+      return;
+    }
+    await updateCompanyPassword({
+      id: getCompanyId(selectedCompany),
+      password: viewNewPassword,
+    });
+  };
 
   const copyToClipboard = useCallback((text: string) => {
     // Используем requestIdleCallback для неблокирующей операции
@@ -1600,6 +1627,57 @@ const AdminCompanies = () => {
                         </div>
                       </Card>
                     </div>
+                    {user?.role === "super_admin" && (
+                      <Card className="p-4 border-amber-200 dark:border-amber-800">
+                        <div className="flex flex-col gap-3">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowViewPasswordSection(!showViewPasswordSection)}
+                            className="w-fit"
+                          >
+                            <FiLock className="h-4 w-4 mr-2" />
+                            {showViewPasswordSection ? t("common.cancel") : t("company.changePassword")}
+                          </Button>
+                          {showViewPasswordSection && (
+                            <div className="space-y-3 p-3 bg-amber-50/50 dark:bg-amber-950/30 rounded-lg">
+                              <p className="text-sm text-amber-800 dark:text-amber-200">
+                                {t("admin.superAdminPasswordWarning")}
+                              </p>
+                              <div>
+                                <Label>{t("company.newPassword")}</Label>
+                                <Input
+                                  type="password"
+                                  value={viewNewPassword}
+                                  onChange={(e) => setViewNewPassword(e.target.value)}
+                                  placeholder={t("admin.passwordMinLengthPlaceholder")}
+                                  autoComplete="new-password"
+                                />
+                              </div>
+                              <div>
+                                <Label>{t("auth.confirmPassword")}</Label>
+                                <Input
+                                  type="password"
+                                  value={viewConfirmPassword}
+                                  onChange={(e) => setViewConfirmPassword(e.target.value)}
+                                  placeholder={t("auth.confirmPassword")}
+                                  autoComplete="new-password"
+                                />
+                              </div>
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={handleViewPasswordChange}
+                                disabled={isUpdatingPassword || !viewNewPassword || !viewConfirmPassword}
+                              >
+                                {isUpdatingPassword ? t("common.loading") : t("company.updatePassword")}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    )}
                     {companyStats && (
                       <Card className="p-4">
                         <div className="text-sm font-semibold mb-3">
