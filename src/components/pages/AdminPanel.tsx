@@ -28,6 +28,7 @@ import {
   FiRefreshCw,
   FiEye,
   FiEyeOff,
+  FiLock,
 } from "react-icons/fi";
 import {
   AlertDialog,
@@ -40,7 +41,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AdminHeader } from "@/components/AdminHeader";
-import { useCompanies, useCreateCompany, useDeleteCompany, usePlans, useUpdateCompanyStatus, useUpdateCompanyPlan } from "@/lib/query";
+import { useCompanies, useCreateCompany, useDeleteCompany, usePlans, useUpdateCompanyStatus, useUpdateCompanyPlan, useUpdateCompanyPassword } from "@/lib/query";
 import { getTranslatedValue } from "@/lib/utils/translations";
 import { toast } from "sonner";
 import type { CompanyStatus, PlanType } from "@/types";
@@ -91,6 +92,9 @@ const AdminPanel = () => {
   const [isUnblockDialogOpen, setIsUnblockDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [planEndDate, setPlanEndDate] = useState<string>("");
+  const [panelNewPassword, setPanelNewPassword] = useState("");
+  const [panelConfirmPassword, setPanelConfirmPassword] = useState("");
+  const [showPanelPasswordSection, setShowPanelPasswordSection] = useState(false);
   const detailCloseRef = useRef<HTMLButtonElement | null>(null);
   const createCloseRef = useRef<HTMLButtonElement | null>(null);
   const viewCloseRef = useRef<HTMLButtonElement | null>(null);
@@ -249,6 +253,36 @@ const AdminPanel = () => {
     },
   });
 
+  const { mutateAsync: updateCompanyPassword, isPending: isUpdatingPassword } = useUpdateCompanyPassword({
+    onSuccess: () => {
+      setPanelNewPassword("");
+      setPanelConfirmPassword("");
+      setShowPanelPasswordSection(false);
+      toast.success(t("admin.companyPasswordUpdated") || "Пароль компании обновлён");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || t("common.error"));
+    },
+  });
+
+  const handlePanelPasswordChange = async () => {
+    if (!selectedCompanyData?.id) return;
+    if (panelNewPassword !== panelConfirmPassword) {
+      toast.error(t("auth.passwordMismatch"));
+      return;
+    }
+    const passwordValidation = validatePasswordStrength(panelNewPassword);
+    if (!passwordValidation.isValid) {
+      const firstError = passwordValidation.errors[0];
+      toast.error(firstError || t("auth.passwordTooWeak"));
+      return;
+    }
+    await updateCompanyPassword({
+      id: selectedCompanyData.id,
+      password: panelNewPassword,
+    });
+  };
+
   const generateCode = () =>
     Math.random().toString(36).slice(2, 10).toUpperCase();
 
@@ -311,6 +345,13 @@ const AdminPanel = () => {
       setSelectedCompanyId(filteredCompanies[0].id);
     }
   }, [filteredCompanies, selectedCompanyId, isMobile]);
+
+  // Сброс полей смены пароля при смене компании
+  useEffect(() => {
+    setPanelNewPassword("");
+    setPanelConfirmPassword("");
+    setShowPanelPasswordSection(false);
+  }, [selectedCompanyId]);
 
   const selectedCompanyData =
     (selectedCompanyId && filteredCompanies.find((c) => c.id === selectedCompanyId)) ||
@@ -580,6 +621,7 @@ const AdminPanel = () => {
               <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">{t("admin.companyDetails")}</h4>
               
               {selectedCompanyData ? (
+                <>
                 <Card
                   key={selectedCompanyData.id}
                   className="p-4 space-y-4 transition"
@@ -665,6 +707,58 @@ const AdminPanel = () => {
                   </div>
                 </div>
               </Card>
+              {user?.role === "super_admin" && (
+                <Card className="p-4 border-amber-200 dark:border-amber-800">
+                  <div className="flex flex-col gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowPanelPasswordSection(!showPanelPasswordSection)}
+                      className="w-fit"
+                    >
+                      <FiLock className="h-4 w-4 mr-2" />
+                      {showPanelPasswordSection ? t("common.cancel") : t("company.changePassword")}
+                    </Button>
+                    {showPanelPasswordSection && (
+                      <div className="space-y-3 p-3 bg-amber-50/50 dark:bg-amber-950/30 rounded-lg">
+                        <p className="text-sm text-amber-800 dark:text-amber-200">
+                          {t("admin.superAdminPasswordWarning")}
+                        </p>
+                        <div>
+                          <Label>{t("company.newPassword")}</Label>
+                          <Input
+                            type="password"
+                            value={panelNewPassword}
+                            onChange={(e) => setPanelNewPassword(e.target.value)}
+                            placeholder={t("admin.passwordMinLengthPlaceholder")}
+                            autoComplete="new-password"
+                          />
+                        </div>
+                        <div>
+                          <Label>{t("auth.confirmPassword")}</Label>
+                          <Input
+                            type="password"
+                            value={panelConfirmPassword}
+                            onChange={(e) => setPanelConfirmPassword(e.target.value)}
+                            placeholder={t("auth.confirmPassword")}
+                            autoComplete="new-password"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handlePanelPasswordChange}
+                          disabled={isUpdatingPassword || !panelNewPassword || !panelConfirmPassword}
+                        >
+                          {isUpdatingPassword ? t("common.loading") : t("company.updatePassword")}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              )}
+                </>
               ) : (
                 <Card className="p-4">
                   <p className="text-muted-foreground text-center">{t("admin.selectCompany")}</p>
@@ -927,6 +1021,58 @@ const AdminPanel = () => {
                               )}
                             </div>
                           </Card>
+
+                          {user?.role === "super_admin" && (
+                            <Card className="p-4 border-amber-200 dark:border-amber-800">
+                              <div className="flex flex-col gap-3">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setShowPanelPasswordSection(!showPanelPasswordSection)}
+                                  className="w-fit"
+                                >
+                                  <FiLock className="h-4 w-4 mr-2" />
+                                  {showPanelPasswordSection ? t("common.cancel") : t("company.changePassword")}
+                                </Button>
+                                {showPanelPasswordSection && (
+                                  <div className="space-y-3 p-3 bg-amber-50/50 dark:bg-amber-950/30 rounded-lg">
+                                    <p className="text-sm text-amber-800 dark:text-amber-200">
+                                      {t("admin.superAdminPasswordWarning")}
+                                    </p>
+                                    <div>
+                                      <Label>{t("company.newPassword")}</Label>
+                                      <Input
+                                        type="password"
+                                        value={panelNewPassword}
+                                        onChange={(e) => setPanelNewPassword(e.target.value)}
+                                        placeholder={t("admin.passwordMinLengthPlaceholder")}
+                                        autoComplete="new-password"
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label>{t("auth.confirmPassword")}</Label>
+                                      <Input
+                                        type="password"
+                                        value={panelConfirmPassword}
+                                        onChange={(e) => setPanelConfirmPassword(e.target.value)}
+                                        placeholder={t("auth.confirmPassword")}
+                                        autoComplete="new-password"
+                                      />
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      onClick={handlePanelPasswordChange}
+                                      disabled={isUpdatingPassword || !panelNewPassword || !panelConfirmPassword}
+                                    >
+                                      {isUpdatingPassword ? t("common.loading") : t("company.updatePassword")}
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            </Card>
+                          )}
 
                           <div className="space-y-3">
                             <h5 className="text-sm font-semibold text-foreground">{t("admin.actions")}</h5>
