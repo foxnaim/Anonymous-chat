@@ -16,6 +16,7 @@ import {
   FiZap,
   FiHome
 } from "react-icons/fi";
+import { MESSAGE_STATUSES, COMPANY_STATUSES } from "@/lib/utils/constants";
 
 const getFromDateForMonth = (): string => {
   const d = new Date();
@@ -59,13 +60,7 @@ const AdminAnalytics = () => {
       };
     }
 
-    // Получаем переводы заранее
-    const activeStatus = t("admin.active");
-    const trialStatus = t("admin.trial");
-    const blockedStatus = t("admin.blocked");
-    const newStatus = t("checkStatus.new");
-    const inProgressStatus = t("checkStatus.inProgress");
-    const resolvedStatus = t("checkStatus.resolved");
+    // API возвращает статусы на русском - используем константы, а не переводы (t() зависит от языка UI)
     
     // Названия планов - учитываем все возможные варианты
     const trialPlanNames = ["Пробный", "Trial", "Сынақ"];
@@ -74,14 +69,14 @@ const AdminAnalytics = () => {
 
     // Основные метрики
     const totalCompanies = companies.length;
-    const activeCompanies = companies.filter((c) => c.status === activeStatus).length;
-    const trialCompanies = companies.filter((c) => c.status === trialStatus).length;
-    const blockedCompanies = companies.filter((c) => c.status === blockedStatus).length;
+    const activeCompanies = companies.filter((c) => c.status === COMPANY_STATUSES.ACTIVE).length;
+    const trialCompanies = companies.filter((c) => c.status === COMPANY_STATUSES.TRIAL).length;
+    const blockedCompanies = companies.filter((c) => c.status === COMPANY_STATUSES.BLOCKED).length;
     
     const totalMessages = messages.length;
-    const newMessages = messages.filter((m) => m.status === newStatus).length;
-    const inProgressMessages = messages.filter((m) => m.status === inProgressStatus).length;
-    const resolvedMessages = messages.filter((m) => m.status === resolvedStatus).length;
+    const newMessages = messages.filter((m) => m.status === MESSAGE_STATUSES.NEW).length;
+    const inProgressMessages = messages.filter((m) => m.status === MESSAGE_STATUSES.IN_PROGRESS).length;
+    const resolvedMessages = messages.filter((m) => m.status === MESSAGE_STATUSES.RESOLVED).length;
     
     // Распределение по типам
     const complaints = messages.filter((m) => m.type === "complaint").length;
@@ -137,7 +132,7 @@ const AdminAnalytics = () => {
       resolutionRate,
       avgMessagesPerCompany,
     };
-  }, [companies, messages, t]);
+  }, [companies, messages]);
 
   const isLoading = companiesLoading || messagesLoading;
 
@@ -209,7 +204,7 @@ const AdminAnalytics = () => {
             {/* Статусы сообщений */}
             <Card className="p-4 sm:p-6">
               <h3 className="text-base sm:text-lg font-semibold mb-4">
-                {t("admin.messageStatuses")}
+                {t("admin.messageStatusesForMonth")}
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -269,7 +264,7 @@ const AdminAnalytics = () => {
             {/* Типы сообщений */}
             <Card className="p-4 sm:p-6">
               <h3 className="text-base sm:text-lg font-semibold mb-4">
-                {t("admin.messageTypes")}
+                {t("admin.messageTypesForMonth")}
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
