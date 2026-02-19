@@ -42,6 +42,7 @@ const AdminAdmins = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showEditPassword, setShowEditPassword] = useState(false);
   const [showEditConfirmPassword, setShowEditConfirmPassword] = useState(false);
+  const [showEditPasswordSection, setShowEditPasswordSection] = useState(false);
   const { user } = useAuth();
 
   // Функция для сброса формы создания админа
@@ -63,6 +64,7 @@ const AdminAdmins = () => {
       setEditAdmin(null);
       setShowEditPassword(false);
       setShowEditConfirmPassword(false);
+      setShowEditPasswordSection(false);
     }
   }, [isEditOpen]);
 
@@ -660,7 +662,7 @@ const AdminAdmins = () => {
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-lg bg-card border border-border shadow-xl transition-all p-6">
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-lg bg-card border border-border shadow-xl transition-all duration-300 ease-out p-6">
                   <Dialog.Title className="text-lg font-semibold text-foreground mb-4">
                     {t("common.edit")}
                   </Dialog.Title>
@@ -690,62 +692,103 @@ const AdminAdmins = () => {
                         onChange={(e) => setEditAdmin((prev) => prev ? { ...prev, email: e.target.value } : prev)}
                       />
                     </div>
-                    <div>
-                      <Label>{t("auth.newPassword")}</Label>
-                      <div className="relative">
-                        <Input
-                          type={showEditPassword ? "text" : "password"}
-                          placeholder={t("admin.enterNewPasswordToChange")}
-                          autoComplete="new-password"
-                          value={editAdmin?.password || ""}
-                          onChange={(e) => setEditAdmin((prev) => prev ? { ...prev, password: e.target.value } : prev)}
-                          className="pr-10"
-                          minLength={8}
-                        />
+                    <div className="space-y-3">
+                      {!showEditPasswordSection ? (
                         <Button
                           type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                          onClick={() => setShowEditPassword(!showEditPassword)}
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => setShowEditPasswordSection(true)}
                         >
-                          {showEditPassword ? (
-                            <FiEyeOff className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <FiEye className="h-4 w-4 text-muted-foreground" />
-                          )}
+                          {t("admin.changePasswordExpand")}
                         </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t("auth.passwordMinLength", { length: 8 }) || "Минимум 8 символов"}
-                      </p>
-                    </div>
-                    <div>
-                      <Label>{t("auth.confirmPassword")}</Label>
-                      <div className="relative">
-                        <Input
-                          type={showEditConfirmPassword ? "text" : "password"}
-                          placeholder={t("auth.confirmPassword")}
-                          autoComplete="new-password"
-                          value={editAdmin?.confirmPassword || ""}
-                          onChange={(e) => setEditAdmin((prev) => prev ? { ...prev, confirmPassword: e.target.value } : prev)}
-                          className="pr-10"
-                          minLength={8}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                          onClick={() => setShowEditConfirmPassword(!showEditConfirmPassword)}
+                      ) : (
+                        <Transition
+                          show={showEditPasswordSection}
+                          as="div"
+                          enter="ease-out duration-300"
+                          enterFrom="opacity-0 -translate-y-2"
+                          enterTo="opacity-100 translate-y-0"
+                          leave="ease-in duration-200"
+                          leaveFrom="opacity-100 translate-y-0"
+                          leaveTo="opacity-0 -translate-y-2"
+                          className="space-y-4"
                         >
-                          {showEditConfirmPassword ? (
-                            <FiEyeOff className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <FiEye className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </Button>
-                      </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-foreground">{t("admin.changePasswordExpand")}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-muted-foreground h-auto py-1"
+                              onClick={() => {
+                                setShowEditPasswordSection(false);
+                                setEditAdmin((prev) => prev ? { ...prev, password: "", confirmPassword: "" } : prev);
+                              }}
+                            >
+                              {t("admin.hidePasswordFields")}
+                            </Button>
+                          </div>
+                          <div>
+                            <Label>{t("auth.newPassword")}</Label>
+                            <div className="relative mt-1">
+                              <Input
+                                type={showEditPassword ? "text" : "password"}
+                                placeholder={t("admin.enterNewPasswordToChange")}
+                                autoComplete="new-password"
+                                value={editAdmin?.password || ""}
+                                onChange={(e) => setEditAdmin((prev) => prev ? { ...prev, password: e.target.value } : prev)}
+                                className="pr-10"
+                                minLength={8}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                onClick={() => setShowEditPassword(!showEditPassword)}
+                              >
+                                {showEditPassword ? (
+                                  <FiEyeOff className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                  <FiEye className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {t("auth.passwordMinLength", { length: 8 }) || "Минимум 8 символов"}
+                            </p>
+                          </div>
+                          <div>
+                            <Label>{t("auth.confirmPassword")}</Label>
+                            <div className="relative mt-1">
+                              <Input
+                                type={showEditConfirmPassword ? "text" : "password"}
+                                placeholder={t("auth.confirmPassword")}
+                                autoComplete="new-password"
+                                value={editAdmin?.confirmPassword || ""}
+                                onChange={(e) => setEditAdmin((prev) => prev ? { ...prev, confirmPassword: e.target.value } : prev)}
+                                className="pr-10"
+                                minLength={8}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                onClick={() => setShowEditConfirmPassword(!showEditConfirmPassword)}
+                              >
+                                {showEditConfirmPassword ? (
+                                  <FiEyeOff className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                  <FiEye className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </Transition>
+                      )}
                     </div>
                     <div className="flex gap-3">
                       <Button type="button" variant="outline" className="flex-1" onClick={() => setIsEditOpen(false)}>
