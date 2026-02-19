@@ -634,7 +634,7 @@
     "detailedMessageStats": "Детальная статистика по сообщениям",
     "messageStatuses": "Статусы сообщений",
     "messageTypes": "Типы сообщений",
-    "topCompanies": "Топ компаний по активности",
+    "topCompanies": "Топ 3 компаний по активности",
     "avgMessagesPerCompany": "Среднее сообщений",
     "messagesPerCompany": "сообщений на компанию",
     "resolutionRate": "Процент решения",

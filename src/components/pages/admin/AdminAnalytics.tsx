@@ -95,7 +95,7 @@ const AdminAnalytics = () => {
         messageCount: messages.filter((m) => m.companyCode === company.code).length,
       }))
       .sort((a, b) => b.messageCount - a.messageCount)
-      .slice(0, 5);
+      .slice(0, 3);
     
     // Конверсия (решенные / всего)
     const resolutionRate = totalMessages > 0 

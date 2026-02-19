@@ -632,7 +632,7 @@
     "detailedMessageStats": "Detailed Message Statistics",
     "messageStatuses": "Message Statuses",
     "messageTypes": "Message Types",
-    "topCompanies": "Top Companies by Activity",
+    "topCompanies": "Top 3 Companies by Activity",
     "avgMessagesPerCompany": "Average Messages",
     "messagesPerCompany": "messages per company",
     "resolutionRate": "Resolution Rate",
