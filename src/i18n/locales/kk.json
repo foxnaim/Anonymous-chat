@@ -492,6 +492,8 @@
     "plan": "Жоспар",
     "employees": "Қызметкерлер",
     "totalMessages": "Барлық хабарламалар",
+    "periodMonth": "Соңғы ай",
+    "periodAll": "Барлық уақыт",
     "resolvedRequests": "Шешілген өтінімдер",
     "totalReceived": "барлығы алынды",
     "registration": "Тіркелу",

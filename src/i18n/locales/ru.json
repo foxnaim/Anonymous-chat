@@ -625,6 +625,8 @@
     "overview": "Обзор",
     "totalCompanies": "Всего компаний",
     "totalMessages": "Всего сообщений",
+    "periodMonth": "За месяц",
+    "periodAll": "Всё время",
     "resolvedRequests": "Решено обращений",
     "totalReceived": "всего получено",
     "monthlyGrowth": "Рост за месяц",

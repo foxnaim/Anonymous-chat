@@ -623,6 +623,8 @@
     "overview": "Overview",
     "totalCompanies": "Total Companies",
     "totalMessages": "Total Messages",
+    "periodMonth": "Last month",
+    "periodAll": "All time",
     "resolvedRequests": "Resolved Requests",
     "totalReceived": "total received",
     "monthlyGrowth": "Monthly Growth",

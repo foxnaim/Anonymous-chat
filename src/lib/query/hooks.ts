@@ -18,23 +18,29 @@ import {
 import { adminSettingsApi, type AdminSettings, type UpdateAdminSettingsRequest } from "../api/adminSettings";
 import { supportApi, type SupportInfo } from "../api/support";
 
+type UseMessagesOptions = Omit<UseQueryOptions<Message[]>, 'queryKey' | 'queryFn'> & {
+  /** Дата в формате YYYY-MM-DD для фильтрации (например, за месяц) */
+  fromDate?: string;
+};
+
 /**
  * Хук для получения всех сообщений
  * Если companyCode не передан (undefined) - получает все сообщения (для админа)
  * Если companyCode === null - запрос отключен
  * Если companyCode === string - получает сообщения конкретной компании
  * messageId - опциональный параметр для поиска по ID сообщения
+ * options.fromDate - опциональная дата YYYY-MM-DD для фильтрации (за месяц)
  */
-export const useMessages = (companyCode?: string | null, page?: number, limit?: number, messageId?: string, options?: Omit<UseQueryOptions<Message[]>, 'queryKey' | 'queryFn'>) => {
-  // Нормализуем null в undefined для queryKey
+export const useMessages = (companyCode?: string | null, page?: number, limit?: number, messageId?: string, options?: UseMessagesOptions) => {
+  const { fromDate, ...queryOptions } = options ?? {};
   const normalizedCode = companyCode ?? undefined;
   return useQuery({
-    queryKey: [...queryKeys.messages(normalizedCode), page, limit, messageId],
-    queryFn: () => messageService.getAll(normalizedCode, page, limit, messageId),
+    queryKey: [...queryKeys.messages(normalizedCode), page, limit, messageId, fromDate],
+    queryFn: () => messageService.getAll(normalizedCode, page, limit, messageId, fromDate),
     enabled: companyCode !== null, // enabled если не null (undefined разрешен для админа)
     staleTime: 1000 * 10, // 10 секунд - сообщения обновляются часто, уменьшено для более быстрого обновления
     gcTime: 1000 * 60 * 5, // 5 минут в кэше
-    ...options,
+    ...queryOptions,
   });
 };
 

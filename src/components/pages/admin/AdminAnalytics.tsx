@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { AdminHeader } from "@/components/AdminHeader";
@@ -14,13 +14,28 @@ import {
   FiAlertCircle,
   FiThumbsUp,
   FiZap,
-  FiHome
+  FiHome,
+  FiCalendar
 } from "react-icons/fi";
+
+type AnalyticsPeriod = "all" | "month";
+
+const getFromDateForMonth = (): string => {
+  const d = new Date();
+  d.setDate(d.getDate() - 30);
+  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+};
 
 const AdminAnalytics = () => {
   const { t } = useTranslation();
+  const [period, setPeriod] = useState<AnalyticsPeriod>("month");
+  const fromDate = period === "month" ? getFromDateForMonth() : undefined;
+  
   const { data: companies = [], isLoading: companiesLoading } = useCompanies();
-  const { data: messages = [], isLoading: messagesLoading } = useMessages();
+  const { data: messages = [], isLoading: messagesLoading } = useMessages(
+    undefined, 1, 500, undefined, 
+    { fromDate, staleTime: 1000 * 15 }
+  );
   
   // Подключаемся к WebSocket для real-time обновлений аналитики
   useSocketMessages();
@@ -146,9 +161,36 @@ const AdminAnalytics = () => {
       <AdminHeader />
       <div className="flex flex-col min-h-screen">
         <div className="container px-4 sm:px-6 py-4 sm:py-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-6">
-            {t("admin.analytics")}
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground">
+              {t("admin.analytics")}
+            </h2>
+            <div className="flex gap-2 p-1 rounded-lg bg-muted/50 w-fit">
+              <button
+                type="button"
+                onClick={() => setPeriod("month")}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  period === "month"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <FiCalendar className="h-4 w-4" />
+                {t("admin.periodMonth")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPeriod("all")}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  period === "all"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t("admin.periodAll")}
+              </button>
+            </div>
+          </div>
 
           {/* Основные метрики */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
