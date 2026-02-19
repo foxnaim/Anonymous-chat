@@ -152,9 +152,14 @@ const AdminAnalytics = () => {
       <AdminHeader />
       <div className="flex flex-col min-h-screen">
         <div className="container px-4 sm:px-6 py-4 sm:py-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-6">
-            {t("admin.analytics")}
-          </h2>
+          <div className="mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground">
+              {t("admin.analytics")}
+            </h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t("admin.last30DaysNote")}
+            </p>
+          </div>
 
           {/* Основные метрики */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">

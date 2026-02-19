@@ -275,7 +275,20 @@ export const useSocketMessages = (companyCode?: string | null) => {
     // Обновляем отдельное сообщение в кэше
     queryClient.setQueryData(queryKeys.message(message.id), message);
 
-    // Оптимизация: инвалидируем только активные запросы статистики
+    // Инвалидируем запросы сообщений, чтобы аналитика и списки подтягивали свежие данные с сервера
+    // (важно при смене статуса — кэш может не содержать обновлённое сообщение или использовать другой fromDate)
+    queryClient.invalidateQueries({ 
+      queryKey: queryKeys.messages(undefined),
+      refetchType: 'active',
+    });
+    if (message.companyCode) {
+      queryClient.invalidateQueries({ 
+        queryKey: queryKeys.messages(message.companyCode),
+        refetchType: 'active',
+      });
+    }
+
+    // Инвалидируем статистику
     queryClient.invalidateQueries({ 
       queryKey: ['stats'],
       refetchType: 'active',

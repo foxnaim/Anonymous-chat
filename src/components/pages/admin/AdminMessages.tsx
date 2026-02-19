@@ -74,6 +74,19 @@ const AdminMessages = () => {
     return statusMap[status] || status;
   };
   
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case "complaint":
+        return t("sendMessage.complaint");
+      case "praise":
+        return t("sendMessage.praise");
+      case "suggestion":
+        return t("sendMessage.suggestion");
+      default:
+        return type;
+    }
+  };
+  
   // Функция для перевода статуса из БД в переведенное значение
   const translateStatus = (status: string): string => {
     // MESSAGE_STATUSES уже содержат русские строки, поэтому используем их напрямую
@@ -294,7 +307,7 @@ const AdminMessages = () => {
                       <div className="space-y-2">
                         <p className="text-xs sm:text-sm text-muted-foreground break-all">ID: {selectedMessage.id}</p>
                         <p className="text-xs sm:text-sm text-muted-foreground">{t("admin.companyName")}: {selectedMessage.companyCode}</p>
-                        <p className="text-xs sm:text-sm text-muted-foreground">{t("messages.type")}: {selectedMessage.type}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{t("messages.type")}: {getTypeLabel(selectedMessage.type)}</p>
                         <div className="flex items-center gap-2">
                           <p className="text-xs sm:text-sm text-muted-foreground">{t("checkStatus.status")}:</p>
                           <Badge className={`${getStatusColor(selectedMessage.status)} text-xs`}>
