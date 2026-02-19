@@ -179,7 +179,7 @@ const AdminAnalytics = () => {
             <Card className="p-4 sm:p-6">
               <div className="flex items-center gap-3 mb-2">
                 <FiMessageSquare className="h-5 w-5 text-secondary" />
-                <p className="text-sm text-muted-foreground">{t("admin.resolvedRequests")}</p>
+                <p className="text-sm text-muted-foreground">{t("admin.resolvedRequestsForMonth")}</p>
               </div>
               <p className="text-2xl sm:text-3xl font-bold text-foreground">
                 {analytics.resolvedMessages}
@@ -194,7 +194,7 @@ const AdminAnalytics = () => {
             <Card className="p-4 sm:p-6">
               <div className="flex items-center gap-3 mb-2">
                 <FiTrendingUp className="h-5 w-5 text-accent" />
-                <p className="text-sm text-muted-foreground">{t("admin.engagementIndex")}</p>
+                <p className="text-sm text-muted-foreground">{t("admin.engagementIndexForMonth")}</p>
               </div>
               <p className="text-2xl sm:text-3xl font-bold text-foreground">
                 {analytics.avgMessagesPerCompany}
