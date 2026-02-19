@@ -320,7 +320,8 @@ const authSlice = createSlice({
         // 2. Проверка заблокированной компании
         else if (backendMessage.includes("COMPANY_BLOCKED") || 
                  backendMessage.includes("company blocked")) {
-          errorMessage = "Компания заблокирована администратором. Свяжитесь с нами по почте.";
+          const num = backendMessage.includes("|") ? backendMessage.split("|")[1]?.trim() : undefined;
+          errorMessage = num ? i18n.t("auth.companyBlockedWhatsAppWithNumber", { number: num }) : i18n.t("auth.companyBlockedWhatsApp");
         }
         // 3. Проверка неверных учетных данных
         else if (backendMessage.includes("Invalid email or password") || 
@@ -359,7 +360,9 @@ const authSlice = createSlice({
         const errorMessage = String(action.payload || action.error?.message || "").trim();
         if (errorMessage.includes("COMPANY_BLOCKED") || 
             errorMessage.includes("company blocked")) {
-          toast.error("Компания заблокирована администратором. Свяжитесь с нами по почте.");
+          const num = errorMessage.includes("|") ? errorMessage.split("|")[1]?.trim() : undefined;
+          const msg = num ? i18n.t("auth.companyBlockedWhatsAppWithNumber", { number: num }) : i18n.t("auth.companyBlockedWhatsApp");
+          toast.error(msg);
         }
         state.user = null;
         state.isAuthenticated = false;

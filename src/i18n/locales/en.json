@@ -215,7 +215,9 @@
     "verificationLinkInvalid": "The verification link is invalid or has expired.",
     "returnHome": "Return Home",
     "checkEmailInstruction": "Please check your email to verify your account.",
-    "verifyEmailBeforeLogin": "Please verify your email address before logging in."
+    "verifyEmailBeforeLogin": "Please verify your email address before logging in.",
+    "companyBlockedWhatsApp": "Company blocked. Please contact us via WhatsApp",
+    "companyBlockedWhatsAppWithNumber": "Company blocked. Please contact us via WhatsApp: {{number}}"
   },
   "company": {
     "dashboard": "Dashboard",
@@ -381,7 +383,8 @@
     "trialAccessLabel": "Trial access",
     "trialAccessFeatures": "All features for {{days}} {{daysLabel}}",
     "blockedTitle": "Company Blocked",
-    "blockedMessage": "Your company has been blocked by an administrator. Access to the service is restricted. Please contact us by email.",
+    "blockedMessage": "Your company has been blocked. Please contact us via WhatsApp",
+    "blockedMessageWithNumber": "Your company has been blocked. Please contact us via WhatsApp: {{number}}",
     "deletedTitle": "Company Deleted",
     "deletedMessage": "Your company has been deleted by an administrator. Your account no longer has access to the service. For more information, please contact the administrator.",
     "cultureExcellent": "Feedback culture in your company is excellent",

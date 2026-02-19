@@ -279,8 +279,21 @@ const CompanyDashboard = () => {
                           {t("company.blockedTitle") || "Компания заблокирована"}
                         </h3>
                         <p className="text-sm text-foreground mb-2">
-                          {t("company.blockedMessage") || "Ваша компания была заблокирована администратором. Доступ к сервису ограничен. Свяжитесь с нами по почте."}
+                          {supportInfo?.supportWhatsAppNumber
+                            ? t("company.blockedMessageWithNumber", { number: supportInfo.supportWhatsAppNumber })
+                            : t("company.blockedMessage")}
                         </p>
+                        {supportInfo?.supportWhatsAppNumber && (
+                          <a
+                            href={`https://wa.me/${supportInfo.supportWhatsAppNumber.replace(/[^0-9]/g, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline mt-2"
+                          >
+                            <FiMessageCircle className="h-4 w-4" />
+                            {t("company.contactSupport") || "Связаться с поддержкой"} — {supportInfo.supportWhatsAppNumber}
+                          </a>
+                        )}
                         <Badge variant="destructive" className="mt-2">
                           {t("admin.blocked")}
                         </Badge>

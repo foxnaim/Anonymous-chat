@@ -248,6 +248,9 @@ const AdminPanel = () => {
   });
 
   const { mutateAsync: updatePlan, isPending: isUpdatingPlan } = useUpdateCompanyPlan({
+    onSuccess: async () => {
+      await refetch();
+    },
     onError: (error: Error) => {
       toast.error(error.message || t("admin.planUpdateError"));
     },
@@ -286,23 +289,23 @@ const AdminPanel = () => {
   const generateCode = () =>
     Math.random().toString(36).slice(2, 10).toUpperCase();
 
-  const filteredCompanies = companies
-    .filter((company) => {
-      const matchesSearch =
-        company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        company.adminEmail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        company.code.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredCompanies = companies.filter((company) => {
+    const matchesSearch =
+      company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      company.adminEmail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      company.code.toLowerCase().includes(searchQuery.toLowerCase());
 
-      // Сравниваем напрямую с реальными значениями статусов из БД, а не с переводами
-      const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "active" && company.status === COMPANY_STATUS.ACTIVE) ||
-        (statusFilter === "blocked" && company.status === COMPANY_STATUS.BLOCKED);
+    // Сравниваем напрямую с реальными значениями статусов из БД, а не с переводами
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && company.status === COMPANY_STATUS.ACTIVE) ||
+      (statusFilter === "blocked" && company.status === COMPANY_STATUS.BLOCKED);
 
-      return matchesSearch && matchesStatus;
-    })
-    // Убираем дубликаты по id — если API вернул одну компанию дважды, подсветится только одна строка
-    .filter((company, index, arr) => arr.findIndex((c) => String(c.id) === String(company.id)) === index);
+    return matchesSearch && matchesStatus;
+  });
+
+  const isCompanySelected = (companyId: string | number | undefined) =>
+    selectedCompanyId != null && companyId != null && String(selectedCompanyId) === String(companyId);
 
   // Определяем мобильный режим, чтобы не рендерить мобильный модал на десктопе
   useEffect(() => {
@@ -343,7 +346,7 @@ const AdminPanel = () => {
       return;
     }
     // Если выбранная компания ушла из списка, выбираем первую
-    const exists = filteredCompanies.some((c) => c.id === selectedCompanyId);
+    const exists = filteredCompanies.some((c) => String(c.id) === String(selectedCompanyId));
     if (!exists) {
       setSelectedCompanyId(filteredCompanies[0].id);
     }
@@ -357,7 +360,10 @@ const AdminPanel = () => {
   }, [selectedCompanyId]);
 
   const selectedCompanyData =
-    (selectedCompanyId && filteredCompanies.find((c) => c.id === selectedCompanyId)) ||
+    (selectedCompanyId && filteredCompanies.find((c) => {
+      const cid = (c as any)?.id ?? (c as any)?._id;
+      return cid != null && String(cid) === String(selectedCompanyId);
+    })) ||
     null;
   
   // Для мобильных: определяем, показывать ли модальное окно (только при явном выборе)
@@ -510,7 +516,7 @@ const AdminPanel = () => {
                         <tr
                           key={company.id}
                           className={`border-b border-border/50 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors relative ${
-                            selectedCompanyId === company.id ? "bg-primary/5 border-l-4 border-l-primary" : "bg-card"
+                            isCompanySelected(company.id) ? "bg-primary/5 border-l-4 border-l-primary" : "bg-card"
                           }`}
                           onClick={() => setSelectedCompanyId(company.id)}
                         >
@@ -529,7 +535,7 @@ const AdminPanel = () => {
                               ) : (
                                 company.name.charAt(0)
                               )}
-                              {selectedCompanyId === company.id && (
+                              {isCompanySelected(company.id) && (
                                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center border-2 border-background z-10">
                                   <FiCheck className="h-2.5 w-2.5 text-white" />
                                 </div>
@@ -576,11 +582,11 @@ const AdminPanel = () => {
                     <Card
                       key={company.id}
                       className={`p-4 cursor-pointer transition-colors relative ${
-                        selectedCompanyId === company.id ? "bg-primary/5 border-primary border-2" : "border-border"
+                        isCompanySelected(company.id) ? "bg-primary/5 border-primary border-2" : "border-border"
                       }`}
                       onClick={() => setSelectedCompanyId(company.id)}
                     >
-                      {selectedCompanyId === company.id && (
+                      {isCompanySelected(company.id) && (
                         <div className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
                           <FiCheck className="h-3 w-3 text-white" />
                         </div>
@@ -588,14 +594,14 @@ const AdminPanel = () => {
                       <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-md bg-[#553D67] flex items-center justify-center text-white font-semibold flex-shrink-0 relative">
                           {company.name.charAt(0)}
-                          {selectedCompanyId === company.id && (
+                          {isCompanySelected(company.id) && (
                             <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center border-2 border-background">
                               <FiCheck className="h-2.5 w-2.5 text-white" />
                             </div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className={`font-medium truncate ${selectedCompanyId === company.id ? "text-primary" : "text-foreground"}`}>
+                          <h4 className={`font-medium truncate ${isCompanySelected(company.id) ? "text-primary" : "text-foreground"}`}>
                             {company.name}
                           </h4>
                           <p className="text-xs text-muted-foreground truncate">{company.adminEmail || "—"}</p>

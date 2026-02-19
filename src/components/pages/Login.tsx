@@ -14,11 +14,14 @@ import { FiArrowLeft, FiEye, FiEyeOff } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { OAuthButtons } from "@/components/auth/OAuthButtons";
+import { useSupportInfo } from "@/lib/query";
+
 const Login = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
+  const { data: supportInfo } = useSupportInfo();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -29,12 +32,13 @@ const Login = () => {
   useEffect(() => {
     const error = searchParams?.get('error');
     if (error === 'AccessDenied') {
-      // Показываем сообщение об ошибке доступа
-      toast.error("Компания заблокирована администратором. Свяжитесь с нами по почте.");
-      // Удаляем параметр error из URL
+      const msg = supportInfo?.supportWhatsAppNumber
+        ? t("auth.companyBlockedWhatsAppWithNumber", { number: supportInfo.supportWhatsAppNumber })
+        : t("auth.companyBlockedWhatsApp");
+      toast.error(msg);
       router.replace('/login');
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, supportInfo?.supportWhatsAppNumber, t]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -87,8 +91,9 @@ const Login = () => {
       // 2. Проверка заблокированной компании
       else if (backendMessage.includes("COMPANY_BLOCKED") || 
                backendMessage.includes("company blocked") ||
-               errorStatus === 403) {
-        errorMessage = "Компания заблокирована администратором. Свяжитесь с нами по почте.";
+               (errorStatus === 403 && msgLower.includes("blocked"))) {
+        const num = backendMessage.includes("|") ? backendMessage.split("|")[1]?.trim() : supportInfo?.supportWhatsAppNumber;
+        errorMessage = num ? t("auth.companyBlockedWhatsAppWithNumber", { number: num }) : t("auth.companyBlockedWhatsApp");
       }
       // 3. Проверка неверных учетных данных
       else if (backendMessage.includes("Invalid email or password") || 

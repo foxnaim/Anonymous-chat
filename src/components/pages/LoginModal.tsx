@@ -14,6 +14,7 @@ import { FiLogIn, FiEye, FiEyeOff } from "react-icons/fi";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 import { toast } from "sonner";
 import { OAuthButtons } from "@/components/auth/OAuthButtons";
+import { useSupportInfo } from "@/lib/query";
 
 interface LoginModalProps {
   open: boolean;
@@ -24,6 +25,7 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
   const { t } = useTranslation();
   const router = useRouter();
   const { login } = useAuth();
+  const { data: supportInfo } = useSupportInfo();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -73,8 +75,9 @@ const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
       // 2. Проверка заблокированной компании
       else if (backendMessage.includes("COMPANY_BLOCKED") || 
                backendMessage.includes("company blocked") ||
-               errorStatus === 403) {
-        errorMessage = "Компания заблокирована администратором. Свяжитесь с нами по почте.";
+               (errorStatus === 403 && backendMessage.toLowerCase().includes("blocked"))) {
+        const num = backendMessage.includes("|") ? backendMessage.split("|")[1]?.trim() : supportInfo?.supportWhatsAppNumber;
+        errorMessage = num ? t("auth.companyBlockedWhatsAppWithNumber", { number: num }) : t("auth.companyBlockedWhatsApp");
       }
       // 3. Проверка неверных учетных данных
       else if (backendMessage.includes("Invalid email or password") || 
