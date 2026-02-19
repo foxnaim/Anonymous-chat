@@ -104,6 +104,7 @@
     "trackResponseDescription": "Компания может оставить ответ на ваше сообщение. Проверяйте статус регулярно",
     "idSecurityNote": "Ваш ID безопасен. Он не содержит личной информации и используется только для отслеживания статуса вашего сообщения.",
     "messageLimitExceeded": "Лимит сообщений для этой компании исчерпан на этот месяц",
+    "dailyLimitExceeded": "Достигнут дневной лимит сообщений (3 в день). Попробуйте завтра.",
     "fillRequiredFields": "Заполните все обязательные поля"
   },
   "checkStatus": {
@@ -467,6 +468,8 @@
     "companyCodeLabelWithColon": "Код компании:",
     "contactSupport": "Связаться с поддержкой",
     "contactSupportDescription": "Нажмите, чтобы открыть чат в WhatsApp",
+    "support": "Поддержка",
+    "globalSupportNumber": "Глобальная поддержка",
     "prioritySupport": "Приоритетная поддержка",
     "day": "день",
     "days2": "дня",
@@ -569,6 +572,7 @@
     "firstNDaysFullAccess": "Первые {{count}} {{label}} после регистрации - полный доступ без ограничений",
     "freePlanSettingsUpdated": "Настройки пробного плана обновлены",
     "settingsUpdateError": "Ошибка при обновлении настроек",
+    "settingsLoadError": "Не удалось загрузить настройки",
     "cannotEditTrialPlan": "Обычные админы не могут редактировать пробный/бесплатный план",
     "planCreated": "План \"{{name}}\" создан",
     "planCreateError": "Ошибка при создании плана",

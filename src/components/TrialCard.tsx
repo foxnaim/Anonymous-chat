@@ -21,11 +21,13 @@ const isTrialPlan = (planName?: string): boolean => {
 
 const TrialCard = ({ company }: TrialCardProps) => {
   const { t, i18n } = useTranslation();
-  const [freePeriodDays, setFreePeriodDays] = useState<number>(60);
+  const [freePeriodDays, setFreePeriodDays] = useState<number | null>(null);
 
   useEffect(() => {
     plansService.getFreePlanSettings().then((data) => {
-      setFreePeriodDays(data.freePeriodDays || 60);
+      setFreePeriodDays(data.freePeriodDays);
+    }).catch(() => {
+      setFreePeriodDays(null);
     });
   }, []);
 
@@ -60,10 +62,14 @@ const TrialCard = ({ company }: TrialCardProps) => {
         </div>
         <div className="mb-4">
           <p className="text-4xl font-bold text-foreground mb-1">
-            {t("company.trialAccessPeriod", {
-              days: freePeriodDays,
-              daysLabel: getDaysText(freePeriodDays),
-            })}
+            {freePeriodDays !== null ? (
+              t("company.trialAccessPeriod", {
+                days: freePeriodDays,
+                daysLabel: getDaysText(freePeriodDays),
+              })
+            ) : (
+              t("company.trialAccessLabel")
+            )}
           </p>
           <p className="text-sm" style={{ color: 'hsl(var(--accent))' }}>
             {t("company.trialAccessLabel")}
@@ -74,10 +80,14 @@ const TrialCard = ({ company }: TrialCardProps) => {
             <FiCheck className="h-3.5 w-3.5" style={{ color: 'hsl(var(--primary))' }} />
           </div>
           <span className="text-sm text-foreground leading-relaxed">
-            {t("company.trialAccessFeatures", {
-              days: freePeriodDays,
-              daysLabel: getDaysText(freePeriodDays),
-            })}
+            {freePeriodDays !== null ? (
+              t("company.trialAccessFeatures", {
+                days: freePeriodDays,
+                daysLabel: getDaysText(freePeriodDays),
+              })
+            ) : (
+              t("company.trialAccessLabel")
+            )}
           </span>
         </div>
       </div>

@@ -104,6 +104,7 @@
     "trackResponseDescription": "Компания сіздің хабарламаңызға жауап қалдыруы мүмкін. Статусты дұрыстап тексеріңіз",
     "idSecurityNote": "Сіздің ID-іңіз қауіпсіз. Ол жеке ақпаратты қамтымайды және тек хабарламаңыздың статусын бақылау үшін пайдаланылады.",
     "messageLimitExceeded": "Осы компания үшін хабарлама лимиті осы айда асып кетті",
+    "dailyLimitExceeded": "Күнделікті хабарлама лимитіне жеттіңіз (күніне 3). Ертең қайта көріңіз.",
     "fillRequiredFields": "Барлық міндетті өрістерді толтырыңыз"
   },
   "checkStatus": {
@@ -466,6 +467,8 @@
     "companyCodeLabelWithColon": "Компания коды:",
     "contactSupport": "Қолдауға хабарласу",
     "contactSupportDescription": "WhatsApp-та чат ашу үшін басыңыз",
+    "support": "Қолдау",
+    "globalSupportNumber": "Жаһандық қолдау",
     "prioritySupport": "Басымдықты қолдау",
     "day": "күн",
     "days2": "күн",
@@ -572,6 +575,7 @@
     "firstNDaysFullAccess": "Тіркелгеннен кейінгі алғашқы {{count}} {{label}} - шектеусіз толық қол жетімділік",
     "freePlanSettingsUpdated": "Сынақ жоспары баптаулары жаңартылды",
     "settingsUpdateError": "Баптауларды жаңарту кезінде қате",
+    "settingsLoadError": "Баптауларды жүктеу мүмкін болмады",
     "cannotEditTrialPlan": "Жәдігөй админдер сынақ/тегін жоспарларды өңдей алмайды",
     "planCreated": "\"{{name}}\" жоспары құрылды",
     "planCreateError": "Жоспар құру кезінде қате",

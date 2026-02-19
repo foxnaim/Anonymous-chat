@@ -286,20 +286,23 @@ const AdminPanel = () => {
   const generateCode = () =>
     Math.random().toString(36).slice(2, 10).toUpperCase();
 
-  const filteredCompanies = companies.filter((company) => {
-    const matchesSearch =
-      company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      company.adminEmail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      company.code.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredCompanies = companies
+    .filter((company) => {
+      const matchesSearch =
+        company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        company.adminEmail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        company.code.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Сравниваем напрямую с реальными значениями статусов из БД, а не с переводами
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "active" && company.status === COMPANY_STATUS.ACTIVE) ||
-      (statusFilter === "blocked" && company.status === COMPANY_STATUS.BLOCKED);
+      // Сравниваем напрямую с реальными значениями статусов из БД, а не с переводами
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && company.status === COMPANY_STATUS.ACTIVE) ||
+        (statusFilter === "blocked" && company.status === COMPANY_STATUS.BLOCKED);
 
-    return matchesSearch && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    })
+    // Убираем дубликаты по id — если API вернул одну компанию дважды, подсветится только одна строка
+    .filter((company, index, arr) => arr.findIndex((c) => String(c.id) === String(company.id)) === index);
 
   // Определяем мобильный режим, чтобы не рендерить мобильный модал на десктопе
   useEffect(() => {
@@ -513,9 +516,6 @@ const AdminPanel = () => {
                         >
                         <td className="p-4">
                           <div className="flex items-center gap-3">
-                            {selectedCompanyId === company.id && (
-                              <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r"></div>
-                            )}
                             <div className="w-10 h-10 rounded-full bg-[#553D67] flex items-center justify-center text-white font-semibold relative overflow-hidden flex-shrink-0">
                               {company.logoUrl ? (
                                 <Image

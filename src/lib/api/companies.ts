@@ -80,18 +80,30 @@ export const statsApi = {
   },
 };
 
-// Настройки бесплатного плана
-let freePlanSettings = {
-  messagesLimit: 10, // Настраивается через админ-панель
-  storageLimit: 1, // Фиксированное значение
-  freePeriodDays: 60, // Настраивается через админ-панель (в днях)
-};
+// Настройки бесплатного плана — загружаются с сервера через getFreePlanSettings
+let freePlanSettings: {
+  messagesLimit: number;
+  storageLimit: number;
+  freePeriodDays: number;
+} | null = null;
 
 const customPlans: SubscriptionPlan[] = [];
+
+async function ensureFreePlanSettings(): Promise<{
+  messagesLimit: number;
+  storageLimit: number;
+  freePeriodDays: number;
+}> {
+  if (freePlanSettings) return freePlanSettings;
+  const res = await apiClient.get<ApiResponse<{ messagesLimit: number; storageLimit: number; freePeriodDays: number }>>('/plans/free-settings');
+  freePlanSettings = res.data;
+  return freePlanSettings;
+}
 
 export const plansApi = {
   getAll: async (): Promise<SubscriptionPlan[]> => {
     await delay(API_CONFIG.TIMEOUT / 3);
+    const settings = await ensureFreePlanSettings();
     const defaultPlans: SubscriptionPlan[] = [
       {
         id: "free",
@@ -101,15 +113,15 @@ export const plansApi = {
           kk: "Сынақ"
         },
         price: 0,
-        messagesLimit: freePlanSettings.messagesLimit,
-        storageLimit: freePlanSettings.storageLimit,
+        messagesLimit: settings.messagesLimit,
+        storageLimit: settings.storageLimit,
         isFree: true,
-        freePeriodDays: freePlanSettings.freePeriodDays,
+        freePeriodDays: settings.freePeriodDays,
         features: [
           {
-            ru: `Все функции на ${freePlanSettings.freePeriodDays} ${freePlanSettings.freePeriodDays === 1 ? 'день' : freePlanSettings.freePeriodDays < 5 ? 'дня' : 'дней'}`,
-            en: `All features for ${freePlanSettings.freePeriodDays} ${freePlanSettings.freePeriodDays === 1 ? 'day' : 'days'}`,
-            kk: `Барлық функциялар ${freePlanSettings.freePeriodDays} ${freePlanSettings.freePeriodDays === 1 ? 'күн' : 'күнге'}`
+            ru: `Все функции на ${settings.freePeriodDays} ${settings.freePeriodDays === 1 ? 'день' : settings.freePeriodDays < 5 ? 'дня' : 'дней'}`,
+            en: `All features for ${settings.freePeriodDays} ${settings.freePeriodDays === 1 ? 'day' : 'days'}`,
+            kk: `Барлық функциялар ${settings.freePeriodDays} ${settings.freePeriodDays === 1 ? 'күн' : 'күнге'}`
           }
         ],
       },
@@ -255,17 +267,13 @@ export const plansApi = {
 
   getFreePlanSettings: async () => {
     await delay(API_CONFIG.TIMEOUT / 5);
-    return freePlanSettings;
+    return ensureFreePlanSettings();
   },
 
   updateFreePlanSettings: async (settings: { messagesLimit: number; storageLimit: number; freePeriodDays: number }): Promise<void> => {
     await delay(API_CONFIG.TIMEOUT / 2);
-    // Обновляем messagesLimit и freePeriodDays (настраиваются админом), storageLimit остается фиксированным
-    freePlanSettings = { 
-      ...freePlanSettings, 
-      messagesLimit: settings.messagesLimit,
-      freePeriodDays: settings.freePeriodDays 
-    };
+    await apiClient.put('/plans/free-settings', settings);
+    freePlanSettings = { ...(freePlanSettings || { storageLimit: 1 }), ...settings };
   },
 };
 

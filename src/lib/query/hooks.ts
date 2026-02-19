@@ -953,30 +953,34 @@ export const useUpdateCompanyStatus = (options?: UseMutationOptions<Company, Err
     },
 
     onSuccess: (data, variables, context, mutation) => {
-      const dataId = data.id ? String(data.id).trim() : null;
-      const data_id = (data as any)._id ? String((data as any)._id).trim() : null;
+      const targetIdStr = String(variables.id).trim();
 
-      // Обновляем кэш с реальными данными от сервера - создаём НОВЫЙ массив
+      // Обновляем кэш с реальными данными от сервера — обновляем ТОЛЬКО компанию с variables.id
       const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
       allQueries.forEach(([key, oldData]) => {
         if (oldData && Array.isArray(oldData)) {
-          const newData = oldData.map(company => {
+          const newData = oldData.map((company) => {
             const companyId = company.id ? String(company.id).trim() : null;
             const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
+            const isTarget = companyId === targetIdStr || company_id === targetIdStr;
 
-            if (companyId === dataId || companyId === data_id || company_id === dataId || company_id === data_id) {
-              return { ...data }; // Создаём новый объект
+            if (isTarget) {
+              return { ...company, ...data };
             }
             return company;
           });
-          // Устанавливаем новый массив напрямую
           queryClient.setQueryData<Company[]>(key, [...newData]);
         }
       });
 
       // Обновляем отдельные запросы для компании
-      queryClient.setQueryData(queryKeys.company(data.id), { ...data });
-      queryClient.setQueryData(queryKeys.companyByCode(data.code), { ...data });
+      const companyId = data.id ?? (data as any)._id;
+      if (companyId) {
+        queryClient.setQueryData(queryKeys.company(companyId), { ...data });
+      }
+      if (data.code) {
+        queryClient.setQueryData(queryKeys.companyByCode(data.code), { ...data });
+      }
 
       // НЕ делаем refetch - бэкенд может вернуть устаревшие данные и затереть оптимистичное обновление
 
@@ -1058,18 +1062,37 @@ export const useUpdateCompanyPlan = (options?: UseMutationOptions<Company, Error
     },
 
     onSuccess: async (data, variables, context, mutation) => {
-      // Инвалидируем кэш компаний для гарантии консистентности (исправляет баг,
-      // когда после смены плана одной компании данные всех компаний показывались неверно)
-      await queryClient.invalidateQueries({ queryKey: queryKeys.companies, exact: false });
+      const companyId = data.id ?? (data as any)._id;
+      const targetIdStr = companyId ? String(companyId).trim() : null;
+
+      // Сразу обновляем кэш компаний данными с сервера — чтобы UI показывал изменения без задержки
+      if (targetIdStr) {
+        const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
+        allQueries.forEach(([key, oldData]) => {
+          if (oldData && Array.isArray(oldData)) {
+            const newData = oldData.map((company) => {
+              const cid = company.id ? String(company.id).trim() : null;
+              const c_id = (company as any)._id ? String((company as any)._id).trim() : null;
+              if (cid === targetIdStr || c_id === targetIdStr) {
+                return { ...company, ...data };
+              }
+              return company;
+            });
+            queryClient.setQueryData<Company[]>(key, [...newData]);
+          }
+        });
+      }
 
       // Обновляем отдельные запросы для компании
-      const companyId = data.id ?? (data as any)._id;
       if (companyId) {
         queryClient.setQueryData(queryKeys.company(companyId), { ...data });
       }
       if (data.code) {
         queryClient.setQueryData(queryKeys.companyByCode(data.code), { ...data });
       }
+
+      // Инвалидируем для синхронизации (refetch в фоне)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.companies, exact: false });
 
       if (userOnSuccess) {
         (userOnSuccess as any)(data, variables, context, mutation);

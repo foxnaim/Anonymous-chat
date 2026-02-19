@@ -73,6 +73,8 @@ const SendMessageModal = ({
         const message = error.message.toLowerCase();
         if (message.includes("not found") || message.includes("company")) {
           errorMessage = t("sendMessage.companyNotFound") || "Компания не найдена";
+        } else if ((error as { code?: string })?.code === "TOO_MANY_MESSAGES" || message.includes("tomorrow")) {
+          errorMessage = t("sendMessage.dailyLimitExceeded");
         } else if (message.includes("limit") || message.includes("exceeded")) {
           errorMessage = t("sendMessage.messageLimitExceeded");
         } else if (message.includes("required")) {

@@ -104,6 +104,7 @@
     "trackResponseDescription": "The company may leave a response to your message. Check the status regularly",
     "idSecurityNote": "Your ID is secure. It does not contain personal information and is only used to track the status of your message.",
     "messageLimitExceeded": "Message limit for this company has been exceeded this month",
+    "dailyLimitExceeded": "Daily message limit reached (3 per day). Try again tomorrow.",
     "fillRequiredFields": "Please fill in all required fields"
   },
   "checkStatus": {
@@ -465,6 +466,8 @@
     "companyCodeLabelWithColon": "Company Code:",
     "contactSupport": "Contact support",
     "contactSupportDescription": "Click to open a WhatsApp chat",
+    "support": "Support",
+    "globalSupportNumber": "Global support",
     "prioritySupport": "Priority support",
     "day": "day",
     "days2": "days",
@@ -567,6 +570,7 @@
     "firstNDaysFullAccess": "First {{count}} {{label}} after registration - full access without restrictions",
     "freePlanSettingsUpdated": "Trial plan settings updated",
     "settingsUpdateError": "Error updating settings",
+    "settingsLoadError": "Failed to load settings",
     "cannotEditTrialPlan": "Regular admins cannot edit trial/free plans",
     "planCreated": "Plan \"{{name}}\" created",
     "planCreateError": "Error creating plan",

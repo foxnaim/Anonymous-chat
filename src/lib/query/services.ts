@@ -279,17 +279,8 @@ export const plansService = {
   },
 
   getFreePlanSettings: async () => {
-    try {
-      const response = await apiClient.get<ApiResponse<{ messagesLimit: number; storageLimit: number; freePeriodDays: number }>>('/plans/free-settings');
-      return response.data;
-    } catch (error) {
-      // Возвращаем дефолтные значения при ошибке
-      return {
-        messagesLimit: 10,
-        storageLimit: 1,
-        freePeriodDays: 60,
-      };
-    }
+    const response = await apiClient.get<ApiResponse<{ messagesLimit: number; storageLimit: number; freePeriodDays: number }>>('/plans/free-settings');
+    return response.data;
   },
 
   updateFreePlanSettings: async (settings: { messagesLimit: number; storageLimit: number; freePeriodDays: number }): Promise<void> => {

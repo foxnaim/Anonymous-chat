@@ -196,7 +196,7 @@ const AdminMessages = () => {
                     leaveTo="opacity-0"
                   >
                     <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-card border border-border py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                      {["all", t("checkStatus.new"), t("checkStatus.inProgress"), t("checkStatus.resolved"), t("checkStatus.rejected"), t("checkStatus.spam")].map((status) => (
+                      {["all", t("checkStatus.new"), t("checkStatus.inProgress"), t("checkStatus.resolved"), t("checkStatus.spam")].map((status) => (
                         <Listbox.Option
                           key={status}
                           className={({ active }) =>

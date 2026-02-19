@@ -25,8 +25,8 @@ const AdminPlans = () => {
     messagesLimit: number | "";
     freePeriodDays: number | "";
   }>({
-    messagesLimit: 10,
-    freePeriodDays: 22,
+    messagesLimit: "",
+    freePeriodDays: "",
   });
 
   const { data: plans = [], isLoading, refetch } = usePlans();
@@ -54,13 +54,18 @@ const AdminPlans = () => {
 
   // Загружаем настройки бесплатного плана при монтировании
   useEffect(() => {
-    plansService.getFreePlanSettings().then((data) => {
-      setFreePlanSettings({
-        messagesLimit: data.messagesLimit ?? 10,
-        freePeriodDays: data.freePeriodDays ?? 22,
+    plansService
+      .getFreePlanSettings()
+      .then((data) => {
+        setFreePlanSettings({
+          messagesLimit: data.messagesLimit,
+          freePeriodDays: data.freePeriodDays,
+        });
+      })
+      .catch(() => {
+        toast.error(t("admin.settingsLoadError"));
       });
-    });
-  }, []);
+  }, [t]);
 
   const { mutate: updateFreePlan } = useMutation({
     mutationFn: plansService.updateFreePlanSettings,
@@ -73,8 +78,8 @@ const AdminPlans = () => {
       // Обновляем локальное состояние после успешного сохранения
       const updatedSettings = await plansService.getFreePlanSettings();
       setFreePlanSettings({
-        messagesLimit: updatedSettings.messagesLimit ?? 10,
-        freePeriodDays: updatedSettings.freePeriodDays ?? 22,
+        messagesLimit: updatedSettings.messagesLimit,
+        freePeriodDays: updatedSettings.freePeriodDays,
       });
       refetch();
     },
@@ -92,7 +97,9 @@ const AdminPlans = () => {
             <div>
               <h2 className="text-base sm:text-lg font-semibold text-foreground">{t("admin.plansAndPrices")}</h2>
               <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                {t("admin.firstNDaysFullAccess", { count: freeDaysNum, label: freeDaysLabel })}
+                {freePlanSettings.freePeriodDays !== ""
+                  ? t("admin.firstNDaysFullAccess", { count: freeDaysNum, label: freeDaysLabel })
+                  : t("common.loading")}
               </p>
             </div>
             {user?.role === "super_admin" && (
