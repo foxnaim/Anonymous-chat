@@ -326,7 +326,7 @@ const AdminAnalytics = () => {
               </h3>
               <div className="space-y-3">
                 {[
-                  { name: t("admin.planTrial"), count: analytics.trialPlan, color: "bg-muted" },
+                  { name: t("admin.planTrial"), count: analytics.trialPlan, color: "bg-muted-foreground" },
                   { name: t("admin.planStandard"), count: analytics.standardPlan, color: "bg-primary" },
                   { name: t("admin.planPro"), count: analytics.proPlan, color: "bg-secondary" },
                 ].map((plan) => {
