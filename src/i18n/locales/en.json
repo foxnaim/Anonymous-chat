@@ -504,6 +504,7 @@
     "changePlan": "Change Plan",
     "planEndDate": "Plan End Date",
     "planEndDateDescription": "Leave empty for unlimited plan",
+    "pastDateNotAllowed": "You cannot select a past date. Please choose a date from today onwards.",
     "planUpdated": "Plan updated successfully",
     "planUpdateError": "Error updating plan",
     "planPro": "Pro",

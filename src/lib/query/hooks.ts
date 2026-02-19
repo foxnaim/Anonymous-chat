@@ -1051,33 +1051,19 @@ export const useUpdateCompanyPlan = (options?: UseMutationOptions<Company, Error
       return { previousData };
     },
 
-    onSuccess: (data, variables, context, mutation) => {
-      const dataId = data.id ? String(data.id).trim() : null;
-      const data_id = (data as any)._id ? String((data as any)._id).trim() : null;
-
-      // Обновляем кэш с реальными данными от сервера - создаём НОВЫЙ массив
-      const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
-      allQueries.forEach(([key, oldData]) => {
-        if (oldData && Array.isArray(oldData)) {
-          const newData = oldData.map(company => {
-            const companyId = company.id ? String(company.id).trim() : null;
-            const company_id = (company as any)._id ? String((company as any)._id).trim() : null;
-
-            if (companyId === dataId || companyId === data_id || company_id === dataId || company_id === data_id) {
-              return { ...data }; // Создаём новый объект
-            }
-            return company;
-          });
-          // Устанавливаем новый массив напрямую
-          queryClient.setQueryData<Company[]>(key, [...newData]);
-        }
-      });
+    onSuccess: async (data, variables, context, mutation) => {
+      // Инвалидируем кэш компаний для гарантии консистентности (исправляет баг,
+      // когда после смены плана одной компании данные всех компаний показывались неверно)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.companies, exact: false });
 
       // Обновляем отдельные запросы для компании
-      queryClient.setQueryData(queryKeys.company(data.id), { ...data });
-      queryClient.setQueryData(queryKeys.companyByCode(data.code), { ...data });
-
-      // НЕ делаем refetch - бэкенд может вернуть устаревшие данные и затереть оптимистичное обновление
+      const companyId = data.id ?? (data as any)._id;
+      if (companyId) {
+        queryClient.setQueryData(queryKeys.company(companyId), { ...data });
+      }
+      if (data.code) {
+        queryClient.setQueryData(queryKeys.companyByCode(data.code), { ...data });
+      }
 
       if (userOnSuccess) {
         (userOnSuccess as any)(data, variables, context, mutation);

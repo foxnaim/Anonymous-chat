@@ -76,6 +76,21 @@ const COMPANY_STATUS: Record<string, CompanyStatus> = {
 
 const ITEMS_PER_PAGE = 10;
 
+// Проверяет, что дата валидна и не в прошлом
+const isDateValidAndFuture = (dateStr: string): boolean => {
+  if (!dateStr) return false;
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    d.setHours(0, 0, 0, 0);
+    return d >= today;
+  } catch {
+    return false;
+  }
+};
+
 const AdminCompanies = () => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
@@ -520,6 +535,11 @@ const AdminCompanies = () => {
       return;
     }
     
+    if (planEndDate && !isDateValidAndFuture(planEndDate)) {
+      toast.error(t("admin.pastDateNotAllowed") || "Нельзя указать дату в прошлом. Выберите дату не ранее сегодняшнего дня.");
+      return;
+    }
+    
     await updatePlan({
       id: getCompanyId(selectedCompany),
       plan: selectedPlan,
@@ -547,13 +567,22 @@ const AdminCompanies = () => {
     setIsStatusModalOpen(true);
   }, []);
 
+  // Дата через месяц от сегодня (для предложения по умолчанию)
+  const getDefaultPlanEndDate = useCallback(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 1);
+    return d.toISOString().split("T")[0];
+  }, []);
+
   const openPlanModal = useCallback((company: Company) => {
     // Проверяем, может ли пользователь редактировать план
     // Суперадмины могут редактировать все планы
     if (user?.role === "super_admin") {
       setSelectedCompany(company);
       setSelectedPlan(company.plan as PlanType);
-      setPlanEndDate(company.trialEndDate || "");
+      const existingDate = company.trialEndDate || "";
+      const defaultDate = getDefaultPlanEndDate();
+      setPlanEndDate(isDateValidAndFuture(existingDate) ? existingDate : defaultDate);
       setIsPlanModalOpen(true);
       return;
     }
@@ -569,9 +598,11 @@ const AdminCompanies = () => {
     
     setSelectedCompany(company);
     setSelectedPlan(company.plan as PlanType);
-    setPlanEndDate(company.trialEndDate || "");
+    const existingDate = company.trialEndDate || "";
+    const defaultDate = getDefaultPlanEndDate();
+    setPlanEndDate(isDateValidAndFuture(existingDate) ? existingDate : defaultDate);
     setIsPlanModalOpen(true);
-  }, [user, t, isTrialPlan]);
+  }, [user, t, isTrialPlan, getDefaultPlanEndDate]);
 
   const openViewModal = useCallback((company: Company) => {
     setSelectedCompany(company);
@@ -1731,6 +1762,7 @@ const AdminCompanies = () => {
                         type="date"
                         value={planEndDate}
                         onChange={(e) => setPlanEndDate(e.target.value)}
+                        min={new Date().toISOString().split("T")[0]}
                         placeholder={t("admin.planEndDateDescription")}
                       />
                       <p className="text-xs text-muted-foreground mt-1">

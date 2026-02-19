@@ -56,6 +56,27 @@ const COMPANY_STATUS: Record<string, CompanyStatus> = {
 
 const PLAN_OPTIONS = ["Пробный", "Стандарт", "Про"] as const;
 
+// Проверяет, что дата валидна и не в прошлом
+const isDateValidAndFuture = (dateStr: string): boolean => {
+  if (!dateStr) return false;
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    d.setHours(0, 0, 0, 0);
+    return d >= today;
+  } catch {
+    return false;
+  }
+};
+
+const getDefaultPlanEndDate = (): string => {
+  const d = new Date();
+  d.setMonth(d.getMonth() + 1);
+  return d.toISOString().split("T")[0];
+};
+
 const AdminPanel = () => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
@@ -622,7 +643,8 @@ const AdminPanel = () => {
                             return;
                           }
                           setSelectedPlan(selectedCompanyData.plan);
-                          setPlanEndDate(selectedCompanyData.trialEndDate || "");
+                          const existingDate = selectedCompanyData.trialEndDate || "";
+                          setPlanEndDate(isDateValidAndFuture(existingDate) ? existingDate : getDefaultPlanEndDate());
                           setIsPlanModalOpen(true);
                         }}
                       >
@@ -851,7 +873,8 @@ const AdminPanel = () => {
                                     className="h-7 w-7"
                                     onClick={() => {
                                       setSelectedPlan(selectedCompanyData.plan);
-                                      setPlanEndDate(selectedCompanyData.trialEndDate || "");
+                                      const existingDate = selectedCompanyData.trialEndDate || "";
+                                      setPlanEndDate(isDateValidAndFuture(existingDate) ? existingDate : getDefaultPlanEndDate());
                                       setIsPlanModalOpen(true);
                                     }}
                                   >
@@ -1353,7 +1376,8 @@ const AdminPanel = () => {
                                 className="h-7 w-7"
                                 onClick={() => {
                                   setSelectedPlan(selectedCompanyData.plan);
-                                  setPlanEndDate(selectedCompanyData.trialEndDate || "");
+                                  const existingDate = selectedCompanyData.trialEndDate || "";
+                                  setPlanEndDate(isDateValidAndFuture(existingDate) ? existingDate : getDefaultPlanEndDate());
                                   setIsPlanModalOpen(true);
                                 }}
                               >
@@ -1549,6 +1573,11 @@ const AdminPanel = () => {
                             toast.error(t("admin.cannotEditTrialPlan") || "Обычные админы не могут редактировать пробный/бесплатный план");
                             return;
                           }
+                        }
+                        
+                        if (planEndDate && !isDateValidAndFuture(planEndDate)) {
+                          toast.error(t("admin.pastDateNotAllowed") || "Нельзя указать дату в прошлом. Выберите дату не ранее сегодняшнего дня.");
+                          return;
                         }
                         
                         await updatePlan({
