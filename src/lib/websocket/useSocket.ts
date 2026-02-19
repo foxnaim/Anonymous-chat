@@ -111,7 +111,7 @@ export const useSocketMessages = (companyCode?: string | null) => {
         }
         
         // Для запросов без messageId обновляем как обычно
-        queryClient.setQueryData(queryKey, (old: unknown) => {
+        queryClient.setQueryData<MessagesCacheValue | undefined>(queryKey, (old) => {
           const list = getMessagesList(old);
           if (list.length === 0) {
             wasEmpty = true;
@@ -121,10 +121,10 @@ export const useSocketMessages = (companyCode?: string | null) => {
           const exists = list.some((m) => m.id === message.id);
           if (exists) {
             wasUpdated = true;
-            return setMessagesInCache(old as MessagesCacheValue, list.map((m) => (m.id === message.id ? message : m)));
+            return setMessagesInCache(old, list.map((m) => (m.id === message.id ? message : m)));
           }
           wasUpdated = true;
-          return setMessagesInCache(old as MessagesCacheValue, [message, ...list]);
+          return setMessagesInCache(old, [message, ...list]);
         });
       });
       
