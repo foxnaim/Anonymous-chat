@@ -412,12 +412,18 @@ const AdminCompanies = () => {
   });
 
   const { mutateAsync: updatePlan, isPending: isUpdatingPlan } = useUpdateCompanyPlan({
-    onSuccess: async (updatedCompany) => {
-      // Обновляем selectedCompany сразу с новыми данными
+    onSuccess: (updatedCompany) => {
+      // Обновляем selectedCompany только полями плана — не затираем статус
       if (selectedCompany && getCompanyId(selectedCompany) === getCompanyId(updatedCompany)) {
-        setSelectedCompany(updatedCompany);
+        setSelectedCompany({
+          ...selectedCompany,
+          plan: updatedCompany.plan,
+          trialEndDate: updatedCompany.trialEndDate,
+          messagesLimit: updatedCompany.messagesLimit,
+          storageLimit: updatedCompany.storageLimit,
+        });
       }
-      await refetch();
+      // НЕ вызываем refetch — он затирает статус блокировки при быстрых изменениях
       setIsPlanModalOpen(false);
       setPlanEndDate("");
       toast.success(t("admin.planUpdated"));

@@ -249,7 +249,7 @@ const AdminPanel = () => {
   });
 
   const { mutateAsync: updatePlan, isPending: isUpdatingPlan } = useUpdateCompanyPlan({
-    onSuccess: async (updatedCompany) => {
+    onSuccess: (updatedCompany) => {
       if (selectedCompanyId && updatedCompany) {
         const updatedId = (updatedCompany as any)?.id ?? (updatedCompany as any)?._id;
         if (updatedId != null && String(updatedId) === String(selectedCompanyId)) {
@@ -257,7 +257,7 @@ const AdminPanel = () => {
           setTimeout(() => setLastPlanUpdatedCompany(null), 1000);
         }
       }
-      await refetch();
+      // НЕ вызываем refetch — он затирает статус блокировки при быстрых изменениях
     },
     onError: (error: Error) => {
       toast.error(error.message || t("admin.planUpdateError"));
