@@ -22,8 +22,21 @@ import type { GroupedAchievements } from "../achievements";
 
 // ========== MESSAGE SERVICES ==========
 // Используем реальный API вместо моковых данных
+
+export interface MessagesPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface MessagesResponse {
+  data: Message[];
+  pagination?: MessagesPagination;
+}
+
 export const messageService = {
-  getAll: async (companyCode?: string, page?: number, limit?: number, messageId?: string, fromDate?: string): Promise<Message[]> => {
+  getAll: async (companyCode?: string, page?: number, limit?: number, messageId?: string, fromDate?: string): Promise<MessagesResponse> => {
     try {
       const params = new URLSearchParams();
       if (companyCode) params.append('companyCode', companyCode);
@@ -32,17 +45,20 @@ export const messageService = {
       if (limit) params.append('limit', limit.toString());
       if (fromDate) params.append('fromDate', fromDate);
       const queryString = params.toString();
-      const response = await apiClient.get<ApiResponse<Message[]>>(`/messages${queryString ? `?${queryString}` : ''}`);
-      return response.data;
+      const response = await apiClient.get<ApiResponse<Message[]> & { pagination?: MessagesPagination }>(`/messages${queryString ? `?${queryString}` : ''}`);
+      return {
+        data: response.data,
+        pagination: response.pagination,
+      };
     } catch (error: any) {
       // Игнорируем ошибки аутентификации (401/403) - пользователь будет перенаправлен на логин
       if (error?.status === 401 || error?.status === 403) {
         // Тихо возвращаем пустой массив, чтобы не показывать ошибку пользователю
         // Аутентификация обрабатывается на уровне ProtectedRoute
-        return [];
+        return { data: [] };
       }
       // Для других ошибок также возвращаем пустой массив
-      return [];
+      return { data: [] };
     }
   },
 

@@ -255,7 +255,9 @@ const AdminCompanies = () => {
 
   const { mutateAsync: deleteCompany, isPending: isDeleting } = useDeleteCompany({
     onSuccess: async (_, { id: deletedId }) => {
-      // Закрываем диалог и очищаем состояние
+      if (selectedCompany && getCompanyId(selectedCompany) === String(deletedId)) {
+        setSelectedCompany(null);
+      }
       setIsDeleteDialogOpen(false);
       setCompanyToDelete(null);
       if (isViewOpen) {
@@ -264,7 +266,7 @@ const AdminCompanies = () => {
       
       toast.success(t("admin.companyDeleted") || "Компания удалена");
     },
-    onError: (error: any) => {
+    onError: (error: any, variables: { id: string | number }) => {
       // Получаем сообщение об ошибке с бэкенда
       const backendMessage = error?.message || error?.response?.data?.error?.message || error?.response?.data?.message || "";
       const errorStatus = error?.status || error?.response?.status;
@@ -275,7 +277,14 @@ const AdminCompanies = () => {
                         backendMessage.includes("not found");
       
       if (isNotFound) {
-        // Компания уже удалена - показываем успех, а не ошибку
+        if (selectedCompany && getCompanyId(selectedCompany) === String(variables.id)) {
+          setSelectedCompany(null);
+        }
+        setIsDeleteDialogOpen(false);
+        setCompanyToDelete(null);
+        if (isViewOpen) {
+          setIsViewOpen(false);
+        }
         toast.success(t("admin.companyDeleted") || "Компания удалена");
       } else {
         // Маппинг сообщений об ошибках на ключи переводов
@@ -313,7 +322,10 @@ const AdminCompanies = () => {
   });
 
   const { mutateAsync: updateCompany, isPending: isUpdating } = useUpdateCompany({
-    onSuccess: async () => {
+    onSuccess: async (updatedCompany) => {
+      if (selectedCompany && getCompanyId(selectedCompany) === getCompanyId(updatedCompany)) {
+        setSelectedCompany(updatedCompany);
+      }
       await refetch();
       setIsEditOpen(false);
       toast.success(t("common.success"));

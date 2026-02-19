@@ -15,30 +15,37 @@ import {
   plansService, 
   adminService 
 } from "./services";
+import type { MessagesResponse } from "./services";
+import { getMessagesList, setMessagesInCache, type MessagesCacheValue } from "./messagesCache";
 import { adminSettingsApi, type AdminSettings, type UpdateAdminSettingsRequest } from "../api/adminSettings";
 import { supportApi, type SupportInfo } from "../api/support";
+import { PAGINATION } from "@/lib/utils/constants";
 
-type UseMessagesOptions = Omit<UseQueryOptions<Message[]>, 'queryKey' | 'queryFn'> & {
+type UseMessagesOptions = Omit<UseQueryOptions<MessagesResponse>, 'queryKey' | 'queryFn'> & {
   /** Дата в формате YYYY-MM-DD для фильтрации (например, за месяц) */
   fromDate?: string;
 };
 
 /**
- * Хук для получения всех сообщений
+ * Хук для получения всех сообщений с поддержкой постраничной загрузки
  * Если companyCode не передан (undefined) - получает все сообщения (для админа)
  * Если companyCode === null - запрос отключен
  * Если companyCode === string - получает сообщения конкретной компании
- * messageId - опциональный параметр для поиска по ID сообщения
+ * messageId - опциональный параметр для поиска по ID сообщения (пагинация отключается)
  * options.fromDate - опциональная дата YYYY-MM-DD для фильтрации (за месяц)
+ *
+ * Возвращает: data (сообщения), pagination (page, limit, total, totalPages)
  */
 export const useMessages = (companyCode?: string | null, page?: number, limit?: number, messageId?: string, options?: UseMessagesOptions) => {
   const { fromDate, ...queryOptions } = options ?? {};
   const normalizedCode = companyCode ?? undefined;
+  const pageNum = page ?? 1;
+  const limitNum = limit ?? PAGINATION.MESSAGES_PAGE_SIZE;
   return useQuery({
-    queryKey: [...queryKeys.messages(normalizedCode), page, limit, messageId, fromDate],
-    queryFn: () => messageService.getAll(normalizedCode, page, limit, messageId, fromDate),
+    queryKey: [...queryKeys.messages(normalizedCode), pageNum, limitNum, messageId, fromDate],
+    queryFn: () => messageService.getAll(normalizedCode, pageNum, limitNum, messageId, fromDate),
     enabled: companyCode !== null, // enabled если не null (undefined разрешен для админа)
-    staleTime: 1000 * 10, // 10 секунд - сообщения обновляются часто, уменьшено для более быстрого обновления
+    staleTime: 1000 * 10, // 10 секунд - сообщения обновляются часто
     gcTime: 1000 * 60 * 5, // 5 минут в кэше
     ...queryOptions,
   });
@@ -507,7 +514,7 @@ export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Om
 
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.messages(variables.companyCode), exact: false });
-      const previousData = queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(variables.companyCode), exact: false });
+      const previousData = queryClient.getQueriesData<unknown>({ queryKey: queryKeys.messages(variables.companyCode), exact: false });
 
       const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
       const now = new Date().toISOString();
@@ -521,14 +528,13 @@ export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Om
         updatedAt: now,
       };
 
-      previousData.forEach(([key, data]) => {
-        if (data && Array.isArray(data)) {
-          queryClient.setQueryData<Message[]>(key, [optimistic, ...data]);
-        }
+      previousData.forEach(([key, cached]) => {
+        const list = getMessagesList(cached as MessagesCacheValue);
+        const next = [optimistic, ...list];
+        queryClient.setQueryData(key, setMessagesInCache(cached as MessagesCacheValue, next));
       });
-      // Если кэша ещё не было (первое сообщение/пустой список), создаём запись
       if (previousData.length === 0) {
-        queryClient.setQueryData<Message[]>(queryKeys.messages(variables.companyCode), [optimistic]);
+        queryClient.setQueryData(queryKeys.messages(variables.companyCode), [optimistic]);
       }
 
       if (userOnMutate) {
@@ -541,30 +547,23 @@ export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Om
     onSuccess: (data, variables, context, mutation) => {
       const targetCompanyCode = (context?.companyCode || data.companyCode)?.toUpperCase();
       
-      // Обновляем все запросы для компании сообщения (включая варианты с page, limit, messageId)
-      // Используем только setQueryData - это обновляет кэш БЕЗ запросов в сеть
-      const allQueries = queryClient.getQueriesData<Message[]>({
+      const allQueries = queryClient.getQueriesData<MessagesCacheValue>({
         queryKey: queryKeys.messages(targetCompanyCode),
         exact: false,
       });
       let updatedAny = false;
-      allQueries.forEach(([key, list]) => {
-        if (list && Array.isArray(list)) {
-          // Удаляем временное сообщение, если оно есть
-          const withoutTemp = list.filter(m => m.id !== context?.tempId);
-          // Проверяем, существует ли уже сообщение с таким ID
-          const exists = withoutTemp.some(m => m.id === data.id);
-          // Если существует, обновляем его, иначе добавляем в начало
-          const next = exists
-            ? withoutTemp.map(m => (m.id === data.id ? data : m))
-            : [data, ...withoutTemp];
-          queryClient.setQueryData<Message[]>(key, next);
-          updatedAny = true;
-        }
+      allQueries.forEach(([key, cached]) => {
+        const list = getMessagesList(cached);
+        const withoutTemp = list.filter(m => m.id !== context?.tempId);
+        const exists = withoutTemp.some(m => m.id === data.id);
+        const next = exists
+          ? withoutTemp.map(m => (m.id === data.id ? data : m))
+          : [data, ...withoutTemp];
+        queryClient.setQueryData(key, setMessagesInCache(cached, next));
+        updatedAny = true;
       });
-      // Если кэша не было, создаем новую запись
       if (!updatedAny) {
-        queryClient.setQueryData<Message[]>(queryKeys.messages(targetCompanyCode), [data]);
+        queryClient.setQueryData(queryKeys.messages(targetCompanyCode), [data]);
       }
 
       // Инвалидируем только статистику/достижения (они обновятся при следующем запросе)
@@ -603,8 +602,8 @@ export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Om
  */
 type UpdateMessageStatusVariables = { id: string; status: Message["status"]; response?: string };
 
-type UpdateMessageStatusContext = {
-  previousQueries: Array<[QueryKey, Message[] | undefined]>;
+  type UpdateMessageStatusContext = {
+  previousQueries: Array<[QueryKey, MessagesCacheValue | undefined]>;
   userContext?: any;
   optimisticMessage?: Message | null;
 };
@@ -630,26 +629,24 @@ export const useUpdateMessageStatus = (options?: Omit<UseMutationOptions<Message
       await queryClient.cancelQueries({ queryKey: queryKeys.messages() });
       
       // Сохраняем предыдущие данные для отката
-      const previousQueries = queryClient.getQueriesData<Message[]>({
+      const previousQueries = queryClient.getQueriesData<MessagesCacheValue>({
         queryKey: queryKeys.messages(),
         exact: false,
       });
       
-      // Оптимистично обновляем сообщение ДО отправки запроса
       // Находим текущее сообщение в кэше
-      const allMessages = queryClient.getQueriesData<Message[]>({
+      const allMessages = queryClient.getQueriesData<MessagesCacheValue>({
         queryKey: queryKeys.messages(),
         exact: false,
       });
       
       let currentMessage: Message | null = null;
-      for (const [, messages] of allMessages) {
-        if (messages && Array.isArray(messages)) {
-          const found = messages.find(m => m.id === variables.id);
-          if (found) {
-            currentMessage = found;
-            break;
-          }
+      for (const [, cached] of allMessages) {
+        const list = getMessagesList(cached);
+        const found = list.find(m => m.id === variables.id);
+        if (found) {
+          currentMessage = found;
+          break;
         }
       }
       
@@ -664,11 +661,11 @@ export const useUpdateMessageStatus = (options?: Omit<UseMutationOptions<Message
         };
         
         // Оптимистично обновляем все запросы сообщений
-        queryClient.setQueriesData<Message[]>(
+        queryClient.setQueriesData<MessagesCacheValue>(
           { queryKey: queryKeys.messages(), exact: false },
           (old) => {
-            if (!old) return old;
-            return old.map((m) => (m.id === optimisticMessage.id ? optimisticMessage : m));
+            const list = getMessagesList(old);
+            return setMessagesInCache(old, list.map((m) => (m.id === optimisticMessage.id ? optimisticMessage : m)));
           }
         );
         
@@ -685,23 +682,21 @@ export const useUpdateMessageStatus = (options?: Omit<UseMutationOptions<Message
       return { previousQueries, userContext, optimisticMessage: currentMessage };
     },
     onSuccess: (data, variables, context, mutation) => {
-      // Оптимистично обновляем все запросы сообщений
       const baseQueryKey = queryKeys.messages(data.companyCode);
       
-      queryClient.setQueriesData<Message[]>(
+      queryClient.setQueriesData<MessagesCacheValue>(
         { queryKey: baseQueryKey, exact: false },
         (old) => {
-          if (!old) return old;
-          return old.map((m) => (m.id === data.id ? data : m));
+          const list = getMessagesList(old);
+          return setMessagesInCache(old, list.map((m) => (m.id === data.id ? data : m)));
         }
       );
       
-      // Также обновляем кэш для всех сообщений (для админов)
-      queryClient.setQueriesData<Message[]>(
+      queryClient.setQueriesData<MessagesCacheValue>(
         { queryKey: queryKeys.messages(undefined), exact: false },
         (old) => {
-          if (!old) return old;
-          return old.map((m) => (m.id === data.id ? data : m));
+          const list = getMessagesList(old);
+          return setMessagesInCache(old, list.map((m) => (m.id === data.id ? data : m)));
         }
       );
       
@@ -728,7 +723,7 @@ export const useUpdateMessageStatus = (options?: Omit<UseMutationOptions<Message
       // Откатываем изменения при ошибке
       if (isUpdateMessageStatusContext(context) && context.previousQueries) {
         context.previousQueries.forEach(([key, old]) => {
-          queryClient.setQueryData<Message[] | undefined>(key, old);
+          queryClient.setQueryData(key, old);
         });
       }
       
@@ -752,7 +747,7 @@ export const useDeleteMessage = (options?: UseMutationOptions<void, Error, { id:
   const { onSuccess: _, onError: __, onMutate: ___, ...rest } = options ?? {};
 
   type DeleteMessageContext = {
-    previousData: Array<[QueryKey, Message[] | undefined]>;
+    previousData: Array<[QueryKey, MessagesCacheValue | undefined]>;
     companyCode?: string;
   };
 
@@ -766,20 +761,18 @@ export const useDeleteMessage = (options?: UseMutationOptions<void, Error, { id:
 
       // Сохраняем предыдущее состояние для всех запросов сообщений
       const previousData = [
-        ...queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(variables.companyCode), exact: false }),
-        ...queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(undefined), exact: false }),
+        ...queryClient.getQueriesData<MessagesCacheValue>({ queryKey: queryKeys.messages(variables.companyCode), exact: false }),
+        ...queryClient.getQueriesData<MessagesCacheValue>({ queryKey: queryKeys.messages(undefined), exact: false }),
       ];
 
-      // Оптимистично удаляем сообщение из всех запросов
       const allQueries = [
-        ...queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(variables.companyCode), exact: false }),
-        ...queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(undefined), exact: false }),
+        ...queryClient.getQueriesData<MessagesCacheValue>({ queryKey: queryKeys.messages(variables.companyCode), exact: false }),
+        ...queryClient.getQueriesData<MessagesCacheValue>({ queryKey: queryKeys.messages(undefined), exact: false }),
       ];
 
-      allQueries.forEach(([key, data]) => {
-        if (data && Array.isArray(data)) {
-          queryClient.setQueryData<Message[]>(key, data.filter(m => m.id !== variables.id));
-        }
+      allQueries.forEach(([key, cached]) => {
+        const list = getMessagesList(cached);
+        queryClient.setQueryData(key, setMessagesInCache(cached, list.filter(m => m.id !== variables.id)));
       });
 
       // Удаляем отдельное сообщение из кэша
@@ -793,16 +786,14 @@ export const useDeleteMessage = (options?: UseMutationOptions<void, Error, { id:
     },
 
     onSuccess: (_, variables, context, mutation) => {
-      // Убеждаемся, что сообщение удалено из всех запросов
       const allQueries = [
-        ...queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(context?.companyCode), exact: false }),
-        ...queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(undefined), exact: false }),
+        ...queryClient.getQueriesData<MessagesCacheValue>({ queryKey: queryKeys.messages(context?.companyCode), exact: false }),
+        ...queryClient.getQueriesData<MessagesCacheValue>({ queryKey: queryKeys.messages(undefined), exact: false }),
       ];
 
-      allQueries.forEach(([key, data]) => {
-        if (data && Array.isArray(data)) {
-          queryClient.setQueryData<Message[]>(key, data.filter(m => m.id !== variables.id));
-        }
+      allQueries.forEach(([key, cached]) => {
+        const list = getMessagesList(cached);
+        queryClient.setQueryData(key, setMessagesInCache(cached, list.filter(m => m.id !== variables.id)));
       });
 
       // Удаляем отдельное сообщение из кэша
@@ -824,16 +815,14 @@ export const useDeleteMessage = (options?: UseMutationOptions<void, Error, { id:
 
       // Если ошибка 404, значит сообщение уже удалено. НЕ откатываем кэш.
       if (errorStatus === 404) {
-        // Убеждаемся, что сообщение удалено из кэша
         const allQueries = [
-          ...queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(variables.companyCode), exact: false }),
-          ...queryClient.getQueriesData<Message[]>({ queryKey: queryKeys.messages(undefined), exact: false }),
+          ...queryClient.getQueriesData<MessagesCacheValue>({ queryKey: queryKeys.messages(variables.companyCode), exact: false }),
+          ...queryClient.getQueriesData<MessagesCacheValue>({ queryKey: queryKeys.messages(undefined), exact: false }),
         ];
 
-        allQueries.forEach(([key, data]) => {
-          if (data && Array.isArray(data)) {
-            queryClient.setQueryData<Message[]>(key, data.filter(m => m.id !== variables.id));
-          }
+        allQueries.forEach(([key, cached]) => {
+          const list = getMessagesList(cached);
+          queryClient.setQueryData(key, setMessagesInCache(cached, list.filter(m => m.id !== variables.id)));
         });
 
         // Удаляем отдельное сообщение из кэша
@@ -886,13 +875,27 @@ export const useUpdateCompany = (options?: UseMutationOptions<Company, Error, { 
   return useMutation({
     mutationFn: ({ id, updates }) => companyService.update(id, updates),
     onSuccess: (data, variables, context, mutation) => {
-      // Обновляем кэш компании с новыми данными
+      const targetIdStr = String(variables.id).trim();
+      // Мгновенно обновляем компанию в списке — динамичное отображение без задержки refetch
+      const allQueries = queryClient.getQueriesData<Company[]>({ queryKey: queryKeys.companies, exact: false });
+      allQueries.forEach(([key, oldData]) => {
+        if (oldData && Array.isArray(oldData)) {
+          const newData = oldData.map((company) => {
+            const cid = company.id ? String(company.id).trim() : null;
+            const c_id = (company as any)._id ? String((company as any)._id).trim() : null;
+            if (cid === targetIdStr || c_id === targetIdStr) {
+              return { ...company, ...data };
+            }
+            return company;
+          });
+          queryClient.setQueryData<Company[]>(key, [...newData]);
+        }
+      });
       queryClient.setQueryData(queryKeys.company(data.id), data);
-      // Инвалидируем запросы для обновления всех компонентов
-      queryClient.invalidateQueries({ queryKey: queryKeys.companies });
-      queryClient.invalidateQueries({ queryKey: queryKeys.company(data.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.companyByCode(data.code) });
-      
+      if (data.code) {
+        queryClient.setQueryData(queryKeys.companyByCode(data.code), data);
+      }
+
       if (userOnSuccess) {
         (userOnSuccess as any)(data, variables, context, mutation);
       }

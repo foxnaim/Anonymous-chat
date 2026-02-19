@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { FiSearch, FiEye, FiCheckCircle, FiClock, FiX, FiChevronDown, FiCheck, FiMessageSquare, FiAlertCircle, FiAlertTriangle, FiCreditCard } from "react-icons/fi";
+import { FiSearch, FiEye, FiCheckCircle, FiClock, FiX, FiChevronDown, FiCheck, FiMessageSquare, FiAlertCircle, FiAlertTriangle, FiCreditCard, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import { Message, MessageStatus } from "@/types";
@@ -21,6 +21,7 @@ import { useFullscreenContext } from "@/components/providers/FullscreenProvider"
 import { useDebounce } from "@/hooks/use-debounce";
 import { usePlanPermissions } from "@/hooks/usePlanPermissions";
 import { useRouter } from "next/navigation";
+import { PAGINATION } from "@/lib/utils/constants";
 
 const CompanyMessages = () => {
   const { isFullscreen } = useFullscreenContext();
@@ -44,6 +45,7 @@ const CompanyMessages = () => {
   })() : false;
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
@@ -159,20 +161,26 @@ const CompanyMessages = () => {
     ? trimmedQuery.replace(/[-_\s]/g, '').toUpperCase()
     : undefined;
   
-  const { data: messages = [], isLoading, refetch } = useMessages(
+  // При поиске по ID пагинация отключена (бэкенд возвращает до 1000)
+  const pageForApi = isMessageIdSearch ? undefined : currentPage;
+  const limitForApi = isMessageIdSearch ? undefined : PAGINATION.MESSAGES_PAGE_SIZE;
+  
+  const { data: messagesResult, isLoading, refetch } = useMessages(
     company?.code, 
-    undefined, 
-    undefined, 
-    normalizedMessageId, // Передаем нормализованный ID для поиска на бэкенде
+    pageForApi, 
+    limitForApi, 
+    normalizedMessageId,
     {
       enabled: !!company?.code,
-      staleTime: 1000 * 5, // считаем свежими 5с - уменьшено для более быстрого обновления через WebSocket
+      staleTime: 1000 * 5,
       refetchOnMount: true,
-      refetchOnWindowFocus: true, // гарантируем подтяжку при фокусе/новом устройстве
+      refetchOnWindowFocus: true,
       refetchOnReconnect: true,
-      // без постоянного интервала — rely на сокет + события видимости
     }
   );
+  
+  const messages = messagesResult?.data ?? [];
+  const pagination = messagesResult?.pagination;
   
   // Подключаемся к WebSocket для real-time обновлений
   useSocketMessages(company?.code);
@@ -286,6 +294,11 @@ const CompanyMessages = () => {
     }
     prevSelectedMessageRef.current = selectedMessage;
   }, [messages, selectedMessage, isEditingResponse]);
+
+  // Сбрасываем страницу при изменении поиска или фильтров
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery, statusFilter, typeFilter]);
 
   // При возврате вкладки/окна в фокус — обновляем список, чтобы новые сообщения подтянулись сразу
   useEffect(() => {
@@ -484,8 +497,11 @@ const CompanyMessages = () => {
             </div>
           ) : (
             <>
-              <div className="text-sm text-muted-foreground px-2 mb-4">
-                {t("messages.found")}: {filteredMessages.length} {filteredMessages.length === 1 ? t("messages.message") : t("messages.messages")} {messages.length !== filteredMessages.length && `(${messages.length} ${t("messages.total")})`}
+              <div className="text-sm text-muted-foreground px-2 mb-4 flex flex-wrap items-center justify-between gap-2">
+                <span>
+                  {t("messages.found")}: {filteredMessages.length} {filteredMessages.length === 1 ? t("messages.message") : t("messages.messages")} {messages.length !== filteredMessages.length && `(${messages.length} ${t("messages.total")})`}
+                  {pagination?.total != null && ` — ${pagination.page} ${t("company.of")} ${pagination.totalPages}`}
+                </span>
               </div>
               {filteredMessages.length === 0 ? (
             <Card className="p-12 text-center">
@@ -542,6 +558,32 @@ const CompanyMessages = () => {
                   </Card>
                 );
               })}
+            </div>
+          )}
+          {/* Пагинация — только при обычном режиме (не поиск по ID) */}
+          {!isMessageIdSearch && pagination && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-border px-4 py-3 mt-4">
+              <div className="text-sm text-muted-foreground">
+                {currentPage} {t("company.of")} {pagination.totalPages}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <FiChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))}
+                  disabled={currentPage === pagination.totalPages}
+                >
+                  <FiChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
             </>

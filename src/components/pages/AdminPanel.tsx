@@ -512,15 +512,18 @@ const AdminPanel = () => {
                         </td>
                       </tr>
                     ) : (
-                      filteredCompanies.map((company, index) => (
+                      filteredCompanies.map((company, index) => {
+                        const selected = isCompanySelected(company.id);
+                        const rowBg = selected ? "bg-primary/5" : "bg-card";
+                        return (
                         <tr
                           key={company.id}
                           className={`border-b border-border/50 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors relative ${
-                            isCompanySelected(company.id) ? "bg-primary/5 border-l-4 border-l-primary" : "bg-card"
+                            selected ? "border-l-4 border-l-primary" : ""
                           }`}
                           onClick={() => setSelectedCompanyId(company.id)}
                         >
-                        <td className="p-4">
+                        <td className={`p-4 ${rowBg}`}>
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-[#553D67] flex items-center justify-center text-white font-semibold relative overflow-hidden flex-shrink-0">
                               {company.logoUrl ? (
@@ -535,33 +538,34 @@ const AdminPanel = () => {
                               ) : (
                                 company.name.charAt(0)
                               )}
-                              {isCompanySelected(company.id) && (
+                              {selected && (
                                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center border-2 border-background z-10">
                                   <FiCheck className="h-2.5 w-2.5 text-white" />
                                 </div>
                               )}
                             </div>
-                            <span className={`font-medium ${selectedCompanyId === company.id ? "text-primary" : "text-foreground"}`}>
+                            <span className={`font-medium ${selected ? "text-primary" : "text-foreground"}`}>
                               {company.name}
                             </span>
                           </div>
                         </td>
-                        <td className="p-4 text-sm text-muted-foreground">{company.adminEmail || "—"}</td>
-                        <td className="p-4">
+                        <td className={`p-4 text-sm text-muted-foreground ${rowBg}`}>{company.adminEmail || "—"}</td>
+                        <td className={`p-4 ${rowBg}`}>
                           <Badge className={getStatusColor(company.status)}>{getStatusLabel(company.status)}</Badge>
                         </td>
-                        <td className="p-4">
+                        <td className={`p-4 ${rowBg}`}>
                           <Badge variant="outline" className="bg-muted text-muted-foreground border-muted-foreground/20">
                             {getPlanLabel(company.plan)}
                           </Badge>
                         </td>
-                        <td className="p-4">
+                        <td className={`p-4 ${rowBg}`}>
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-muted-foreground">{company.registered}</span>
                           </div>
                         </td>
                       </tr>
-                      ))
+                      );
+                      })
                     )}
                   </tbody>
                 </table>

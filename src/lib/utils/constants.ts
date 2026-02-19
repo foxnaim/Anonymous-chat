@@ -30,6 +30,7 @@ export const DEBOUNCE_DELAYS = {
 // Pagination
 export const PAGINATION = {
   DEFAULT_PAGE_SIZE: 10,
+  MESSAGES_PAGE_SIZE: 20,
   MAX_PAGE_SIZE: 100,
 } as const;
 

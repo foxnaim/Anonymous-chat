@@ -6,7 +6,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 // Исправлено: удален неиспользуемый импорт disconnectSocket
 import { getSocket } from './socket';
-import { queryKeys } from '../query';
+import { queryKeys, getMessagesList, setMessagesInCache, type MessagesCacheValue } from '../query';
 import type { Message } from '@/types';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -103,7 +103,7 @@ export const useSocketMessages = (companyCode?: string | null) => {
           
           // Обновляем только если это то же сообщение
           if (normalizedQueryId === normalizedMessageId) {
-            queryClient.setQueryData(queryKey, [message]);
+            queryClient.setQueryData(queryKey, { data: [message] });
             wasUpdated = true;
           }
           // Если это другой messageId, не трогаем этот запрос
@@ -111,23 +111,20 @@ export const useSocketMessages = (companyCode?: string | null) => {
         }
         
         // Для запросов без messageId обновляем как обычно
-        queryClient.setQueryData<Message[]>(queryKey, (old) => {
-          // Если кэш пустой, создаем новый массив с сообщением
-          if (!old || old.length === 0) {
+        queryClient.setQueryData(queryKey, (old: unknown) => {
+          const list = getMessagesList(old);
+          if (list.length === 0) {
             wasEmpty = true;
             wasUpdated = true;
             return [message];
           }
-          // Проверяем, существует ли уже сообщение с таким ID
-          const exists = old.some((m) => m.id === message.id);
+          const exists = list.some((m) => m.id === message.id);
           if (exists) {
-            // Если существует, обновляем его
             wasUpdated = true;
-            return old.map((m) => (m.id === message.id ? message : m));
+            return setMessagesInCache(old as MessagesCacheValue, list.map((m) => (m.id === message.id ? message : m)));
           }
-          // Если не существует, добавляем в начало списка
           wasUpdated = true;
-          return [message, ...old];
+          return setMessagesInCache(old as MessagesCacheValue, [message, ...list]);
         });
       });
       
@@ -239,35 +236,32 @@ export const useSocketMessages = (companyCode?: string | null) => {
   }, [companyCode, queryClient]);
 
   const handleMessageUpdate = useCallback((message: Message) => {
-    // Обновляем все запросы сообщений для данного companyCode (включая все варианты page/limit)
     const baseQueryKey = queryKeys.messages(companyCode || message.companyCode || undefined);
     
-    queryClient.setQueriesData<Message[]>(
+    queryClient.setQueriesData<MessagesCacheValue>(
       { queryKey: baseQueryKey, exact: false },
       (old) => {
-        if (!old) return old;
-        return old.map((m) => (m.id === message.id ? message : m));
+        const list = getMessagesList(old);
+        return setMessagesInCache(old, list.map((m) => (m.id === message.id ? message : m)));
       }
     );
     
-    // Также обновляем кэш для всех сообщений (для админов)
     if (!companyCode) {
-      queryClient.setQueriesData<Message[]>(
+      queryClient.setQueriesData<MessagesCacheValue>(
         { queryKey: queryKeys.messages(undefined), exact: false },
         (old) => {
-          if (!old) return old;
-          return old.map((m) => (m.id === message.id ? message : m));
+          const list = getMessagesList(old);
+          return setMessagesInCache(old, list.map((m) => (m.id === message.id ? message : m)));
         }
       );
     }
     
-    // Обновляем запросы для компании, которой принадлежит сообщение
     if (message.companyCode && message.companyCode !== companyCode) {
-      queryClient.setQueriesData<Message[]>(
+      queryClient.setQueriesData<MessagesCacheValue>(
         { queryKey: queryKeys.messages(message.companyCode), exact: false },
         (old) => {
-          if (!old) return old;
-          return old.map((m) => (m.id === message.id ? message : m));
+          const list = getMessagesList(old);
+          return setMessagesInCache(old, list.map((m) => (m.id === message.id ? message : m)));
         }
       );
     }
@@ -296,23 +290,21 @@ export const useSocketMessages = (companyCode?: string | null) => {
   }, [companyCode, queryClient]);
 
   const handleMessageDelete = useCallback((data: { id: string; companyCode: string }) => {
-    // Удаляем из всех запросов сообщений для данного companyCode
     const baseQueryKey = queryKeys.messages(companyCode || data.companyCode || undefined);
     
-    queryClient.setQueriesData<Message[]>(
+    queryClient.setQueriesData<MessagesCacheValue>(
       { queryKey: baseQueryKey, exact: false },
       (old) => {
-        if (!old) return old;
-        return old.filter((m) => m.id !== data.id);
+        const list = getMessagesList(old);
+        return setMessagesInCache(old, list.filter((m) => m.id !== data.id));
       }
     );
     
-    // Также удаляем из общего списка всех сообщений (для админов)
-    queryClient.setQueriesData<Message[]>(
+    queryClient.setQueriesData<MessagesCacheValue>(
       { queryKey: queryKeys.messages(undefined), exact: false },
       (old) => {
-        if (!old) return old;
-        return old.filter((m) => m.id !== data.id);
+        const list = getMessagesList(old);
+        return setMessagesInCache(old, list.filter((m) => m.id !== data.id));
       }
     );
 

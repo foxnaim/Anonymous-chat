@@ -29,7 +29,8 @@ const CompanyGrowth = () => {
   const { data: stats, isLoading: isLoadingStats } = useCompanyStats(user?.companyId || 0, {
     enabled: !!user?.companyId,
   });
-  const { data: messages = [], isLoading: isLoadingMessages } = useMessages(company?.code || null);
+  const { data: messagesResult, isLoading: isLoadingMessages } = useMessages(company?.code ?? null, 1, 500);
+  const messages = messagesResult?.data ?? [];
   
   const isLoading = isLoadingMetrics || isLoadingAchievements || isLoadingStats || isLoadingMessages;
 

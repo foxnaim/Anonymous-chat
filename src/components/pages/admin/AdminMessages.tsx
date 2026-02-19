@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Fragment } from "react";
+import { useState, Fragment, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Dialog, Transition, Listbox } from "@headlessui/react";
 import { Card } from "@/components/ui/card";
@@ -17,24 +17,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { FiSearch, FiEye, FiCheckCircle, FiX, FiChevronDown, FiCheck, FiTrash2 } from "react-icons/fi";
+import { FiSearch, FiEye, FiCheckCircle, FiX, FiChevronDown, FiCheck, FiTrash2, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { AdminHeader } from "@/components/AdminHeader";
 import { useMessages, useDeleteMessage } from "@/lib/query";
 import { messageService } from "@/lib/query/services";
 import { Message, MessageStatus } from "@/types";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { MESSAGE_STATUSES } from "@/lib/utils/constants";
+import { MESSAGE_STATUSES, PAGINATION } from "@/lib/utils/constants";
 import { useSocketMessages } from "@/lib/websocket/useSocket";
 
 const AdminMessages = () => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const { data: messages = [], isLoading, refetch } = useMessages();
+  const { data: messagesResult, isLoading, refetch } = useMessages(undefined, currentPage, PAGINATION.MESSAGES_PAGE_SIZE);
+  const messages = messagesResult?.data ?? [];
+  const pagination = messagesResult?.pagination;
   
   // Подключаемся к WebSocket для real-time обновлений
   useSocketMessages();
@@ -100,6 +103,10 @@ const AdminMessages = () => {
     return statusMap[status] || status;
   };
   
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
+
   const filteredMessages = messages.filter((msg) => {
     const matchesSearch = msg.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
       msg.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -235,6 +242,7 @@ const AdminMessages = () => {
             <>
               <div className="text-sm text-muted-foreground px-2">
                 {t("messages.found")}: {filteredMessages.length} {filteredMessages.length === 1 ? t("messages.message") : t("messages.messages")} {messages.length !== filteredMessages.length && `(${messages.length} ${t("messages.total")})`}
+                {pagination?.total != null && ` — ${currentPage} ${t("company.of")} ${pagination.totalPages}`}
               </div>
               <div className="space-y-3 sm:space-y-4">
                 {filteredMessages.length === 0 ? (
@@ -270,6 +278,31 @@ const AdminMessages = () => {
                   ))
                 )}
               </div>
+              {pagination && pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between border-t border-border px-4 py-3 mt-4">
+                  <div className="text-sm text-muted-foreground">
+                    {currentPage} {t("company.of")} {pagination.totalPages}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <FiChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.min(pagination.totalPages, p + 1))}
+                      disabled={currentPage === pagination.totalPages}
+                    >
+                      <FiChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </main>

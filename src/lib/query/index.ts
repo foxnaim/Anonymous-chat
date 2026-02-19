@@ -20,6 +20,9 @@ export {
   plansService, 
   adminService 
 } from './services';
+export { getMessagesList, setMessagesInCache } from './messagesCache';
+export type { MessagesCacheValue } from './messagesCache';
+export type { MessagesResponse, MessagesPagination } from './services';
 
 // Query keys для централизованного управления
 export const queryKeys = {

@@ -33,10 +33,11 @@ const AdminAnalytics = () => {
   const fromDate = getFromDateForMonth();
   
   const { data: companies = [], isLoading: companiesLoading } = useCompanies();
-  const { data: messages = [], isLoading: messagesLoading } = useMessages(
+  const { data: messagesResult, isLoading: messagesLoading } = useMessages(
     undefined, 1, 500, undefined, 
     { fromDate, staleTime: 1000 * 15 }
   );
+  const messages = messagesResult?.data ?? [];
   
   // Подключаемся к WebSocket для real-time обновлений аналитики
   useSocketMessages();
