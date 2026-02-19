@@ -504,7 +504,7 @@ export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Om
   const { onSuccess: _, onError: __, onMutate: ___, ...rest } = options ?? {};
 
   type MessageOptimisticContext = {
-    previousData: Array<[QueryKey, Message[] | undefined]>;
+    previousData: Array<[QueryKey, MessagesCacheValue | undefined]>;
     tempId: string;
     companyCode: string;
   };
@@ -514,7 +514,7 @@ export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Om
 
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.messages(variables.companyCode), exact: false });
-      const previousData = queryClient.getQueriesData<unknown>({ queryKey: queryKeys.messages(variables.companyCode), exact: false });
+      const previousData = queryClient.getQueriesData<MessagesCacheValue>({ queryKey: queryKeys.messages(variables.companyCode), exact: false });
 
       const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
       const now = new Date().toISOString();
@@ -529,9 +529,9 @@ export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Om
       };
 
       previousData.forEach(([key, cached]) => {
-        const list = getMessagesList(cached as MessagesCacheValue);
+        const list = getMessagesList(cached);
         const next = [optimistic, ...list];
-        queryClient.setQueryData(key, setMessagesInCache(cached as MessagesCacheValue, next));
+        queryClient.setQueryData(key, setMessagesInCache(cached, next));
       });
       if (previousData.length === 0) {
         queryClient.setQueryData(queryKeys.messages(variables.companyCode), [optimistic]);
@@ -580,7 +580,7 @@ export const useCreateMessage = (options?: UseMutationOptions<Message, Error, Om
     onError: (error, variables, context, mutation) => {
       if (context?.previousData) {
         context.previousData.forEach(([key, old]) => {
-          queryClient.setQueryData<Message[] | undefined>(key, old);
+          queryClient.setQueryData<MessagesCacheValue | undefined>(key, old);
         });
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.messages(variables.companyCode) });
