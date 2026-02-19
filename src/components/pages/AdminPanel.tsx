@@ -44,7 +44,7 @@ import { AdminHeader } from "@/components/AdminHeader";
 import { useCompanies, useCreateCompany, useDeleteCompany, usePlans, useUpdateCompanyStatus, useUpdateCompanyPlan, useUpdateCompanyPassword } from "@/lib/query";
 import { getTranslatedValue } from "@/lib/utils/translations";
 import { toast } from "sonner";
-import type { CompanyStatus, PlanType } from "@/types";
+import type { Company, CompanyStatus, PlanType } from "@/types";
 import { validatePasswordStrength } from "@/lib/utils/validation";
 import { useAuth } from "@/lib/redux";
 
@@ -109,7 +109,7 @@ const AdminPanel = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showCreatePassword, setShowCreatePassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [lastPlanUpdatedCompany, setLastPlanUpdatedCompany] = useState<{ id: string; data: { plan?: string; trialEndDate?: string } } | null>(null);
+  const [lastPlanUpdatedCompany, setLastPlanUpdatedCompany] = useState<Company | null>(null);
 
   const getStatusLabel = (status: CompanyStatus) => {
     const value = String(status).toLowerCase();
@@ -249,7 +249,14 @@ const AdminPanel = () => {
   });
 
   const { mutateAsync: updatePlan, isPending: isUpdatingPlan } = useUpdateCompanyPlan({
-    onSuccess: async () => {
+    onSuccess: async (updatedCompany) => {
+      if (selectedCompanyId && updatedCompany) {
+        const updatedId = (updatedCompany as any)?.id ?? (updatedCompany as any)?._id;
+        if (updatedId != null && String(updatedId) === String(selectedCompanyId)) {
+          setLastPlanUpdatedCompany(updatedCompany);
+          setTimeout(() => setLastPlanUpdatedCompany(null), 1000);
+        }
+      }
       await refetch();
     },
     onError: (error: Error) => {
@@ -305,8 +312,13 @@ const AdminPanel = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const isCompanySelected = (companyId: string | number | undefined) =>
-    selectedCompanyId != null && companyId != null && String(selectedCompanyId) === String(companyId);
+  const toIdString = (id: any): string => {
+    if (id == null) return "";
+    if (typeof id === "object" && typeof id.toString === "function") return id.toString();
+    return String(id);
+  };
+  const isCompanySelected = (companyId: any) =>
+    selectedCompanyId != null && companyId != null && toIdString(selectedCompanyId) === toIdString(companyId);
 
   // Определяем мобильный режим, чтобы не рендерить мобильный модал на десктопе
   useEffect(() => {
@@ -347,7 +359,7 @@ const AdminPanel = () => {
       return;
     }
     // Если выбранная компания ушла из списка, выбираем первую
-    const exists = filteredCompanies.some((c) => String(c.id) === String(selectedCompanyId));
+    const exists = filteredCompanies.some((c) => toIdString((c as any)?.id ?? (c as any)?._id) === toIdString(selectedCompanyId));
     if (!exists) {
       setSelectedCompanyId(filteredCompanies[0].id);
     }
@@ -360,12 +372,24 @@ const AdminPanel = () => {
     setShowPanelPasswordSection(false);
   }, [selectedCompanyId]);
 
-  const selectedCompanyData =
+  const baseSelectedCompanyData =
     (selectedCompanyId && filteredCompanies.find((c) => {
       const cid = (c as any)?.id ?? (c as any)?._id;
-      return cid != null && String(cid) === String(selectedCompanyId);
+      return cid != null && toIdString(cid) === toIdString(selectedCompanyId);
     })) ||
     null;
+
+  // При смене плана — сразу показываем обновлённые данные в карточке
+  const selectedCompanyData =
+    lastPlanUpdatedCompany && selectedCompanyId && baseSelectedCompanyData
+      ? (() => {
+          const updatedId = (lastPlanUpdatedCompany as any)?.id ?? (lastPlanUpdatedCompany as any)?._id;
+          if (updatedId != null && String(updatedId) === String(selectedCompanyId)) {
+            return { ...baseSelectedCompanyData, ...lastPlanUpdatedCompany };
+          }
+          return baseSelectedCompanyData;
+        })()
+      : baseSelectedCompanyData;
   
   // Для мобильных: определяем, показывать ли модальное окно (только при явном выборе)
   const shouldShowMobileModal = selectedCompanyId !== null && isMobile;
@@ -518,13 +542,14 @@ const AdminPanel = () => {
                         const rowBg = selected ? "bg-primary/5" : "bg-card";
                         return (
                         <tr
-                          key={company.id}
-                          className={`border-b border-border/50 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors relative ${
-                            selected ? "border-l-4 border-l-primary" : ""
-                          }`}
-                          onClick={() => setSelectedCompanyId(company.id)}
+                          key={`${toIdString((company as any)?.id ?? (company as any)?._id)}-${index}`}
+                          className="border-b border-border/50 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors relative"
+                          onClick={() => {
+                          const id = (company as any)?.id ?? (company as any)?._id;
+                          if (id != null) setSelectedCompanyId(toIdString(id));
+                        }}
                         >
-                        <td className={`p-4 ${rowBg}`}>
+                        <td className={`p-4 ${rowBg} ${selected ? "border-l-4 border-l-primary" : ""}`}>
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-[#553D67] flex items-center justify-center text-white font-semibold relative overflow-hidden flex-shrink-0">
                               {company.logoUrl ? (
@@ -585,11 +610,14 @@ const AdminPanel = () => {
                 ) : (
                   filteredCompanies.map((company, index) => (
                     <Card
-                      key={company.id}
+                      key={`${toIdString((company as any)?.id ?? (company as any)?._id)}-${index}`}
                       className={`p-4 cursor-pointer transition-colors relative ${
                         isCompanySelected(company.id) ? "bg-primary/5 border-primary border-2" : "border-border"
                       }`}
-                      onClick={() => setSelectedCompanyId(company.id)}
+                      onClick={() => {
+                          const id = (company as any)?.id ?? (company as any)?._id;
+                          if (id != null) setSelectedCompanyId(toIdString(id));
+                        }}
                     >
                       {isCompanySelected(company.id) && (
                         <div className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
