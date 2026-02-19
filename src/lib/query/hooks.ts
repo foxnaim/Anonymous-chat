@@ -831,7 +831,7 @@ export const useDeleteMessage = (options?: UseMutationOptions<void, Error, { id:
         // Для других ошибок откатываем изменения
         if (context?.previousData) {
           context.previousData.forEach(([key, old]) => {
-            queryClient.setQueryData<Message[] | undefined>(key, old);
+            queryClient.setQueryData<MessagesCacheValue | undefined>(key, old);
           });
         }
 
