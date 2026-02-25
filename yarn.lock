@@ -6407,10 +6407,10 @@ tabbable@^6.0.0:
   resolved "https://registry.yarnpkg.com/tabbable/-/tabbable-6.3.0.tgz#2e0e6163935387cdeacd44e9334616ca0115a8d3"
   integrity sha512-EIHvdY5bPLuWForiR/AN2Bxngzpuwn1is4asboytXtpTgsArc+WmSJKVLlhdh71u7jFcryDqB2A8lQvj78MkyQ==
 
-tailwind-merge@^2.6.0:
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/tailwind-merge/-/tailwind-merge-2.6.0.tgz#ac5fb7e227910c038d458f396b7400d93a3142d5"
-  integrity sha512-P+Vu1qXfzediirmHOC3xKGAYeZtPcV9g76X+xg2FD4tYgR71ewMA35Y3sCz3zhiN/dwefRpJX0yBcgwi1fXNQA==
+tailwind-merge@^3.5.0:
+  version "3.5.0"
+  resolved "https://registry.yarnpkg.com/tailwind-merge/-/tailwind-merge-3.5.0.tgz#06502f4496ba15151445d97d916a26564d50d1ca"
+  integrity sha512-I8K9wewnVDkL1NTGoqWmVEIlUcB9gFriAEkXkfCjX5ib8ezGxtR3xD7iZIxrfArjEsH7F1CHD4RFUtxefdqV/A==
 
 tailwindcss-animate@^1.0.7:
   version "1.0.7"
