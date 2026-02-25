@@ -1,154 +1,58 @@
-# Anonymous Chat Frontend
+<div align="center">
 
-Современный фронтенд для платформы анонимных отзывов, построенный на Next.js 14 с полной поддержкой SSR, SEO и интернационализации.
+# 💬 Anonymous-chat
 
-## 🚀 Технологии
+**Real-time anonymous chat platform with WebSocket communication**
 
-- **Next.js 14** - React фреймворк с App Router
-- **TypeScript** - типизированный JavaScript
-- **Tailwind CSS** - utility-first CSS фреймворк
-- **Redux Toolkit** - управление состоянием
-- **React Query** - кэширование и синхронизация данных
-- **i18next** - интернационализация (ru, en, kk)
-- **Socket.IO** - real-time обновления
-- **Framer Motion** - анимации
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)
+![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socket.io&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
-## 📋 Требования
+</div>
 
-- Node.js >= 18
-- yarn или npm
+---
 
-## 🛠️ Установка
+## About
+
+Anonymous-chat is a real-time messaging platform where users can communicate without revealing their identity. Built with WebSocket for instant message delivery.
+
+## Features
+
+- 🎭 **Anonymous** — Chat without registration or identity
+- ⚡ **Real-time** — Instant message delivery via WebSocket
+- 🔒 **Privacy** — No data stored, no tracking
+- 🎨 **Modern UI** — Clean, responsive interface
+- 🐳 **Docker** — Containerized deployment
+- 🚀 **Railway** — Ready for cloud deployment
+- 🧪 **Tested** — Jest test suite included
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js, TypeScript |
+| Real-time | Socket.io / WebSocket |
+| Styling | Tailwind CSS |
+| Testing | Jest |
+| Deploy | Docker, Railway |
+
+## Getting Started
 
 ```bash
+git clone https://github.com/foxnaim/Anonymous-chat.git
+cd Anonymous-chat
 yarn install
-# или
-npm install
-```
-
-## 🏃 Запуск
-
-### Разработка
-```bash
 yarn dev
 ```
 
-### Production
-```bash
-yarn build
-yarn start
-```
-
-## 🧪 Тестирование
+### Docker
 
 ```bash
-# Запустить все тесты
-yarn test
-
-# Watch режим
-yarn test:watch
-
-# С покрытием
-yarn test:coverage
+docker-compose up
 ```
 
-## 📁 Структура проекта
+## License
 
-```
-src/
-├── app/              # Next.js App Router страницы
-├── components/       # React компоненты
-├── lib/              # Утилиты и конфигурация
-│   ├── api/         # API клиенты
-│   ├── i18n/        # Интернационализация
-│   ├── query/       # React Query настройки
-│   ├── redux/       # Redux store
-│   ├── seo/         # SEO утилиты
-│   └── utils/       # Вспомогательные функции
-├── styles/          # Глобальные стили
-└── types/           # TypeScript типы
-```
-
-## 🔒 Безопасность
-
-- **CSP Headers** - Content Security Policy
-- **XSS Protection** - защита от XSS атак
-- **Frame Options** - защита от clickjacking
-- **Content Type Options** - защита от MIME sniffing
-
-## 🌐 SEO
-
-- **Полный SSR** - Server-Side Rendering для всех страниц
-- **ISR** - Incremental Static Regeneration
-- **Динамические метаданные** - для каждой компании
-- **Sitemap** - автоматическая генерация
-- **Open Graph** - для социальных сетей
-- **Canonical URLs** - для избежания дублей
-- **Hreflang** - поддержка многоязычности
-
-## 📱 Адаптивность
-
-Полностью адаптивный дизайн для всех устройств:
-- Мобильные телефоны (320px+)
-- Планшеты (768px+)
-- Десктопы (1024px+)
-
-## 🌍 Интернационализация
-
-Поддержка трех языков:
-- Русский (ru)
-- English (en)
-- Қазақша (kk)
-
-Переключение языка доступно на всех страницах.
-
-## 📚 Документация компонентов
-
-### Button
-```tsx
-import { Button } from '@/components/ui/button';
-
-<Button variant="default" size="lg">
-  Click me
-</Button>
-```
-
-### SEO Component
-```tsx
-import { SEO } from '@/lib/seo';
-
-<SEO
-  title="Page Title"
-  description="Page description"
-  keywords="key, words"
-/>
-```
-
-## 🔧 Переменные окружения
-
-Создайте файл `.env.local`:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3001/api
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-```
-
-## 📦 Оптимизация Bundle
-
-- Tree shaking для неиспользуемого кода
-- Code splitting по маршрутам
-- Динамические импорты для тяжелых библиотек
-- Оптимизация изображений Next.js
-
-## 🚀 Деплой
-
-Проект готов к деплою на:
-- Vercel (рекомендуется)
-- Railway
-- Docker
-- Любой Node.js хостинг
-
-## 📄 Лицензия
-
-ISC
-
+MIT © [foxnaim](https://github.com/foxnaim)
