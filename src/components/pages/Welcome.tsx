@@ -103,7 +103,7 @@ function Welcome({ initialCompanyCode, initialCompany }: WelcomeProps) {
 
     // Проверяем только когда код равен 8 символам
     if (debouncedCode.length === 8 && company) {
-      if (company.status === t("admin.blocked")) {
+      if (company.status === "Заблокирована") {
         toast.error(t("admin.blockCompany"));
         setValidatedCode(null);
         return;

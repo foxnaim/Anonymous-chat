@@ -730,31 +730,31 @@ const CompanyMessages = () => {
                           <div className="flex gap-3 flex-wrap">
                             <Button
                               variant="outline"
-                              onClick={() => handleUpdateStatus(t("checkStatus.inProgress") as MessageStatus)}
-                              disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === t("checkStatus.inProgress")}
+                              onClick={() => handleUpdateStatus("В работе" as MessageStatus)}
+                              disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === "В работе"}
                             >
                               <FiClock className="h-4 w-4 mr-2" />
                               {t("checkStatus.inProgress")}
                             </Button>
                             <Button
-                              onClick={() => handleUpdateStatus(t("checkStatus.resolved") as MessageStatus)}
-                              disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === t("checkStatus.resolved")}
+                              onClick={() => handleUpdateStatus("Решено" as MessageStatus)}
+                              disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === "Решено"}
                             >
                               <FiCheckCircle className="h-4 w-4 mr-2" />
                               {t("checkStatus.resolved")}
                             </Button>
                             <Button
                               variant="outline"
-                              onClick={() => handleUpdateStatus(t("checkStatus.rejected") as MessageStatus)}
-                              disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === t("checkStatus.rejected") || selectedMessage.status === "Отклонено"}
+                              onClick={() => handleUpdateStatus("Отклонено" as MessageStatus)}
+                              disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === "Отклонено"}
                             >
                               <FiX className="h-4 w-4 mr-2" />
                               {t("messages.reject")}
                             </Button>
                             <Button
                               variant="outline"
-                              onClick={() => handleUpdateStatus(t("checkStatus.spam") as MessageStatus)}
-                              disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === t("checkStatus.spam") || selectedMessage.status === "Спам"}
+                              onClick={() => handleUpdateStatus("Спам" as MessageStatus)}
+                              disabled={isRejectedByAdmin(selectedMessage) || selectedMessage.status === "Спам"}
                             >
                               <FiAlertCircle className="h-4 w-4 mr-2" />
                               {t("checkStatus.spam")}

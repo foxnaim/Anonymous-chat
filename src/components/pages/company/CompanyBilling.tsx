@@ -107,9 +107,9 @@ const CompanyBilling = () => {
                       <div className="flex items-center gap-2.5 mb-2">
                         <h3 className="text-base sm:text-lg font-bold text-foreground">{t("company.yourTariff")}</h3>
                         <Badge variant="outline" className="text-xs sm:text-sm px-2.5 py-0.5">
-                          {company.status === t("admin.trial") 
-                            ? t("company.trialPeriod") 
-                            : currentPlan 
+                          {company.status === "Пробная"
+                            ? t("company.trialPeriod")
+                            : currentPlan
                               ? getTranslatedValue(currentPlan.name)
                               : company.plan || t("company.plan")}
                         </Badge>
@@ -132,7 +132,7 @@ const CompanyBilling = () => {
                               </Badge>
                             )}
                             <span className="text-xs text-muted-foreground">
-                              ({new Date(company.trialEndDate).toLocaleDateString("ru-RU", {
+                              ({new Date(company.trialEndDate).toLocaleDateString(i18n.language === "kk" ? "kk-KZ" : i18n.language === "en" ? "en-US" : "ru-RU", {
                                 day: "numeric",
                                 month: "long",
                                 year: "numeric"
@@ -144,9 +144,9 @@ const CompanyBilling = () => {
                     </div>
                     <div className="flex-shrink-0 text-left sm:text-right">
                       <p className="text-2xl sm:text-3xl font-bold" style={{ color: 'hsl(var(--primary))' }}>
-                        {company.status === t("admin.trial") 
-                          ? t("common.free") 
-                          : currentPlan 
+                        {company.status === "Пробная"
+                          ? t("common.free")
+                          : currentPlan
                             ? (currentPlan.price === 0 ? t("common.free") : `${currentPlan.price} ₸`)
                             : t("common.free")}
                       </p>

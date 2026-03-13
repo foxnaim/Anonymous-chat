@@ -474,7 +474,9 @@
     "prioritySupport": "Priority support",
     "day": "day",
     "days2": "days",
-    "days": "days"
+    "days": "days",
+    "planNotFound": "Plan not found",
+    "planSwitchError": "Error switching plan"
   },
   "admin": {
     "title": "Platform Administration",
