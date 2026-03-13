@@ -480,6 +480,24 @@
     "planNotFound": "План не найден",
     "planSwitchError": "Ошибка при смене плана"
   },
+  "payment": {
+    "title": "Оплата тарифа",
+    "description": "Оплата тарифа «{{plan}}» — {{price}} ₸/мес",
+    "plan": "Тариф",
+    "amount": "Сумма",
+    "cardNumber": "Номер карты",
+    "expiry": "Срок действия",
+    "cardHolder": "Имя владельца карты",
+    "cardHolderPlaceholder": "ИМЯ ФАМИЛИЯ",
+    "securePayment": "Безопасная оплата. Данные карты защищены.",
+    "processing": "Обработка...",
+    "pay": "Оплатить {{price}} ₸",
+    "invalidCardNumber": "Введите корректный номер карты",
+    "invalidExpiry": "Введите корректный срок действия",
+    "cardExpired": "Срок действия карты истёк",
+    "invalidCvv": "Введите корректный CVV",
+    "invalidCardHolder": "Введите имя владельца карты"
+  },
   "admin": {
     "title": "Администрирование платформы",
     "companies": "Компании",

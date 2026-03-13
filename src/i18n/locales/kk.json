@@ -479,6 +479,24 @@
     "planNotFound": "Жоспар табылмады",
     "planSwitchError": "Жоспарды ауыстыру кезінде қате"
   },
+  "payment": {
+    "title": "Тарифті төлеу",
+    "description": "«{{plan}}» тарифін төлеу — {{price}} ₸/ай",
+    "plan": "Тариф",
+    "amount": "Сома",
+    "cardNumber": "Карта нөмірі",
+    "expiry": "Жарамдылық мерзімі",
+    "cardHolder": "Карта иесінің аты",
+    "cardHolderPlaceholder": "АТЫ ЖӨНІ",
+    "securePayment": "Қауіпсіз төлем. Карта деректері қорғалған.",
+    "processing": "Өңдеу...",
+    "pay": "{{price}} ₸ төлеу",
+    "invalidCardNumber": "Дұрыс карта нөмірін енгізіңіз",
+    "invalidExpiry": "Дұрыс жарамдылық мерзімін енгізіңіз",
+    "cardExpired": "Картаның жарамдылық мерзімі өтіп кетті",
+    "invalidCvv": "Дұрыс CVV енгізіңіз",
+    "invalidCardHolder": "Карта иесінің атын енгізіңіз"
+  },
   "admin": {
     "title": "Платформа әкімшілігі",
     "companies": "Компаниялар",

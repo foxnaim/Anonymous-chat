@@ -478,6 +478,24 @@
     "planNotFound": "Plan not found",
     "planSwitchError": "Error switching plan"
   },
+  "payment": {
+    "title": "Plan Payment",
+    "description": "Payment for «{{plan}}» plan — {{price}} ₸/mo",
+    "plan": "Plan",
+    "amount": "Amount",
+    "cardNumber": "Card number",
+    "expiry": "Expiry date",
+    "cardHolder": "Cardholder name",
+    "cardHolderPlaceholder": "FIRST LAST",
+    "securePayment": "Secure payment. Card data is protected.",
+    "processing": "Processing...",
+    "pay": "Pay {{price}} ₸",
+    "invalidCardNumber": "Enter a valid card number",
+    "invalidExpiry": "Enter a valid expiry date",
+    "cardExpired": "Card has expired",
+    "invalidCvv": "Enter a valid CVV",
+    "invalidCardHolder": "Enter cardholder name"
+  },
   "admin": {
     "title": "Platform Administration",
     "companies": "Companies",

@@ -11,6 +11,8 @@ import { useAuth } from "@/lib/redux";
 import { toast } from "sonner";
 import { getTranslatedValue } from "@/lib/utils/translations";
 import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
+import { useState } from "react";
+import PaymentModal from "./PaymentModal";
 
 const CompanyBilling = () => {
   const { isFullscreen } = useFullscreenContext();
@@ -30,6 +32,9 @@ const CompanyBilling = () => {
     // default en
     return days === 1 ? "day" : "days";
   };
+  const [paymentModal, setPaymentModal] = useState<{ open: boolean; planId: string; planName: string; planPrice: number }>({
+    open: false, planId: "", planName: "", planPrice: 0,
+  });
   const { user } = useAuth();
   const { data: company, isLoading: companyLoading, refetch: refetchCompany } = useCompany(user?.companyId || 0, {
     enabled: !!user?.companyId,
@@ -53,25 +58,51 @@ const CompanyBilling = () => {
       toast.error(t("common.error"));
       return;
     }
-    
+
     const selectedPlan = plans.find((p) => p.id === planId);
     if (!selectedPlan) {
       toast.error(t("company.planNotFound"));
       return;
     }
-    
-    const planName = typeof selectedPlan.name === "string" 
-      ? selectedPlan.name 
+
+    const planName = typeof selectedPlan.name === "string"
+      ? selectedPlan.name
       : selectedPlan.name?.ru || selectedPlan.name?.en || selectedPlan.name?.kk || "";
-    
-    // Вычисляем дату окончания плана (если не пробный)
-    let planEndDate: string | undefined;
-    if (planName !== "Пробный" && planName !== "Free" && planName !== "Бесплатный") {
-      const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + 1); // 1 месяц
-      planEndDate = endDate.toISOString().split('T')[0];
+
+    const isFree = selectedPlan.price === 0 || selectedPlan.isFree === true;
+
+    if (!isFree) {
+      // Открываем модальное окно оплаты для платных планов
+      setPaymentModal({
+        open: true,
+        planId,
+        planName: getTranslatedValue(selectedPlan.name),
+        planPrice: selectedPlan.price,
+      });
+      return;
     }
-    
+
+    // Для бесплатного плана — переключаем сразу
+    updatePlan({
+      id: user.companyId,
+      plan: planName as any,
+    });
+  };
+
+  const handlePaymentSuccess = () => {
+    if (!user?.companyId) return;
+
+    const selectedPlan = plans.find((p) => p.id === paymentModal.planId);
+    if (!selectedPlan) return;
+
+    const planName = typeof selectedPlan.name === "string"
+      ? selectedPlan.name
+      : selectedPlan.name?.ru || selectedPlan.name?.en || selectedPlan.name?.kk || "";
+
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + 1);
+    const planEndDate = endDate.toISOString().split('T')[0];
+
     updatePlan({
       id: user.companyId,
       plan: planName as any,
@@ -331,6 +362,14 @@ const CompanyBilling = () => {
           </div>
         </main>
       </div>
+
+      <PaymentModal
+        open={paymentModal.open}
+        onOpenChange={(open) => setPaymentModal((prev) => ({ ...prev, open }))}
+        planName={paymentModal.planName}
+        planPrice={paymentModal.planPrice}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
     </div>
   );
 };
