@@ -110,13 +110,15 @@ const CompanyMessages = () => {
       
       const backendMessage = error?.response?.data?.message || error?.message || "";
       const msgLower = backendMessage.toLowerCase();
-      
+
       // Маппинг ошибок из бэкенда на ключи переводов
       let errorMessage = t("messages.statusUpdateError");
-      
-      if (backendMessage.includes("Cannot modify status of message rejected by admin") ||
+
+      if (msgLower.includes("insufficient permissions") || msgLower.includes("access denied") || msgLower.includes("forbidden")) {
+        errorMessage = t("auth.accessDenied");
+      } else if (backendMessage.includes("Cannot modify status of message rejected by admin") ||
           backendMessage.includes("Cannot modify response for message rejected by admin") ||
-          msgLower.includes("cannot modify") && msgLower.includes("rejected by admin")) {
+          (msgLower.includes("cannot modify") && msgLower.includes("rejected by admin"))) {
         errorMessage = t("messages.cannotModifyRejected");
       } else if (backendMessage && !backendMessage.includes("HTTP error")) {
         errorMessage = backendMessage;

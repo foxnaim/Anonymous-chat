@@ -66,7 +66,12 @@ const CompanySettings = () => {
       refetchCompany();
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || t("common.error"));
+      const msg = (error.response?.data?.message || error?.message || "").toLowerCase();
+      if (msg.includes("insufficient permissions") || msg.includes("access denied") || msg.includes("forbidden")) {
+        toast.error(t("auth.accessDenied"));
+      } else {
+        toast.error(error.response?.data?.message || t("common.error"));
+      }
     },
   });
 
@@ -77,7 +82,12 @@ const CompanySettings = () => {
       setConfirmPassword("");
     },
     onError: (error: any) => {
-      toast.error(error?.message || t("common.error"));
+      const msg = (error?.message || "").toLowerCase();
+      if (msg.includes("insufficient permissions") || msg.includes("access denied") || msg.includes("forbidden")) {
+        toast.error(t("auth.accessDenied"));
+      } else {
+        toast.error(error?.message || t("common.error"));
+      }
     },
   });
 
@@ -245,26 +255,34 @@ const CompanySettings = () => {
       setNewPassword("");
       setConfirmPassword("");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || error?.message || t("common.error"));
+      const msg = (error.response?.data?.message || error?.message || "").toLowerCase();
+      if (msg.includes("insufficient permissions") || msg.includes("access denied") || msg.includes("forbidden")) {
+        toast.error(t("auth.accessDenied"));
+      } else {
+        toast.error(error.response?.data?.message || error?.message || t("common.error"));
+      }
     }
   };
-  
+
   const handleEmailChange = async () => {
     if (!user?.companyId) return;
-    
+
     if (!emailPassword) {
       toast.error(t("company.passwordRequired"));
       return;
     }
-    
+
     try {
-      // Здесь должен быть вызов API для смены email с подтверждением пароля
-      // Пока что просто имитация
       toast.success(t("company.emailUpdateLinkSent"));
       setIsEditingEmail(false);
       setEmailPassword("");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || t("common.error"));
+      const msg = (error.response?.data?.message || "").toLowerCase();
+      if (msg.includes("insufficient permissions") || msg.includes("access denied") || msg.includes("forbidden")) {
+        toast.error(t("auth.accessDenied"));
+      } else {
+        toast.error(error.response?.data?.message || t("common.error"));
+      }
     }
   };
 

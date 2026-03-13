@@ -49,7 +49,13 @@ const CompanyBilling = () => {
       refetchCompany();
     },
     onError: (error: any) => {
-      toast.error(error?.message || t("company.planSwitchError"));
+      const msg = error?.message || "";
+      const msgLower = msg.toLowerCase();
+      if (msgLower.includes("insufficient permissions") || msgLower.includes("access denied") || msgLower.includes("forbidden")) {
+        toast.error(t("auth.accessDenied"));
+      } else {
+        toast.error(msg || t("company.planSwitchError"));
+      }
     },
   });
   
