@@ -766,6 +766,29 @@
   resolved "https://registry.yarnpkg.com/@panva/hkdf/-/hkdf-1.2.1.tgz#cb0d111ef700136f4580349ff0226bf25c853f23"
   integrity sha512-6oclG6Y3PiDFcoyk8srjLfVKyMfVCKJ27JwNPViuXziFpmdz+MZnZN/aKY0JGXgYuO/VghU0jcOAZgWXZ1Dmrw==
 
+"@paypal/paypal-js@^9.4.0":
+  version "9.4.0"
+  resolved "https://registry.yarnpkg.com/@paypal/paypal-js/-/paypal-js-9.4.0.tgz#12faad9fb78da0ff64aedb58497855a62d3fb5d9"
+  integrity sha512-iPJIkEgzuUt9AW9d41xcltLYdcJvQ0qf+wWWuJ+wnJYnx4H6Yf1Pm98eBRnTNej4XHMSEDDb33ERsB4v/siORQ==
+  dependencies:
+    promise-polyfill "^8.3.0"
+
+"@paypal/react-paypal-js@^9.0.1":
+  version "9.0.1"
+  resolved "https://registry.yarnpkg.com/@paypal/react-paypal-js/-/react-paypal-js-9.0.1.tgz#3eb8c9f3d994e28d4de1accc7e28d50ede9fd642"
+  integrity sha512-cqX0l0wSOlWlovH0dnbVksZNfkoVxoQ5qYSoOQrqiXyibgrNCNT+loYqQ26F3rdCz+qPEQwf4+euKxgw8M1bNQ==
+  dependencies:
+    "@paypal/paypal-js" "^9.4.0"
+    "@paypal/sdk-constants" "^1.0.122"
+    server-only "^0.0.1"
+
+"@paypal/sdk-constants@^1.0.122":
+  version "1.0.157"
+  resolved "https://registry.yarnpkg.com/@paypal/sdk-constants/-/sdk-constants-1.0.157.tgz#3aeed32b13118b4e72caacd7a045cd8b6754af29"
+  integrity sha512-BjxWT9rK6dM1AOffSpvHYY47/8BY775jgEYYiwH6eL4YaqU5Epcw7zOtwQ8L4UaEn4FCAjZ2EWxaS83dCN7SpA==
+  dependencies:
+    hi-base32 "^0.5.0"
+
 "@pkgjs/parseargs@^0.11.0":
   version "0.11.0"
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
@@ -3955,6 +3978,11 @@ hasown@^2.0.2:
   dependencies:
     function-bind "^1.1.2"
 
+hi-base32@^0.5.0:
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/hi-base32/-/hi-base32-0.5.1.tgz#1279f2ddae2673219ea5870c2121d2a33132857e"
+  integrity sha512-EmBBpvdYh/4XxsnUybsPag6VikPYnN30td+vQk+GI3qpahVEG9+gTkG0aXVxTjBqQ5T6ijbWIu77O+C5WFWsnA==
+
 html-encoding-sniffer@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/html-encoding-sniffer/-/html-encoding-sniffer-3.0.0.tgz#2cb1a8cf0db52414776e5b2a7a04d5dd98158de9"
@@ -5627,6 +5655,11 @@ pretty-format@^3.8.0:
   resolved "https://registry.yarnpkg.com/pretty-format/-/pretty-format-3.8.0.tgz#bfbed56d5e9a776645f4b1ff7aa1a3ac4fa3c385"
   integrity sha512-WuxUnVtlWL1OfZFQFuqvnvs6MiAGk9UNsBostyBOB0Is9wb5uRESevA6rnl/rkksXaGX3GzZhPup5d6Vp1nFew==
 
+promise-polyfill@^8.3.0:
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/promise-polyfill/-/promise-polyfill-8.3.0.tgz#9284810268138d103807b11f4e23d5e945a4db63"
+  integrity sha512-H5oELycFml5yto/atYqmjyigJoAo3+OXwolYiH7OfQuYlAqhxNvTfiNMbV9hsC6Yp83yE5r2KTVmtrG6R9i6Pg==
+
 prompts@^2.0.1:
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/prompts/-/prompts-2.4.2.tgz#7b57e73b3a48029ad10ebd44f74b01722a4cb069"
@@ -6015,6 +6048,11 @@ semver@^7.5.3, semver@^7.5.4, semver@^7.6.0, semver@^7.7.1, semver@^7.7.3:
   version "7.7.3"
   resolved "https://registry.yarnpkg.com/semver/-/semver-7.7.3.tgz#4b5f4143d007633a8dc671cd0a6ef9147b8bb946"
   integrity sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==
+
+server-only@^0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/server-only/-/server-only-0.0.1.tgz#0f366bb6afb618c37c9255a314535dc412cd1c9e"
+  integrity sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==
 
 set-function-length@^1.2.2:
   version "1.2.2"
