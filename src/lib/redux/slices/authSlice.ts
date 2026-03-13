@@ -22,7 +22,11 @@ export const loginAsync = createAsyncThunk<
   async ({ email, password }, { rejectWithValue }) => {
     try {
       const response = await authService.login({ email, password });
-      
+
+      if (!response?.data?.user || !response.data.token) {
+        return rejectWithValue("Некорректный ответ сервера");
+      }
+
       // Сохраняем токен в куки
       setToken(response.data.token);
 
@@ -70,7 +74,11 @@ export const registerAsync = createAsyncThunk<
         companyName,
         companyCode,
       });
-      
+
+      if (!response?.data?.user) {
+        return rejectWithValue("Некорректный ответ сервера");
+      }
+
       // Если есть токен авторизации - сохраняем
       if (response.data.token) {
         setToken(response.data.token);
@@ -87,10 +95,10 @@ export const registerAsync = createAsyncThunk<
         name: response.data.user.name,
       };
 
-      return { 
-        user, 
+      return {
+        user,
         verificationToken: response.data.verificationToken,
-        token: response.data.token 
+        token: response.data.token
       };
     } catch (error) {
       const apiError = error as ApiError;
@@ -109,7 +117,11 @@ export const verifyEmailAsync = createAsyncThunk<
   async ({ token }, { rejectWithValue }) => {
     try {
       const response = await authService.verifyEmail({ token });
-      
+
+      if (!response?.data?.user || !response.data.token) {
+        return rejectWithValue("Некорректный ответ сервера");
+      }
+
       // Сохраняем токен в куки
       setToken(response.data.token);
 
@@ -149,7 +161,12 @@ export const checkSessionAsync = createAsyncThunk<
 
     try {
       const response = await authService.getMe();
-      
+
+      if (!response?.data?.user) {
+        removeToken();
+        return null;
+      }
+
       // Преобразуем ответ в формат User
       const user: User = {
         id: response.data.user.id,
