@@ -198,6 +198,11 @@ export const companyService = {
     const body = password ? { password } : undefined;
     await apiClient.delete<ApiResponse<void>>(`/companies/${id}`, body);
   },
+
+  verifyPayment: async (companyId: string, data: { orderId: string; planId: string }) => {
+    const response = await apiClient.post<ApiResponse<Company>>(`/companies/${companyId}/verify-payment`, data);
+    return response.data;
+  },
 };
 
 // ========== STATS SERVICES ==========

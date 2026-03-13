@@ -1388,3 +1388,17 @@ export const useSupportInfo = (options?: Omit<UseQueryOptions<SupportInfo>, 'que
     ...options,
   });
 };
+
+/**
+ * Хук для верификации платежа через бэкенд
+ */
+export const useVerifyPayment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ companyId, orderId, planId }: { companyId: string; orderId: string; planId: string }) =>
+      companyService.verifyPayment(companyId, { orderId, planId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company"] });
+    },
+  });
+};

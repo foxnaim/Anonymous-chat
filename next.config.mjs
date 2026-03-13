@@ -123,7 +123,7 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.paypal.com https://www.sandbox.paypal.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; frame-src 'self' https://www.paypal.com https://www.sandbox.paypal.com; connect-src 'self' https://${httpDomain} wss://${apiDomain} https:;`
+            value: `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.paypal.com https://www.sandbox.paypal.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; frame-src 'self' https://www.paypal.com https://www.sandbox.paypal.com; connect-src 'self' https://${httpDomain} wss://${apiDomain} https://www.paypal.com https://www.sandbox.paypal.com;`
           }
         ]
       }

@@ -12,11 +12,12 @@ interface PaymentModalProps {
   onOpenChange: (open: boolean) => void;
   planName: string;
   planPrice: number;
-  onPaymentSuccess: () => void;
+  onPaymentSuccess: (orderId: string) => void;
 }
 
-// Курс KZT → USD (примерный). В продакшене лучше получать актуальный курс через API.
-const KZT_TO_USD_RATE = 0.002;
+// Курс KZT → USD. Актуальный курс ~490 KZT = 1 USD (март 2026).
+// TODO: В продакшене получать актуальный курс через API (exchangerate-api.com и т.д.)
+const KZT_TO_USD_RATE = 1 / 490;
 
 const PaymentModal = ({ open, onOpenChange, planName, planPrice, onPaymentSuccess }: PaymentModalProps) => {
   const { t } = useTranslation();
@@ -107,7 +108,7 @@ const PaymentModal = ({ open, onOpenChange, planName, planPrice, onPaymentSucces
                   const details = await actions.order?.capture();
                   if (details?.status === "COMPLETED") {
                     toast.success(t("payment.success"));
-                    onPaymentSuccess();
+                    onPaymentSuccess(details.id || "");
                     onOpenChange(false);
                   } else {
                     toast.error(t("payment.failed"));

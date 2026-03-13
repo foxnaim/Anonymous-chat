@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslation } from "react-i18next";
-import { useCompany, usePlans, useFreePlanSettings, useUpdateCompanyPlan } from "@/lib/query";
+import { useCompany, usePlans, useFreePlanSettings, useUpdateCompanyPlan, useVerifyPayment } from "@/lib/query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -95,25 +95,29 @@ const CompanyBilling = () => {
     });
   };
 
-  const handlePaymentSuccess = () => {
-    if (!user?.companyId) return;
+  const { mutate: verifyPayment } = useVerifyPayment();
 
-    const selectedPlan = plans.find((p) => p.id === paymentModal.planId);
-    if (!selectedPlan) return;
+  const handlePaymentSuccess = (orderId: string) => {
+    if (!user?.companyId || !paymentModal.planId) return;
 
-    const planName = typeof selectedPlan.name === "string"
-      ? selectedPlan.name
-      : selectedPlan.name?.ru || selectedPlan.name?.en || selectedPlan.name?.kk || "";
-
-    const endDate = new Date();
-    endDate.setMonth(endDate.getMonth() + 1);
-    const planEndDate = endDate.toISOString().split('T')[0];
-
-    updatePlan({
-      id: user.companyId,
-      plan: planName as any,
-      planEndDate,
-    });
+    verifyPayment(
+      {
+        companyId: user.companyId,
+        orderId,
+        planId: paymentModal.planId,
+      },
+      {
+        onSuccess: () => {
+          toast.success(t("company.switchingPlan"));
+          toast.info(t("admin.changesTakeEffectWithin5Minutes"));
+          refetchCompany();
+        },
+        onError: (error: any) => {
+          const msg = error?.message || "";
+          toast.error(msg || t("company.planSwitchError"));
+        },
+      }
+    );
   };
   if (companyLoading || plansLoading || freePlanSettingsLoading) {
     return (
