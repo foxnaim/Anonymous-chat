@@ -469,6 +469,8 @@
     "companyLabel": "Компания",
     "companyNameLabel": "Компания:",
     "companyCodeLabelWithColon": "Код компании:",
+    "emailLabel": "Email:",
+    "planLabel": "Тариф:",
     "contactSupport": "Связаться с поддержкой",
     "contactSupportDescription": "Нажмите, чтобы открыть чат в WhatsApp",
     "support": "Поддержка",

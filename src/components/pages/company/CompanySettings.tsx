@@ -31,6 +31,7 @@ import { compressImage, validateFileSize, validateImageType } from "@/lib/utils/
 
 import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
 import { usePlanPermissions } from "@/hooks/usePlanPermissions";
+import { useWhatsAppSupport } from "@/hooks/useWhatsAppSupport";
 
 const CompanySettings = () => {
   const { t, i18n: i18nInstance } = useTranslation();
@@ -38,6 +39,7 @@ const CompanySettings = () => {
   const router = useRouter();
   const { isFullscreen } = useFullscreenContext();
   const permissions = usePlanPermissions();
+  const whatsapp = useWhatsAppSupport();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -463,7 +465,7 @@ const CompanySettings = () => {
                 <div className="space-y-2 pt-4 border-t border-border">
                   <Label>{t("company.contactSupport") || "Связаться с поддержкой"}</Label>
                   <a
-                    href={`https://wa.me/${supportInfo.supportWhatsAppNumber.replace(/[^0-9]/g, '')}`}
+                    href={whatsapp.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg hover:bg-green-100 dark:hover:bg-green-900 transition-colors"

@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { getTranslatedValue } from "@/lib/utils/translations";
 import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
 import { usePlanPermissions } from "@/hooks/usePlanPermissions";
+import { useWhatsAppSupport } from "@/hooks/useWhatsAppSupport";
 import { FiAlertTriangle, FiCreditCard, FiHeadphones, FiMessageCircle, FiExternalLink } from "react-icons/fi";
 
 const CompanyDashboard = () => {
@@ -148,16 +149,7 @@ const CompanyDashboard = () => {
   });
 
   const { data: supportInfo } = useSupportInfo();
-
-  // Формируем сообщение для WhatsApp с указанием приоритета
-  const getWhatsAppMessage = React.useMemo(() => {
-    const baseMessage = t("company.supportMessage") || "Здравствуйте! Мне нужна помощь с платформой FeedbackHub.";
-    if (permissions.isPro) {
-      const priorityNote = t("company.prioritySupportNote") || "\n\n⚠️ ПРИОРИТЕТНАЯ ПОДДЕРЖКА (Pro план)";
-      return `${baseMessage}${priorityNote}\n\n${t("company.companyNameLabel")} ${company?.name || ""}\n${t("company.companyCodeLabelWithColon")} ${company?.code || ""}`;
-    }
-    return `${baseMessage}\n\n${t("company.companyNameLabel")} ${company?.name || ""}\n${t("company.companyCodeLabelWithColon")} ${company?.code || ""}`;
-  }, [permissions.isPro, company?.name, company?.code, t]);
+  const whatsapp = useWhatsAppSupport();
 
   // Получаем достижения, близкие к получению (незавершенные с наибольшим прогрессом)
   const nearCompletionAchievements = React.useMemo(() => {
@@ -285,7 +277,7 @@ const CompanyDashboard = () => {
                         </p>
                         {supportInfo?.supportWhatsAppNumber && (
                           <a
-                            href={`https://wa.me/${supportInfo.supportWhatsAppNumber.replace(/[^0-9]/g, "")}`}
+                            href={whatsapp.href}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline mt-2"
@@ -780,7 +772,7 @@ const CompanyDashboard = () => {
                         )}
                       </div>
                       <a
-                        href={`https://wa.me/${supportInfo.supportWhatsAppNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(getWhatsAppMessage)}`}
+                        href={whatsapp.href}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-3 p-3.5 rounded-xl transition-all duration-200 hover:shadow-md group"

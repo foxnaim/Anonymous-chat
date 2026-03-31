@@ -467,6 +467,8 @@
     "companyLabel": "Company",
     "companyNameLabel": "Company:",
     "companyCodeLabelWithColon": "Company Code:",
+    "emailLabel": "Email:",
+    "planLabel": "Plan:",
     "contactSupport": "Contact support",
     "contactSupportDescription": "Click to open a WhatsApp chat",
     "support": "Support",
