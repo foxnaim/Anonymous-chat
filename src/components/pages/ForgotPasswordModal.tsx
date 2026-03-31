@@ -12,7 +12,6 @@ import { FiLock } from "react-icons/fi";
 import { toast } from "sonner";
 import { authService } from "@/lib/api/auth";
 import type { ApiError } from "@/lib/api/client";
-import emailjs from '@emailjs/browser';
 
 interface ForgotPasswordModalProps {
   open: boolean;
@@ -36,76 +35,42 @@ const ForgotPasswordModal = ({ open, onOpenChange }: ForgotPasswordModalProps) =
     setIsLoading(true);
     
     try {
-      // 1. Получаем токен от бэкенда
-      const response = await authService.forgotPassword({ email });
-      
-      if (response.resetToken) {
-        // 2. Формируем ссылку
-        const resetLink = `${window.location.origin}/reset-password?token=${response.resetToken}`;
-        
-        // 3. Отправляем письмо через EmailJS
-        // Проверяем наличие ключей (убираем кавычки, если есть)
-        const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID?.replace(/^["']|["']$/g, '') || process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-        const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID?.replace(/^["']|["']$/g, '') || process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
-        const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY?.replace(/^["']|["']$/g, '') || process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+      // Отправляем запрос на бэкенд - бэкенд отправит email
+      await authService.forgotPassword({ email });
 
-        if (serviceId && templateId && publicKey) {
-          try {
-            // Пытаемся отправить письмо через EmailJS
-            await emailjs.send(
-              serviceId,
-              templateId,
-              {
-                email: email,        // Переменная для шаблона {{email}}
-                link: resetLink,     // Переменная для шаблона {{link}}
-                company_name: "FeedbackHub" 
-              },
-              publicKey
-            );
-            // Успешно отправлено - показываем только успешное сообщение БЕЗ токена
-            toast.success(t("auth.resetPasswordSuccess"));
-          } catch (emailError) {
-            // Если EmailJS не сработал, показываем токен (фоллбэк) - только в случае ошибки
-            if (navigator.clipboard) {
-              navigator.clipboard.writeText(resetLink).catch(() => {});
-            }
-            toast.error("Не удалось отправить письмо автоматически. Ссылка скопирована в буфер обмена.");
-            toast.info(
-              <div className="flex flex-col gap-2">
-                <span>Ссылка для сброса пароля:</span>
-                <span className="text-xs opacity-80 break-all bg-black/10 p-2 rounded select-all">
-                  {resetLink}
-                </span>
-              </div>,
-              { duration: 20000 }
-            );
-          }
-        } else {
-          // Если ключи EmailJS не настроены - показываем токен (только для разработки/отладки)
-          if (navigator.clipboard) {
-            navigator.clipboard.writeText(resetLink).catch(() => {});
-          }
-          toast.warning("EmailJS не настроен. Ссылка скопирована в буфер обмена.");
-          toast.info(
-            <div className="flex flex-col gap-2">
-              <span>Ссылка для сброса пароля:</span>
-              <span className="text-xs opacity-80 break-all bg-black/10 p-2 rounded select-all">
-                {resetLink}
-              </span>
-            </div>,
-            { duration: 20000 }
-          );
-        }
-      } else {
-        toast.success(t("auth.resetPasswordSuccess"));
-      }
-      
+      // Всегда показываем одно и то же сообщение (для безопасности)
+      toast.success(t("auth.resetPasswordSuccess"));
+
       setEmail("");
       onOpenChange(false);
     } catch (error) {
-      setIsLoading(false);
       const apiError = error as ApiError;
-      toast.error(apiError.message || t("common.error"));
+      const msg = apiError.message || "";
+
+      if (msg.includes("EMAIL_SEND_FAILED")) {
+        // Извлекаем номер поддержки если есть (формат: "EMAIL_SEND_FAILED|+7...")
+        const supportNumber = msg.includes("|") ? msg.split("|")[1]?.trim() : "";
+        if (supportNumber) {
+          toast.error(
+            t("auth.emailSendFailedWithSupport", {
+              number: supportNumber,
+              defaultValue: `Не удалось отправить письмо. Обратитесь в поддержку: ${supportNumber}`,
+            }),
+            { duration: 10000 }
+          );
+        } else {
+          toast.error(
+            t("auth.emailSendFailed", {
+              defaultValue: "Не удалось отправить письмо. Обратитесь в поддержку.",
+            }),
+            { duration: 10000 }
+          );
+        }
+      } else {
+        toast.error(apiError.message || t("common.error"));
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 

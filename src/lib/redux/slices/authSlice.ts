@@ -231,17 +231,8 @@ const authSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(registerAsync.fulfilled, (state, action) => {
-        // Если вернулся verificationToken, значит нужна верификация, и пользователь НЕ залогинен
-        if (action.payload.verificationToken) {
-          state.user = null;
-          state.isAuthenticated = false;
-          // Мы не показываем тост успеха здесь, так как это сделает компонент с отправкой письма
-        } else {
-          // Стандартная логика (если вдруг verificationToken нет)
-          state.user = action.payload.user;
-          state.isAuthenticated = true;
-          // Тост успеха показывается в компоненте RegisterModal
-        }
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
         state.isLoading = false;
       })
       .addCase(registerAsync.rejected, (state, action) => {

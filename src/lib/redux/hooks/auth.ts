@@ -51,20 +51,14 @@ export const useAuth = () => {
     role?: string,
     companyName?: string,
     companyCode?: string
-  ): Promise<{ success: boolean; verificationToken?: string }> => {
+  ): Promise<{ success: boolean }> => {
     try {
       const result = await dispatch(
         registerAsync({ email, password, name, role, companyName, companyCode })
       );
       if (registerAsync.fulfilled.match(result)) {
-        // Если есть verificationToken, то не логиним сокеты и т.д., а просто возвращаем токен
-        if (result.payload.verificationToken) {
-           return { success: true, verificationToken: result.payload.verificationToken };
-        }
-
-        // Переподключаем WebSocket с новым токеном после успешной регистрации (если сразу залогинили)
+        // Переподключаем WebSocket с новым токеном после успешной регистрации
         if (typeof window !== 'undefined') {
-          // Используем setTimeout для асинхронной загрузки модуля
           setTimeout(() => {
             try {
               const socketModule = require('@/lib/websocket/socket');

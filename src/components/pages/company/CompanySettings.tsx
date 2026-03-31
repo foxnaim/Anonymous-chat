@@ -264,6 +264,8 @@ const CompanySettings = () => {
     }
   };
 
+  const [isChangingEmail, setIsChangingEmail] = useState(false);
+
   const handleEmailChange = async () => {
     if (!user?.companyId) return;
 
@@ -272,17 +274,41 @@ const CompanySettings = () => {
       return;
     }
 
+    if (!newEmail || newEmail === company?.adminEmail) {
+      toast.error(t("company.enterNewEmail") || "Введите новый email");
+      return;
+    }
+
+    // Валидация email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      toast.error(t("auth.invalidEmail"));
+      return;
+    }
+
+    setIsChangingEmail(true);
     try {
-      toast.success(t("company.emailUpdateLinkSent"));
+      await authService.changeEmail({
+        newEmail,
+        password: emailPassword,
+      });
+      toast.success(t("company.emailChanged") || "Email успешно изменён");
       setIsEditingEmail(false);
       setEmailPassword("");
+      refetchCompany();
     } catch (error: any) {
-      const msg = (error.response?.data?.message || "").toLowerCase();
-      if (msg.includes("insufficient permissions") || msg.includes("access denied") || msg.includes("forbidden")) {
-        toast.error(t("auth.accessDenied"));
+      const msg = (error?.message || "").toLowerCase();
+      if (msg.includes("incorrect") || msg.includes("invalid") || msg.includes("password")) {
+        toast.error(t("auth.incorrectPassword") || "Неверный пароль");
+      } else if (msg.includes("already") || msg.includes("registered")) {
+        toast.error(t("auth.emailAlreadyInUse") || "Этот email уже используется");
+      } else if (msg.includes("same") || msg.includes("different")) {
+        toast.error(t("auth.emailMustBeDifferent") || "Новый email должен отличаться от текущего");
       } else {
-        toast.error(error.response?.data?.message || t("common.error"));
+        toast.error(error?.message || t("common.error"));
       }
+    } finally {
+      setIsChangingEmail(false);
     }
   };
 
@@ -416,12 +442,12 @@ const CompanySettings = () => {
                       >
                         {t("common.cancel")}
                       </Button>
-                      <Button 
+                      <Button
                         size="sm"
                         onClick={handleEmailChange}
-                        disabled={!newEmail || !emailPassword || newEmail === company?.adminEmail}
+                        disabled={!newEmail || !emailPassword || newEmail === company?.adminEmail || isChangingEmail}
                       >
-                        {t("common.save")}
+                        {isChangingEmail ? t("common.loading") : t("common.save")}
                       </Button>
                     </div>
                   </div>

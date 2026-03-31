@@ -15,7 +15,6 @@ import { toast } from "sonner";
 import { FiKey, FiSettings, FiGift, FiCheck, FiEye, FiEyeOff, FiArrowLeft, FiUserPlus } from "react-icons/fi";
 import { Badge } from "@/components/ui/badge";
 import { validatePasswordStrength } from "@/lib/utils/validation";
-import emailjs from '@emailjs/browser';
 
 interface RegisterModalProps {
   open: boolean;
@@ -111,56 +110,11 @@ const RegisterModal = ({ open, onOpenChange }: RegisterModalProps) => {
       
       // Проверяем результат
       if (result.success) {
-        if (result.verificationToken) {
-           // Если нужен email verification
-           const verifyLink = `${window.location.origin}/verify-email?token=${result.verificationToken}`;
-           
-           // Отправляем письмо
-           const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID?.replace(/^["']|["']$/g, '') || process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-           const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID?.replace(/^["']|["']$/g, '') || process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
-           const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY?.replace(/^["']|["']$/g, '') || process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
-
-           if (serviceId && templateId && publicKey) {
-             try {
-               await emailjs.send(
-                 serviceId,
-                 templateId,
-                 {
-                   email: formData.email,
-                   link: verifyLink,
-                   company_name: "FeedbackHub"
-                 },
-                 publicKey
-               );
-               toast.success(t("auth.verificationEmailSent") || "Письмо с подтверждением отправлено");
-             } catch (emailError) {
-               console.error("Email send error:", emailError);
-               // Fallback: копируем ссылку в буфер
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(verifyLink).catch(() => {});
-                }
-                toast.warning("Не удалось отправить письмо. Ссылка для подтверждения скопирована.");
-             }
-           } else {
-             // Fallback dev mode
-              if (navigator.clipboard) {
-                  navigator.clipboard.writeText(verifyLink).catch(() => {});
-              }
-              toast.warning("EmailJS не настроен. Ссылка скопирована (Dev mode).");
-           }
-
-           // Показываем сообщение и закрываем
-           onOpenChange(false);
-           // Можно показать отдельный диалог или тост с инструкцией
-           toast.info("Пожалуйста, проверьте вашу почту для подтверждения аккаунта.", { duration: 10000 });
-        } else {
-           // Если верификация не потребовалась (старая логика)
-           toast.success(t("auth.registerSuccess"));
-           requestAnimationFrame(() => {
-             router.replace("/company");
-             onOpenChange(false);
-           });
-        }
+        toast.success(t("auth.registerSuccess"));
+        requestAnimationFrame(() => {
+          router.replace("/company");
+          onOpenChange(false);
+        });
       }
     } catch (error: any) {
       // apiClient выбрасывает ApiError: { message: string, status: number, code?: string }
