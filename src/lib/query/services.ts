@@ -213,53 +213,23 @@ export const companyService = {
 // ========== STATS SERVICES ==========
 export const statsService = {
   getCompanyStats: async (companyId: string | number): Promise<Stats> => {
-    try {
-      const response = await apiClient.get<ApiResponse<Stats>>(`/stats/company/${companyId}`);
-      return response.data;
-    } catch (error) {
-      // Если ошибка, возвращаем пустую статистику
-      return { new: 0, inProgress: 0, resolved: 0, total: 0 };
-    }
+    const response = await apiClient.get<ApiResponse<Stats>>(`/stats/company/${companyId}`);
+    return response.data;
   },
 
   getMessageDistribution: async (companyId: string | number): Promise<MessageDistribution> => {
-    try {
-      const response = await apiClient.get<ApiResponse<MessageDistribution>>(`/stats/distribution/${companyId}`);
-      return response.data;
-    } catch (error) {
-      return { complaints: 0, praises: 0, suggestions: 0 };
-    }
+    const response = await apiClient.get<ApiResponse<MessageDistribution>>(`/stats/distribution/${companyId}`);
+    return response.data;
   },
 
   getGrowthMetrics: async (companyId: string | number): Promise<GrowthMetrics> => {
-    try {
-      const response = await apiClient.get<ApiResponse<GrowthMetrics>>(`/stats/growth/${companyId}`);
-      return response.data;
-    } catch (error) {
-      // Возвращаем дефолтные значения при ошибке
-      return {
-        rating: 0,
-        mood: "Нейтральный",
-        trend: "stable",
-        pointsBreakdown: {
-          totalMessages: 0,
-          resolvedCases: 0,
-          responseSpeed: 0,
-          activityBonus: 0,
-          achievementsBonus: 0,
-          praiseBonus: 0,
-        },
-      };
-    }
+    const response = await apiClient.get<ApiResponse<GrowthMetrics>>(`/stats/growth/${companyId}`);
+    return response.data;
   },
 
   getAchievements: async (companyId: string | number): Promise<AchievementProgress[]> => {
-    try {
-      const response = await apiClient.get<ApiResponse<AchievementProgress[]>>(`/stats/achievements/${companyId}`);
-      return response.data;
-    } catch (error) {
-      return [];
-    }
+    const response = await apiClient.get<ApiResponse<AchievementProgress[]>>(`/stats/achievements/${companyId}`);
+    return response.data;
   },
 
   getGroupedAchievements: async (companyId: string | number): Promise<GroupedAchievements[]> => {
