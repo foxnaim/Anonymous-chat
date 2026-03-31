@@ -29,6 +29,7 @@ import {
   FiEye,
   FiEyeOff,
   FiLock,
+  FiMail,
 } from "react-icons/fi";
 import {
   AlertDialog,
@@ -41,7 +42,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AdminHeader } from "@/components/AdminHeader";
-import { useCompanies, useCreateCompany, useDeleteCompany, usePlans, useUpdateCompanyStatus, useUpdateCompanyPlan, useUpdateCompanyPassword } from "@/lib/query";
+import { useCompanies, useCreateCompany, useDeleteCompany, usePlans, useUpdateCompany, useUpdateCompanyStatus, useUpdateCompanyPlan, useUpdateCompanyPassword } from "@/lib/query";
 import { getTranslatedValue } from "@/lib/utils/translations";
 import { toast } from "sonner";
 import type { Company, CompanyStatus, PlanType } from "@/types";
@@ -95,6 +96,8 @@ const AdminPanel = () => {
   const [panelNewPassword, setPanelNewPassword] = useState("");
   const [panelConfirmPassword, setPanelConfirmPassword] = useState("");
   const [showPanelPasswordSection, setShowPanelPasswordSection] = useState(false);
+  const [showPanelEmailSection, setShowPanelEmailSection] = useState(false);
+  const [panelNewEmail, setPanelNewEmail] = useState("");
   const detailCloseRef = useRef<HTMLButtonElement | null>(null);
   const createCloseRef = useRef<HTMLButtonElement | null>(null);
   const viewCloseRef = useRef<HTMLButtonElement | null>(null);
@@ -277,6 +280,23 @@ const AdminPanel = () => {
     },
   });
 
+  const { mutateAsync: updateCompany, isPending: isUpdatingCompany } = useUpdateCompany({
+    onSuccess: () => {
+      setPanelNewEmail("");
+      setShowPanelEmailSection(false);
+      toast.success(t("company.emailChanged") || "Email компании обновлён");
+      refetch();
+    },
+    onError: (error: any) => {
+      const msg = (error?.message || "").toLowerCase();
+      if (msg.includes("already")) {
+        toast.error(t("auth.emailAlreadyInUse") || "Этот email уже используется");
+      } else {
+        toast.error(error?.message || t("common.error"));
+      }
+    },
+  });
+
   const handlePanelPasswordChange = async () => {
     if (!selectedCompanyData?.id) return;
     if (panelNewPassword !== panelConfirmPassword) {
@@ -292,6 +312,19 @@ const AdminPanel = () => {
     await updateCompanyPassword({
       id: selectedCompanyData.id,
       password: panelNewPassword,
+    });
+  };
+
+  const handlePanelEmailChange = async () => {
+    if (!selectedCompanyData?.id || !panelNewEmail) return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(panelNewEmail)) {
+      toast.error(t("auth.invalidEmail"));
+      return;
+    }
+    await updateCompany({
+      id: selectedCompanyData.id,
+      updates: { adminEmail: panelNewEmail },
     });
   };
 
@@ -750,16 +783,26 @@ const AdminPanel = () => {
               {user?.role === "super_admin" && (
                 <Card className="p-4 border-amber-200 dark:border-amber-800">
                   <div className="flex flex-col gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowPanelPasswordSection(!showPanelPasswordSection)}
-                      className="w-fit"
-                    >
-                      <FiLock className="h-4 w-4 mr-2" />
-                      {showPanelPasswordSection ? t("common.cancel") : t("company.changePassword")}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setShowPanelPasswordSection(!showPanelPasswordSection); setShowPanelEmailSection(false); }}
+                      >
+                        <FiLock className="h-4 w-4 mr-2" />
+                        {showPanelPasswordSection ? t("common.cancel") : t("company.changePassword")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setShowPanelEmailSection(!showPanelEmailSection); setShowPanelPasswordSection(false); }}
+                      >
+                        <FiMail className="h-4 w-4 mr-2" />
+                        {showPanelEmailSection ? t("common.cancel") : (t("admin.changeEmail") || "Сменить email")}
+                      </Button>
+                    </div>
                     {showPanelPasswordSection && (
                       <div className="space-y-3 p-3 bg-amber-50/50 dark:bg-amber-950/30 rounded-lg">
                         <p className="text-sm text-amber-800 dark:text-amber-200">
@@ -792,6 +835,31 @@ const AdminPanel = () => {
                           disabled={isUpdatingPassword || !panelNewPassword || !panelConfirmPassword}
                         >
                           {isUpdatingPassword ? t("common.loading") : t("company.updatePassword")}
+                        </Button>
+                      </div>
+                    )}
+                    {showPanelEmailSection && (
+                      <div className="space-y-3 p-3 bg-amber-50/50 dark:bg-amber-950/30 rounded-lg">
+                        <p className="text-sm text-amber-800 dark:text-amber-200">
+                          {t("admin.changeCompanyEmailDescription") || "Смена email компании (также обновит email для входа)"}
+                        </p>
+                        <div>
+                          <Label>{t("company.newEmail") || "Новый email"}</Label>
+                          <Input
+                            type="email"
+                            value={panelNewEmail}
+                            onChange={(e) => setPanelNewEmail(e.target.value)}
+                            placeholder="new@email.com"
+                            autoComplete="email"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handlePanelEmailChange}
+                          disabled={isUpdatingCompany || !panelNewEmail}
+                        >
+                          {isUpdatingCompany ? t("common.loading") : (t("admin.updateEmail") || "Обновить email")}
                         </Button>
                       </div>
                     )}
@@ -1065,16 +1133,26 @@ const AdminPanel = () => {
                           {user?.role === "super_admin" && (
                             <Card className="p-4 border-amber-200 dark:border-amber-800">
                               <div className="flex flex-col gap-3">
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setShowPanelPasswordSection(!showPanelPasswordSection)}
-                                  className="w-fit"
-                                >
-                                  <FiLock className="h-4 w-4 mr-2" />
-                                  {showPanelPasswordSection ? t("common.cancel") : t("company.changePassword")}
-                                </Button>
+                                <div className="flex gap-2 flex-wrap">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => { setShowPanelPasswordSection(!showPanelPasswordSection); setShowPanelEmailSection(false); }}
+                                  >
+                                    <FiLock className="h-4 w-4 mr-2" />
+                                    {showPanelPasswordSection ? t("common.cancel") : t("company.changePassword")}
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => { setShowPanelEmailSection(!showPanelEmailSection); setShowPanelPasswordSection(false); }}
+                                  >
+                                    <FiMail className="h-4 w-4 mr-2" />
+                                    {showPanelEmailSection ? t("common.cancel") : (t("admin.changeEmail") || "Сменить email")}
+                                  </Button>
+                                </div>
                                 {showPanelPasswordSection && (
                                   <div className="space-y-3 p-3 bg-amber-50/50 dark:bg-amber-950/30 rounded-lg">
                                     <p className="text-sm text-amber-800 dark:text-amber-200">
@@ -1107,6 +1185,31 @@ const AdminPanel = () => {
                                       disabled={isUpdatingPassword || !panelNewPassword || !panelConfirmPassword}
                                     >
                                       {isUpdatingPassword ? t("common.loading") : t("company.updatePassword")}
+                                    </Button>
+                                  </div>
+                                )}
+                                {showPanelEmailSection && (
+                                  <div className="space-y-3 p-3 bg-amber-50/50 dark:bg-amber-950/30 rounded-lg">
+                                    <p className="text-sm text-amber-800 dark:text-amber-200">
+                                      {t("admin.changeCompanyEmailDescription") || "Смена email компании (также обновит email для входа)"}
+                                    </p>
+                                    <div>
+                                      <Label>{t("company.newEmail") || "Новый email"}</Label>
+                                      <Input
+                                        type="email"
+                                        value={panelNewEmail}
+                                        onChange={(e) => setPanelNewEmail(e.target.value)}
+                                        placeholder="new@email.com"
+                                        autoComplete="email"
+                                      />
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      onClick={handlePanelEmailChange}
+                                      disabled={isUpdatingCompany || !panelNewEmail}
+                                    >
+                                      {isUpdatingCompany ? t("common.loading") : (t("admin.updateEmail") || "Обновить email")}
                                     </Button>
                                   </div>
                                 )}
