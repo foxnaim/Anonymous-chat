@@ -17,6 +17,7 @@ import { CompanyHeader } from "@/components/CompanyHeader";
 import { useAuth } from "@/lib/redux";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { robotoRegular, robotoMedium } from '@/lib/fonts/roboto';
 import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
 import { usePlanPermissions } from "@/hooks/usePlanPermissions";
 
@@ -131,43 +132,12 @@ const CompanyReports = () => {
 
     const doc = new jsPDF();
 
-    // Функция для загрузки шрифта
-    const loadFont = async (url: string) => {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      return new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          if (typeof reader.result === 'string') {
-            resolve(reader.result.split(',')[1]);
-          } else {
-            reject(new Error('Failed to read font'));
-          }
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    };
-
-    try {
-      // Загружаем Regular и Medium (для bold) шрифты
-      const [fontRegular, fontBold] = await Promise.all([
-        loadFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf'),
-        loadFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Medium.ttf')
-      ]);
-
-      // Добавляем шрифты в VFS
-      doc.addFileToVFS('Roboto-Regular.ttf', fontRegular);
-      doc.addFileToVFS('Roboto-Bold.ttf', fontBold);
-
-      // Регистрируем шрифты
-      doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-      doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
-
-      doc.setFont('Roboto');
-    } catch (error) {
-      console.error('Error loading fonts:', error);
-    }
+    // Встроенные шрифты Roboto с поддержкой кириллицы
+    doc.addFileToVFS('Roboto-Regular.ttf', robotoRegular);
+    doc.addFileToVFS('Roboto-Bold.ttf', robotoMedium);
+    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
+    doc.setFont('Roboto');
 
     // Заголовок
     doc.setFontSize(20);
