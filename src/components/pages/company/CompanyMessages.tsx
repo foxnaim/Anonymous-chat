@@ -33,8 +33,8 @@ const CompanyMessages = () => {
     enabled: !!user?.companyId,
   });
   
-  // Проверяем, истек ли тариф
-  const isTrialExpired = company?.trialEndDate ? (() => {
+  // Проверяем, истек ли пробный тариф (только для бесплатных планов)
+  const isTrialExpired = permissions.isFree && company?.trialEndDate ? (() => {
     try {
       const endDate = new Date(company.trialEndDate);
       const now = new Date();
