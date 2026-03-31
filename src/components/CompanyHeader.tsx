@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@/lib/redux";
 import { useNextAuth } from "@/lib/hooks/useNextAuth";
 import { useCompany } from "@/lib/query";
+import { usePlanPermissions } from "@/hooks/usePlanPermissions";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
@@ -39,6 +40,7 @@ export const CompanyHeader = () => {
     enabled: !!user?.companyId && (user?.role === 'company' || user?.role === 'admin' || user?.role === 'super_admin'),
   });
 
+  const permissions = usePlanPermissions();
   // Проверяем, заблокирована ли компания
   const isCompanyBlocked = company?.status === "Заблокирована";
 
@@ -51,8 +53,10 @@ export const CompanyHeader = () => {
   const navigation = [
     { name: t("company.dashboard"), path: "/company", icon: FiLayout },
     { name: t("company.messages"), path: "/company/messages", icon: FiMessageSquare },
-    { name: t("company.growth"), path: "/company/growth", icon: FiAward },
-    { name: t("company.reports"), path: "/company/reports", icon: FiBarChart2 },
+    ...(!permissions.isReadOnly ? [
+      { name: t("company.growth"), path: "/company/growth", icon: FiAward },
+      { name: t("company.reports"), path: "/company/reports", icon: FiBarChart2 },
+    ] : []),
     { name: t("company.billing"), path: "/company/billing", icon: FiCreditCard },
   ];
 

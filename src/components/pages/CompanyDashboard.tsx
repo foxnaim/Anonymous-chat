@@ -630,6 +630,7 @@ const CompanyDashboard = () => {
                 </Card>
                 
                 {/* Near Completion Achievements and Growth Rating Block */}
+                {!permissions.isReadOnly && (
                 <Card className="p-5 border-border shadow-lg relative overflow-hidden bg-card">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                     {/* Achievements Section */}
@@ -751,6 +752,7 @@ const CompanyDashboard = () => {
                     </Button>
                   </div>
                 </Card>
+                )}
 
                 {/* Support Card */}
                 {supportInfo?.supportWhatsAppNumber && (
