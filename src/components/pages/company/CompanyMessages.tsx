@@ -68,7 +68,7 @@ const CompanyMessages = () => {
           ...selectedMessage,
           status: variables.status || selectedMessage.status,
           companyResponse: variables.response !== undefined ? variables.response : selectedMessage.companyResponse,
-          updatedAt: new Date().toISOString().split('T')[0],
+          updatedAt: new Date().toISOString(),
           lastUpdate: new Date().toISOString().split('T')[0],
         };
         setSelectedMessage(optimisticMessage);
