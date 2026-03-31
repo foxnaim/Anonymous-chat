@@ -783,12 +783,13 @@ const AdminPanel = () => {
               {user?.role === "super_admin" && (
                 <Card className="p-4 border-amber-200 dark:border-amber-800">
                   <div className="flex flex-col gap-3">
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => { setShowPanelPasswordSection(!showPanelPasswordSection); setShowPanelEmailSection(false); }}
+                        className="w-full"
                       >
                         <FiLock className="h-4 w-4 mr-2" />
                         {showPanelPasswordSection ? t("common.cancel") : t("company.changePassword")}
@@ -798,6 +799,7 @@ const AdminPanel = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => { setShowPanelEmailSection(!showPanelEmailSection); setShowPanelPasswordSection(false); }}
+                        className="w-full"
                       >
                         <FiMail className="h-4 w-4 mr-2" />
                         {showPanelEmailSection ? t("common.cancel") : (t("admin.changeEmail") || "Сменить email")}
@@ -1133,12 +1135,13 @@ const AdminPanel = () => {
                           {user?.role === "super_admin" && (
                             <Card className="p-4 border-amber-200 dark:border-amber-800">
                               <div className="flex flex-col gap-3">
-                                <div className="flex gap-2 flex-wrap">
+                                <div className="grid grid-cols-2 gap-2">
                                   <Button
                                     type="button"
                                     variant="outline"
                                     size="sm"
                                     onClick={() => { setShowPanelPasswordSection(!showPanelPasswordSection); setShowPanelEmailSection(false); }}
+                                    className="w-full"
                                   >
                                     <FiLock className="h-4 w-4 mr-2" />
                                     {showPanelPasswordSection ? t("common.cancel") : t("company.changePassword")}
@@ -1148,6 +1151,7 @@ const AdminPanel = () => {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => { setShowPanelEmailSection(!showPanelEmailSection); setShowPanelPasswordSection(false); }}
+                                    className="w-full"
                                   >
                                     <FiMail className="h-4 w-4 mr-2" />
                                     {showPanelEmailSection ? t("common.cancel") : (t("admin.changeEmail") || "Сменить email")}
