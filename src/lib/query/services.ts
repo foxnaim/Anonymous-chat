@@ -208,6 +208,11 @@ export const companyService = {
     const response = await apiClient.post<ApiResponse<Company>>(`/companies/${companyId}/verify-payment`, data);
     return response.data;
   },
+
+  expireTrial: async (id: string | number): Promise<Company> => {
+    const response = await apiClient.post<ApiResponse<Company>>(`/companies/${id}/expire-trial`);
+    return response.data;
+  },
 };
 
 // ========== STATS SERVICES ==========

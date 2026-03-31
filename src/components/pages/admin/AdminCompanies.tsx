@@ -1472,7 +1472,7 @@ const AdminCompanies = () => {
                   </div>
                   {user?.role === "super_admin" && (
                     <div className="border-t border-border pt-4 mt-4 space-y-3">
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         <Button
                           type="button"
                           variant="outline"
@@ -1491,6 +1491,31 @@ const AdminCompanies = () => {
                           <FiMail className="h-4 w-4 mr-2" />
                           {showEditEmailSection ? t("common.cancel") : (t("admin.changeEmail") || "Сменить email")}
                         </Button>
+                        {selectedCompany && isTrialPlan(selectedCompany.plan) && selectedCompany.trialEndDate && (() => {
+                          try {
+                            return new Date(selectedCompany.trialEndDate) > new Date();
+                          } catch { return false; }
+                        })() && (
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={async () => {
+                              if (!selectedCompany) return;
+                              try {
+                                const { companyService } = await import("@/lib/query/services");
+                                const updated = await companyService.expireTrial(getCompanyId(selectedCompany));
+                                setSelectedCompany({ ...selectedCompany, trialEndDate: updated.trialEndDate });
+                                toast.success(t("admin.trialExpired") || "Пробный период завершён");
+                              } catch (err: any) {
+                                toast.error(err?.message || t("common.error"));
+                              }
+                            }}
+                          >
+                            <FiAlertCircle className="h-4 w-4 mr-2" />
+                            {t("admin.expireTrial") || "Завершить пробный период"}
+                          </Button>
+                        )}
                       </div>
                       {showEditPassword && (
                         <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
@@ -1727,7 +1752,7 @@ const AdminCompanies = () => {
                     {user?.role === "super_admin" && (
                       <Card className="p-4 border-amber-200 dark:border-amber-800">
                         <div className="flex flex-col gap-3">
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 flex-wrap">
                             <Button
                               type="button"
                               variant="outline"
@@ -1746,6 +1771,31 @@ const AdminCompanies = () => {
                               <FiMail className="h-4 w-4 mr-2" />
                               {showViewEmailSection ? t("common.cancel") : (t("admin.changeEmail") || "Сменить email")}
                             </Button>
+                            {selectedCompany && isTrialPlan(selectedCompany.plan) && selectedCompany.trialEndDate && (() => {
+                              try {
+                                return new Date(selectedCompany.trialEndDate) > new Date();
+                              } catch { return false; }
+                            })() && (
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={async () => {
+                                  if (!selectedCompany) return;
+                                  try {
+                                    const { companyService } = await import("@/lib/query/services");
+                                    const updated = await companyService.expireTrial(getCompanyId(selectedCompany));
+                                    setSelectedCompany({ ...selectedCompany, trialEndDate: updated.trialEndDate });
+                                    toast.success(t("admin.trialExpired") || "Пробный период завершён");
+                                  } catch (err: any) {
+                                    toast.error(err?.message || t("common.error"));
+                                  }
+                                }}
+                              >
+                                <FiAlertCircle className="h-4 w-4 mr-2" />
+                                {t("admin.expireTrial") || "Завершить пробный период"}
+                              </Button>
+                            )}
                           </div>
                           {showViewPasswordSection && (
                             <div className="space-y-3 p-3 bg-amber-50/50 dark:bg-amber-950/30 rounded-lg">
