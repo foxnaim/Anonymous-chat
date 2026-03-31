@@ -30,6 +30,7 @@ import {
   FiEyeOff,
   FiLock,
   FiMail,
+  FiAlertCircle,
 } from "react-icons/fi";
 import {
   AlertDialog,
@@ -805,6 +806,28 @@ const AdminPanel = () => {
                         {showPanelEmailSection ? t("common.cancel") : (t("admin.changeEmail") || "Сменить email")}
                       </Button>
                     </div>
+                    {selectedCompanyData && isTrialPlan(selectedCompanyData.plan) && selectedCompanyData.trialEndDate && new Date(selectedCompanyData.trialEndDate) > new Date() && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="w-full"
+                        onClick={async () => {
+                          if (!selectedCompanyData?.id) return;
+                          try {
+                            const { companyService } = await import("@/lib/query/services");
+                            await companyService.expireTrial(selectedCompanyData.id);
+                            toast.success(t("admin.trialExpired") || "Пробный период завершён");
+                            await refetch();
+                          } catch (err: any) {
+                            toast.error(err?.message || t("common.error"));
+                          }
+                        }}
+                      >
+                        <FiAlertCircle className="h-4 w-4 mr-2" />
+                        {t("admin.expireTrial") || "Завершить пробный период"}
+                      </Button>
+                    )}
                     {showPanelPasswordSection && (
                       <div className="space-y-3 p-3 bg-amber-50/50 dark:bg-amber-950/30 rounded-lg">
                         <p className="text-sm text-amber-800 dark:text-amber-200">
@@ -1157,6 +1180,28 @@ const AdminPanel = () => {
                                     {showPanelEmailSection ? t("common.cancel") : (t("admin.changeEmail") || "Сменить email")}
                                   </Button>
                                 </div>
+                                {selectedCompanyData && isTrialPlan(selectedCompanyData.plan) && selectedCompanyData.trialEndDate && new Date(selectedCompanyData.trialEndDate) > new Date() && (
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="sm"
+                                    className="w-full"
+                                    onClick={async () => {
+                                      if (!selectedCompanyData?.id) return;
+                                      try {
+                                        const { companyService } = await import("@/lib/query/services");
+                                        await companyService.expireTrial(selectedCompanyData.id);
+                                        toast.success(t("admin.trialExpired") || "Пробный период завершён");
+                                        await refetch();
+                                      } catch (err: any) {
+                                        toast.error(err?.message || t("common.error"));
+                                      }
+                                    }}
+                                  >
+                                    <FiAlertCircle className="h-4 w-4 mr-2" />
+                                    {t("admin.expireTrial") || "Завершить пробный период"}
+                                  </Button>
+                                )}
                                 {showPanelPasswordSection && (
                                   <div className="space-y-3 p-3 bg-amber-50/50 dark:bg-amber-950/30 rounded-lg">
                                     <p className="text-sm text-amber-800 dark:text-amber-200">
