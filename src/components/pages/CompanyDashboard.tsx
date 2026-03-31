@@ -532,6 +532,7 @@ const CompanyDashboard = () => {
                 )}
 
                 {/* Combined Stats Block */}
+                {!permissions.isReadOnly && (
                 <Card className="p-5 border-border shadow-lg relative overflow-hidden bg-card">
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                     {/* Stats Row */}
@@ -628,7 +629,8 @@ const CompanyDashboard = () => {
                     </Button>
                   </div>
                 </Card>
-                
+                )}
+
                 {/* Near Completion Achievements and Growth Rating Block */}
                 {!permissions.isReadOnly && (
                 <Card className="p-5 border-border shadow-lg relative overflow-hidden bg-card">
