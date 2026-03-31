@@ -32,6 +32,7 @@ import {
   FiAlertCircle,
   FiSettings,
   FiLock,
+  FiMail,
   FiTrash2,
 } from "react-icons/fi";
 import {
@@ -147,6 +148,10 @@ const AdminCompanies = () => {
   const [viewNewPassword, setViewNewPassword] = useState("");
   const [viewConfirmPassword, setViewConfirmPassword] = useState("");
   const [showViewPasswordSection, setShowViewPasswordSection] = useState(false);
+  const [showEditEmailSection, setShowEditEmailSection] = useState(false);
+  const [editNewEmail, setEditNewEmail] = useState("");
+  const [showViewEmailSection, setShowViewEmailSection] = useState(false);
+  const [viewNewEmail, setViewNewEmail] = useState("");
 
   const getCompanyId = (company?: Company | null) =>
     (company as any)?.id || (company as any)?._id || "";
@@ -606,6 +611,8 @@ const AdminCompanies = () => {
     setEditNewPassword("");
     setEditConfirmPassword("");
     setShowEditPassword(!!options?.expandPassword);
+    setShowEditEmailSection(false);
+    setEditNewEmail("");
     setIsEditOpen(true);
   }, []);
 
@@ -675,6 +682,8 @@ const AdminCompanies = () => {
     setViewNewPassword("");
     setViewConfirmPassword("");
     setShowViewPasswordSection(false);
+    setShowViewEmailSection(false);
+    setViewNewEmail("");
     setIsViewOpen(true);
   }, []);
 
@@ -694,6 +703,36 @@ const AdminCompanies = () => {
       id: getCompanyId(selectedCompany),
       password: viewNewPassword,
     });
+  };
+
+  const handleEditEmailChange = async () => {
+    if (!selectedCompany || !editNewEmail) return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(editNewEmail)) {
+      toast.error(t("auth.invalidEmail"));
+      return;
+    }
+    await updateCompany({
+      id: getCompanyId(selectedCompany),
+      updates: { adminEmail: editNewEmail },
+    });
+    setShowEditEmailSection(false);
+    setEditNewEmail("");
+  };
+
+  const handleViewEmailChange = async () => {
+    if (!selectedCompany || !viewNewEmail) return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(viewNewEmail)) {
+      toast.error(t("auth.invalidEmail"));
+      return;
+    }
+    await updateCompany({
+      id: getCompanyId(selectedCompany),
+      updates: { adminEmail: viewNewEmail },
+    });
+    setShowViewEmailSection(false);
+    setViewNewEmail("");
   };
 
   const copyToClipboard = useCallback((text: string) => {
@@ -1432,16 +1471,27 @@ const AdminCompanies = () => {
                     />
                   </div>
                   {user?.role === "super_admin" && (
-                    <div className="border-t border-border pt-4 mt-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowEditPassword(!showEditPassword)}
-                        className="mb-3"
-                      >
-                        {showEditPassword ? t("common.cancel") : t("company.changePassword")}
-                      </Button>
+                    <div className="border-t border-border pt-4 mt-4 space-y-3">
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => { setShowEditPassword(!showEditPassword); setShowEditEmailSection(false); }}
+                        >
+                          <FiLock className="h-4 w-4 mr-2" />
+                          {showEditPassword ? t("common.cancel") : t("company.changePassword")}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => { setShowEditEmailSection(!showEditEmailSection); setShowEditPassword(false); }}
+                        >
+                          <FiMail className="h-4 w-4 mr-2" />
+                          {showEditEmailSection ? t("common.cancel") : (t("admin.changeEmail") || "Сменить email")}
+                        </Button>
+                      </div>
                       {showEditPassword && (
                         <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
                           <p className="text-sm text-muted-foreground">
@@ -1474,6 +1524,31 @@ const AdminCompanies = () => {
                             disabled={isUpdatingPassword || !editNewPassword || !editConfirmPassword}
                           >
                             {isUpdatingPassword ? t("common.loading") : t("company.updatePassword")}
+                          </Button>
+                        </div>
+                      )}
+                      {showEditEmailSection && (
+                        <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
+                          <p className="text-sm text-muted-foreground">
+                            {t("admin.changeCompanyEmailDescription") || "Смена email компании (также обновит email для входа)"}
+                          </p>
+                          <div>
+                            <Label>{t("company.newEmail") || "Новый email"}</Label>
+                            <Input
+                              type="email"
+                              value={editNewEmail}
+                              onChange={(e) => setEditNewEmail(e.target.value)}
+                              placeholder="new@email.com"
+                              autoComplete="email"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={handleEditEmailChange}
+                            disabled={isUpdating || !editNewEmail}
+                          >
+                            {isUpdating ? t("common.loading") : (t("admin.updateEmail") || "Обновить email")}
                           </Button>
                         </div>
                       )}
@@ -1652,16 +1727,26 @@ const AdminCompanies = () => {
                     {user?.role === "super_admin" && (
                       <Card className="p-4 border-amber-200 dark:border-amber-800">
                         <div className="flex flex-col gap-3">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setShowViewPasswordSection(!showViewPasswordSection)}
-                            className="w-fit"
-                          >
-                            <FiLock className="h-4 w-4 mr-2" />
-                            {showViewPasswordSection ? t("common.cancel") : t("company.changePassword")}
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => { setShowViewPasswordSection(!showViewPasswordSection); setShowViewEmailSection(false); }}
+                            >
+                              <FiLock className="h-4 w-4 mr-2" />
+                              {showViewPasswordSection ? t("common.cancel") : t("company.changePassword")}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => { setShowViewEmailSection(!showViewEmailSection); setShowViewPasswordSection(false); }}
+                            >
+                              <FiMail className="h-4 w-4 mr-2" />
+                              {showViewEmailSection ? t("common.cancel") : (t("admin.changeEmail") || "Сменить email")}
+                            </Button>
+                          </div>
                           {showViewPasswordSection && (
                             <div className="space-y-3 p-3 bg-amber-50/50 dark:bg-amber-950/30 rounded-lg">
                               <p className="text-sm text-amber-800 dark:text-amber-200">
@@ -1694,6 +1779,31 @@ const AdminCompanies = () => {
                                 disabled={isUpdatingPassword || !viewNewPassword || !viewConfirmPassword}
                               >
                                 {isUpdatingPassword ? t("common.loading") : t("company.updatePassword")}
+                              </Button>
+                            </div>
+                          )}
+                          {showViewEmailSection && (
+                            <div className="space-y-3 p-3 bg-amber-50/50 dark:bg-amber-950/30 rounded-lg">
+                              <p className="text-sm text-amber-800 dark:text-amber-200">
+                                {t("admin.changeCompanyEmailDescription") || "Смена email компании (также обновит email для входа)"}
+                              </p>
+                              <div>
+                                <Label>{t("company.newEmail") || "Новый email"}</Label>
+                                <Input
+                                  type="email"
+                                  value={viewNewEmail}
+                                  onChange={(e) => setViewNewEmail(e.target.value)}
+                                  placeholder="new@email.com"
+                                  autoComplete="email"
+                                />
+                              </div>
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={handleViewEmailChange}
+                                disabled={isUpdating || !viewNewEmail}
+                              >
+                                {isUpdating ? t("common.loading") : (t("admin.updateEmail") || "Обновить email")}
                               </Button>
                             </div>
                           )}
