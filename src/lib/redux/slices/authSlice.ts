@@ -240,7 +240,7 @@ const authSlice = createSlice({
           // Стандартная логика (если вдруг verificationToken нет)
           state.user = action.payload.user;
           state.isAuthenticated = true;
-          toast.success("Регистрация выполнена успешно");
+          // Тост успеха показывается в компоненте RegisterModal
         }
         state.isLoading = false;
       })
