@@ -764,17 +764,23 @@ const CompanyMessages = () => {
                           </div>
                         )}
                         {permissions.canReply && responseText.trim() && (
-                          <Button
-                            className="w-full"
-                            onClick={() => {
-                              if (responseText.trim()) {
-                                handleUpdateStatus(selectedMessage.status);
-                              }
-                            }}
-                            disabled={!responseText.trim()}
-                          >
-                            {t("company.saveResponse")}
-                          </Button>
+                          selectedMessage.status === "Новое" ? (
+                            <p className="text-xs text-destructive text-center py-2">
+                              {t("messages.changeStatusBeforeReply") || "Выберите статус сообщения перед отправкой ответа"}
+                            </p>
+                          ) : (
+                            <Button
+                              className="w-full"
+                              onClick={() => {
+                                if (responseText.trim()) {
+                                  handleUpdateStatus(selectedMessage.status);
+                                }
+                              }}
+                              disabled={!responseText.trim()}
+                            >
+                              {t("company.saveResponse")}
+                            </Button>
+                          )
                         )}
                       </div>
                     )}

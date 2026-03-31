@@ -754,6 +754,7 @@
     "content": "Message",
     "noMessages": "No messages found",
     "noMessagesFound": "No messages found",
+    "changeStatusBeforeReply": "Please select a message status before sending a reply",
     "statusUpdated": "Status updated",
     "statusUpdateError": "Error updating status",
     "cannotModifyRejected": "This message was rejected by admin. Status and response modification is not available.",
