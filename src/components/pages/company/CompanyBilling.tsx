@@ -155,8 +155,9 @@ const CompanyBilling = () => {
                               : company.plan || t("company.plan")}
                         </Badge>
                       </div>
-                      {company.trialEndDate && (() => {
-                        const endDate = new Date(company.trialEndDate);
+                      {(company.trialEndDate || company.planEndDate) && (() => {
+                        const endDateStr = company.trialEndDate || company.planEndDate!;
+                        const endDate = new Date(endDateStr);
                         const now = new Date();
                         const diffTime = endDate.getTime() - now.getTime();
                         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -164,7 +165,7 @@ const CompanyBilling = () => {
                           <div className="flex items-center gap-2 flex-wrap">
                             <p className="text-xs text-muted-foreground">{t("company.daysUntilTariffEnds")}:</p>
                             {diffDays > 0 ? (
-                              <Badge className="bg-primary text-white text-xs px-2.5 py-0.5 font-semibold">
+                              <Badge className={`${diffDays <= 5 ? "bg-orange-500" : "bg-primary"} text-white text-xs px-2.5 py-0.5 font-semibold`}>
                                 {diffDays} {getDaysText(diffDays)}
                               </Badge>
                             ) : (
@@ -173,7 +174,7 @@ const CompanyBilling = () => {
                               </Badge>
                             )}
                             <span className="text-xs text-muted-foreground">
-                              ({new Date(company.trialEndDate).toLocaleDateString(i18n.language === "kk" ? "kk-KZ" : i18n.language === "en" ? "en-US" : "ru-RU", {
+                              ({new Date(endDateStr).toLocaleDateString(i18n.language === "kk" ? "kk-KZ" : i18n.language === "en" ? "en-US" : "ru-RU", {
                                 day: "numeric",
                                 month: "long",
                                 year: "numeric"
@@ -313,9 +314,9 @@ const CompanyBilling = () => {
                             <span className="text-xs text-muted-foreground">/{t("admin.perMonth")}</span>
                           </div>
                         )}
-                        {/* Дни до окончания тарифа - только для текущего платного тарифа (не пробного) */}
-                        {isCurrent && !isFree && company?.trialEndDate && (() => {
-                          const endDate = new Date(company.trialEndDate);
+                        {/* Дни до окончания тарифа - для текущего платного тарифа */}
+                        {isCurrent && !isFree && company?.planEndDate && (() => {
+                          const endDate = new Date(company.planEndDate);
                           const now = new Date();
                           const diffTime = endDate.getTime() - now.getTime();
                           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -323,8 +324,8 @@ const CompanyBilling = () => {
                             <div className="mt-3 pt-3 border-t border-border/50">
                               <div className="flex items-center justify-between text-xs">
                                 <span className="text-muted-foreground">{t("admin.daysUntilExpiry")}:</span>
-                                <span className={`font-semibold ${diffDays <= 0 ? "text-destructive" : "text-foreground"}`}>
-                                  {diffDays > 0 
+                                <span className={`font-semibold ${diffDays <= 0 ? "text-destructive" : diffDays <= 5 ? "text-orange-500" : "text-foreground"}`}>
+                                  {diffDays > 0
                                     ? `${diffDays} ${getDaysText(diffDays)}`
                                     : t("admin.tariffExpired")
                                   }
@@ -349,20 +350,31 @@ const CompanyBilling = () => {
                           );
                         })}
                       </ul>
-                      <Button
-                        className={`w-full mt-auto ${
-                          isCurrent 
-                            ? "bg-muted text-muted-foreground hover:bg-muted cursor-not-allowed" 
-                            : ""
-                        }`}
-                        variant={isCurrent ? "outline" : buttonVariant}
-                        disabled={isCurrent}
-                        onClick={() => handleUpgrade(plan.id)}
-                        style={!isCurrent && !isFree ? { backgroundColor: circleColor } : {}}
-                      >
-                        {isCurrent ? t("company.currentPlan") : t("company.selectPlan")}
-                        {!isCurrent && <FiArrowRight className="h-4 w-4 ml-2" />}
-                      </Button>
+                      {(() => {
+                        // Проверяем, истек ли текущий платный план — разрешаем продление
+                        const isCurrentPlanExpired = isCurrent && !isFree && company?.planEndDate && new Date(company.planEndDate) < new Date();
+                        const isDisabled = isCurrent && !isCurrentPlanExpired;
+                        return (
+                          <Button
+                            className={`w-full mt-auto ${
+                              isDisabled
+                                ? "bg-muted text-muted-foreground hover:bg-muted cursor-not-allowed"
+                                : ""
+                            }`}
+                            variant={isDisabled ? "outline" : buttonVariant}
+                            disabled={isDisabled}
+                            onClick={() => handleUpgrade(plan.id)}
+                            style={!isDisabled && !isFree ? { backgroundColor: circleColor } : {}}
+                          >
+                            {isCurrentPlanExpired
+                              ? t("company.renewPlan")
+                              : isCurrent
+                                ? t("company.currentPlan")
+                                : t("company.selectPlan")}
+                            {!isDisabled && <FiArrowRight className="h-4 w-4 ml-2" />}
+                          </Button>
+                        );
+                      })()}
                     </div>
                   </Card>
                 );

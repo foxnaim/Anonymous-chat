@@ -266,6 +266,7 @@
     "availablePlans": "Available Plans",
     "current": "Current",
     "selectPlan": "Select Plan",
+    "renewPlan": "Renew Plan",
     "choosePlan": "Choose Plan",
     "trialExpiredTitle": "Trial period expired",
     "trialExpiredMessage": "Your trial period has ended. To continue working, please subscribe to one of our plans.",

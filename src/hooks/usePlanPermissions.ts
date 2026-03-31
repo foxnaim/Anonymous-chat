@@ -67,6 +67,23 @@ function isTrialExpired(company: Company | null | undefined): boolean {
 }
 
 /**
+ * Проверяет, истек ли платный тариф
+ */
+function isPlanExpired(company: Company | null | undefined): boolean {
+  if (!company?.planEndDate) {
+    return false;
+  }
+
+  try {
+    const endDate = new Date(company.planEndDate);
+    const now = new Date();
+    return now > endDate;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Хук для получения прав доступа на основе плана компании
  */
 export function usePlanPermissions(): PlanPermissions {
@@ -143,6 +160,25 @@ export function usePlanPermissions(): PlanPermissions {
         isFree: true,
         isStandard: false,
         isPro: false,
+      };
+    }
+
+    // Для платных планов проверяем, не истек ли срок действия
+    const planExpired = isPlanExpired(company);
+    if (planExpired) {
+      return {
+        canReply: false,
+        canChangeStatus: false,
+        canViewBasicAnalytics: false,
+        canViewExtendedAnalytics: false,
+        canViewReports: false,
+        canViewGrowth: false,
+        canViewTeamMood: false,
+        isReadOnly: true,
+        currentPlan,
+        isFree: false,
+        isStandard,
+        isPro,
       };
     }
 

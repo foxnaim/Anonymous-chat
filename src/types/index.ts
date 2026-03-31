@@ -28,7 +28,8 @@ export interface Company {
   status: CompanyStatus;
   plan: PlanType;
   registered: string;
-  trialEndDate?: string; // Дата окончания пробного периода (2 месяца после регистрации)
+  trialEndDate?: string; // Дата окончания пробного периода
+  planEndDate?: string; // Дата окончания платного тарифа (ежемесячно)
   trialUsed?: boolean; // Флаг, что пользователь уже использовал пробный тариф
   employees?: number; // Опциональное поле, больше не используется в интерфейсе
   messages: number;
