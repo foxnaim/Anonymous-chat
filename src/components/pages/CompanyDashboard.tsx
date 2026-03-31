@@ -27,7 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { getTranslatedValue } from "@/lib/utils/translations";
 import { useFullscreenContext } from "@/components/providers/FullscreenProvider";
 import { usePlanPermissions } from "@/hooks/usePlanPermissions";
-import { FiAlertTriangle, FiCreditCard, FiHeadphones, FiMessageCircle } from "react-icons/fi";
+import { FiAlertTriangle, FiCreditCard, FiHeadphones, FiMessageCircle, FiExternalLink } from "react-icons/fi";
 
 const CompanyDashboard = () => {
   const { isFullscreen } = useFullscreenContext();
@@ -762,35 +762,39 @@ const CompanyDashboard = () => {
 
                 {/* Support Card */}
                 {supportInfo?.supportWhatsAppNumber && (
-                  <Card className="p-5 border-border shadow-lg relative overflow-hidden bg-card">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="p-2 rounded-lg" style={{ backgroundColor: 'hsl(var(--primary))' }}>
-                        <FiHeadphones className="h-4 w-4 text-white" />
-                      </div>
-                      <h3 className="text-sm font-semibold">{t("company.support") || "Поддержка"}</h3>
-                      {permissions.isPro && (
-                        <Badge variant="default" className="text-xs">
-                          {t("company.prioritySupport") || "Приоритетная"}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="space-y-3">
-                      {supportInfo?.supportWhatsAppNumber && (
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                          <div className="flex items-center gap-2">
-                            <FiMessageCircle className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm text-muted-foreground">{t("company.globalSupportNumber") || "Глобальная поддержка"}:</span>
-                          </div>
-                          <a
-                            href={`https://wa.me/${supportInfo.supportWhatsAppNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(getWhatsAppMessage)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm font-semibold text-primary hover:underline"
-                          >
-                            {supportInfo.supportWhatsAppNumber}
-                          </a>
+                  <Card className="p-5 border-border shadow-lg relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 rounded-full -mr-10 -mt-10 opacity-10" style={{ backgroundColor: 'hsl(var(--primary))' }} />
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2.5 rounded-xl shadow-sm" style={{ background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8))' }}>
+                          <FiHeadphones className="h-5 w-5 text-white" />
                         </div>
-                      )}
+                        <div className="flex-1">
+                          <h3 className="text-sm font-semibold">{t("company.support") || "Поддержка"}</h3>
+                          <p className="text-xs text-muted-foreground">{t("company.supportDescription") || "Мы всегда на связи"}</p>
+                        </div>
+                        {permissions.isPro && (
+                          <Badge variant="default" className="text-xs">
+                            {t("company.prioritySupport") || "Приоритетная"}
+                          </Badge>
+                        )}
+                      </div>
+                      <a
+                        href={`https://wa.me/${supportInfo.supportWhatsAppNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(getWhatsAppMessage)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3.5 rounded-xl transition-all duration-200 hover:shadow-md group"
+                        style={{ background: 'linear-gradient(to right, hsl(var(--primary) / 0.08), hsl(var(--primary) / 0.03))' }}
+                      >
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'hsl(142 70% 45%)' }}>
+                          <FiMessageCircle className="h-5 w-5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground mb-0.5">{t("company.globalSupportNumber") || "Глобальная поддержка"}</p>
+                          <p className="text-sm font-bold" style={{ color: 'hsl(var(--primary))' }}>{supportInfo.supportWhatsAppNumber}</p>
+                        </div>
+                        <FiExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                      </a>
                     </div>
                   </Card>
                 )}
