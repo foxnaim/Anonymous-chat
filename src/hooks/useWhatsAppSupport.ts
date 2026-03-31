@@ -37,9 +37,9 @@ export function useWhatsAppSupport() {
   }, [company?.plan, plans]);
 
   const message = useMemo(() => {
-    const greeting = t("company.supportMessage") || "Здравствуйте! Мне нужна помощь с платформой FeedBack.";
+    const greeting = t("admin.supportMessage") || "Здравствуйте! Мне нужна помощь с платформой FeedBack.";
     const priority = permissions.isPro
-      ? `\n\n⚠️ ${t("company.prioritySupportNote") || "ПРИОРИТЕТНАЯ ПОДДЕРЖКА (Pro план)"}`
+      ? `\n\n⚠️ ${t("admin.prioritySupportNote") || "ПРИОРИТЕТНАЯ ПОДДЕРЖКА (Pro план)"}`
       : "";
 
     const details = [
