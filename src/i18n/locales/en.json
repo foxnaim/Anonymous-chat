@@ -105,7 +105,8 @@
     "idSecurityNote": "Your ID is secure. It does not contain personal information and is only used to track the status of your message.",
     "messageLimitExceeded": "Message limit for this company has been exceeded this month",
     "dailyLimitExceeded": "Daily message limit reached (3 per day). Try again tomorrow.",
-    "fillRequiredFields": "Please fill in all required fields"
+    "fillRequiredFields": "Please fill in all required fields",
+    "tooFast": "Please wait a moment before sending another message."
   },
   "checkStatus": {
     "title": "Check Message Status",

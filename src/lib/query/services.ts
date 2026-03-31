@@ -75,7 +75,12 @@ export const messageService = {
   },
 
   create: async (message: Omit<Message, "id" | "createdAt" | "updatedAt" | "lastUpdate">): Promise<Message> => {
-    const response = await apiClient.post<ApiResponse<Message>>('/messages', message);
+    // Подключаем fingerprint для антиспам-защиты
+    const { getFingerprint } = await import('@/lib/utils/fingerprint');
+    const fingerprint = await getFingerprint();
+    const response = await apiClient.post<ApiResponse<Message>>('/messages', message, {
+      headers: { 'X-Fingerprint': fingerprint },
+    });
     return response.data;
   },
 
